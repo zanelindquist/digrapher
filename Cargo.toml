@@ -1,0 +1,7 @@
+[package]
+name = "digrapher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+yew = { version = "0.22", features = ["csr"] }
