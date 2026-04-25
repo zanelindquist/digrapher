@@ -2,7 +2,7 @@ use yew::prelude::*;
 use crate::components::sidebar::Sidebar;
 
 // Theme embedded at compile time
-const THEME_JSON: &str = include_str!("assets/themes/sunlight.json");
+const THEME_JSON: &str = include_str!("assets/themes/organic.json");
 
 fn generate_css_vars() -> String {
     let value: serde_json::Value = serde_json::from_str(THEME_JSON).unwrap();
@@ -29,10 +29,12 @@ pub fn app() -> Html {
     let theme_css = generate_css_vars();
     
     html! {
-        <>
+        <div class="app">
             <style>{ theme_css }</style>
-            <h1>{ "Hello Yew" }</h1>
             <Sidebar/>
-        </>
+            <main class="main">
+                <p>{"Graph canvas"}</p>
+            </main>
+        </div>
     }
 }
