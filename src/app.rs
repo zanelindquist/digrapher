@@ -1,5 +1,6 @@
 use yew::prelude::*;
 use crate::components::sidebar::Sidebar;
+use crate::render::graph::{Graph, GraphProps};
 
 // Theme embedded at compile time
 const THEME_JSON: &str = include_str!("assets/themes/organic.json");
@@ -27,14 +28,20 @@ fn generate_css_vars() -> String {
 #[function_component(App)]
 pub fn app() -> Html {
     let theme_css = generate_css_vars();
+    let input_value = use_state(String::new);
     
+    let on_input = {
+        let input_value = input_value.clone();
+        Callback::from(move |v: String| {
+            input_value.set(v);
+        })
+    };
+
     html! {
         <div class="app">
             <style>{ theme_css }</style>
-            <Sidebar/>
-            <main class="main">
-                <p>{"Graph canvas"}</p>
-            </main>
+            <Sidebar value={(*input_value).clone()} on_input={on_input.clone()}/>
+            <Graph input={(*input_value).clone()}/>
         </div>
     }
 }

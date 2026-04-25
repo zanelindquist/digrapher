@@ -1,6 +1,7 @@
 mod app;
 mod components;
-mod graph;
+mod render;
+mod logic;
 
 use app::App;
 use yew::Renderer;

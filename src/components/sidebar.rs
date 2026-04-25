@@ -1,18 +1,22 @@
 use yew::prelude::*;
 use wasm_bindgen::JsCast;
 
+#[derive(Properties, PartialEq)]
+pub struct SidebarProps {
+    pub value: String,
+    pub on_input: Callback<String>
+}
+
 #[function_component(Sidebar)]
-pub fn sidebar() -> Html {
-    let input_value = use_state(String::new);
-    
+pub fn sidebar(props: &SidebarProps) -> Html {
     let oninput: Callback<InputEvent> = {
-        let input_value = input_value.clone();
+        let input_value = props.on_input.clone();
         Callback::from(move |e: InputEvent| {
             let target = e.target().unwrap();
             let value = target.dyn_into::<web_sys::HtmlInputElement>()
                 .unwrap()
                 .value();
-            input_value.set(value);
+            input_value.emit(value);
         })
     };
     
@@ -31,15 +35,15 @@ pub fn sidebar() -> Html {
                         class="sidebar__input"
                         type="text" 
                         placeholder="{(a, b), (b, c), (c, c)}"
-                        value={(*input_value).clone()}
+                        value={props.value.clone()}
                         oninput={oninput}
                     />
                 </div>
                 
-                if !input_value.is_empty() {
+                if !props.value.is_empty() {
                     <div class="sidebar__preview">
                         <span class="sidebar__preview-label">{"Preview"}</span>
-                        <code class="sidebar__preview-code">{(*input_value).clone()}</code>
+                        <code class="sidebar__preview-code">{props.value.clone()}</code>
                     </div>
                 }
             </div>
