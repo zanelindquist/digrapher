@@ -1,7 +1,7 @@
 use super::point::Point;
 use serde::{Serialize, Deserialize};
 
-#[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Edge {
     pub start: Point,
     pub end: Point,
@@ -17,6 +17,7 @@ impl Edge {
         Point {
             x: (self.start.x + self.end.x) / 2.0,
             y: (self.start.y + self.end.y) / 2.0,
+            label: String::from("")
         }
     }
     

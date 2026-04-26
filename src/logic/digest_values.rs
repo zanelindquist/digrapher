@@ -1,26 +1,8 @@
 use gloo_console::log;
 use std::collections::HashSet;
-use yew::Properties;
 
-#[derive(Properties, PartialEq)]
-pub struct RelationProperties {
-    pub antisymmetric: bool,
-    pub symmetric: bool,
-    pub reflexive: bool,
-    pub transitive: bool
-}
+use super::types::{Relation, ParseError, RelationProperties};
 
-#[derive(Properties, PartialEq)]
-pub struct Relation {
-    pub values: Vec<(String, String)>,
-    pub points: HashSet<String>,
-    pub properties: RelationProperties
-}
-
-#[derive(Debug, PartialEq)]
-pub struct ParseError {
-    pub message: String,
-}
 
 pub fn digest_values(values: String) -> Result<Relation, ParseError> {
     if values.is_empty() {
