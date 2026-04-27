@@ -17,8 +17,8 @@ impl CanvasPositioning {
         Self {
             offset_x: 0,
             offset_y: 0,
-            width: 1000,
-            height: 1000,
+            width: 300,
+            height: 300,
             zoom: 1.0,
         }
     }
@@ -42,7 +42,7 @@ pub fn canvas(props: &CanvasProps) -> Html {
             <svg
                 class="canvas__svg"
                 width={props.position.width.to_string()}
-                height={props.position.width.to_string()}
+                height={props.position.height.to_string()}
             >
                 { for points.iter().map(|point| html! {
                     <circle

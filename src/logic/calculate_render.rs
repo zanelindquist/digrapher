@@ -20,6 +20,7 @@ pub fn position_points(points: RawCharPoints, position: CanvasPositioning) -> Po
         let theta = (i as f32) * (2.0 * PI / n as f32);
         let x = center_x + r * theta.cos();
         let y = center_y + r * theta.sin();
+        web_sys::console::log_1(&format!("Pos {}: {}x{}", i, x, y).into());
         let new_point = Point::new(x, y, p.clone());
         point_vec.push(new_point);
     }
