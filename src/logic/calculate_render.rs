@@ -13,13 +13,10 @@ pub fn position_points(points: RawCharPoints, position: CanvasPositioning) -> Po
     let center_x = (position.width as f32) / 2.0 + position.offset_x as f32;
     let center_y = (position.height as f32) / 2.0 + position.offset_y as f32;
 
-    web_sys::console::log_1(&format!("Center: {}x{}", center_x, center_y).into());
-
     for (i, p) in points.iter().enumerate() {
         let theta = (i as f32) * (2.0 * PI / n as f32);
         let x = center_x + r * theta.cos();
         let y = center_y + r * theta.sin();
-        web_sys::console::log_1(&format!("Pos {}: {}x{}", i, x, y).into());
         let new_point = Point::new(x, y, theta, p.clone(), PointRenderSymbol::CIRCLE);
         point_vec.push(new_point);
     }

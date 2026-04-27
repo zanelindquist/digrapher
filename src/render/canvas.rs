@@ -38,6 +38,8 @@ pub fn canvas(props: &CanvasProps) -> Html {
     let edges: EdgeVector = position_edges(props.relation.values.clone(), points.clone());
     let styles = props.styles;
 
+    web_sys::console::log_1(&format!("LEN {}", props.relation.points.clone().len()).into());
+
     html!{
         <div class="canvas" >
             <svg
@@ -82,8 +84,8 @@ pub fn canvas(props: &CanvasProps) -> Html {
                             stroke-width={styles.dot.stroke_width.to_string()}
                         />
                         <text
-                            x={(point.x + point.bearing.cos() * styles.font.size).to_string()}
-                            y={(point.y + point.bearing.sin() * styles.font.size).to_string()}
+                            x={(point.x + point.bearing.cos() * (styles.font.size + 10.0)).to_string()}
+                            y={(point.y + point.bearing.sin() * (styles.font.size + 10.0)).to_string()}
                             font-family={styles.font.family}
                             font-size={styles.font.size.to_string()}
                             fill={styles.font.fill}

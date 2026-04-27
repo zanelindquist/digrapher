@@ -34,6 +34,7 @@ pub fn app() -> Html {
         let input_value = input_value.clone();
         Callback::from(move |v: String| {
             input_value.set(v);
+            web_sys::console::log_1(&format!("UPDATE").into());
         })
     };
 
