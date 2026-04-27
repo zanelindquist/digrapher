@@ -38,7 +38,7 @@ pub struct Relation {
 
 // ERRORS
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ParseError {
     pub message: String,
 }
