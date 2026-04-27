@@ -1,23 +1,28 @@
-use super::point::Point;
 use serde::{Serialize, Deserialize};
+
+use super::point::Point;
+use crate::logic::types::{PointRenderSymbol, RelationProperty};
+
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Edge {
     pub start: Point,
     pub end: Point,
-    pub directed: bool,
+    pub relation_type: RelationProperty,
 }
 
 impl Edge {
-    pub fn new(start: Point, end: Point, directed: bool) -> Self {
-        Self { start, end, directed }
+    pub fn new(start: Point, end: Point, relation_type: RelationProperty) -> Self {
+        Self { start, end, relation_type }
     }
     
     pub fn midpoint(self) -> Point {
         Point {
             x: (self.start.x + self.end.x) / 2.0,
             y: (self.start.y + self.end.y) / 2.0,
-            label: String::from("")
+            bearing: 0.0,
+            label: String::from(""),
+            symbol: PointRenderSymbol::TRIANGLE
         }
     }
     

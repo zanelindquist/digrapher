@@ -2,12 +2,22 @@ use serde::{Deserialize, Serialize};
 use yew::Properties;
 use std::collections::HashSet;
 
-use crate::render::objects::point::Point;
+use crate::render::objects::{edge::Edge, point::Point};
 
 // TYPES
 
 pub type RawCharPoints = HashSet<String>;
+pub type RawEdgePairs = HashSet<(String, String)>;
 pub type PointVector = Vec<Point>;
+pub type EdgeVector = Vec<Edge>;
+
+// ENUMS
+
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum RelationProperty {ANTISYMMETRIC, SYMMETRIC, REFLEXIVE, TRANSITIVE}
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
+
 // RELATIONS
 
 #[derive(Properties, Clone, Debug, Deserialize, Serialize, PartialEq)]
@@ -30,7 +40,7 @@ impl Default for RelationProperties {
 
 #[derive(Properties, PartialEq)]
 pub struct Relation {
-    pub values: Vec<(String, String)>,
+    pub values: RawEdgePairs,
     pub points: RawCharPoints,
     pub properties: RelationProperties
 }

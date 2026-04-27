@@ -1,13 +1,15 @@
 use gloo_console::log;
 use std::collections::HashSet;
 
+use crate::logic::types::RawEdgePairs;
+
 use super::types::{Relation, ParseError, RelationProperties};
 
 
 pub fn digest_values(values: String) -> Result<Relation, ParseError> {
     if values.is_empty() {
         return Ok(Relation {
-            values: Vec::new(),
+            values: HashSet::new(),
             points: HashSet::new(),
             properties: RelationProperties {
                 antisymmetric: true,
@@ -31,7 +33,7 @@ pub fn digest_values(values: String) -> Result<Relation, ParseError> {
 
     let mut points: HashSet<String> = Default::default();
     
-    let pairs: Vec<(String, String)> = inner
+    let pairs: RawEdgePairs = inner
         .split("),")
         .enumerate()
         .map(|(i, pair)| {
@@ -69,7 +71,7 @@ pub fn digest_values(values: String) -> Result<Relation, ParseError> {
 
             Ok((first, second))
         })
-        .collect::<Result<Vec<_>, _>>()?;
+        .collect::<Result<RawEdgePairs, _>>()?;
 
     Ok(Relation {
         values: pairs,

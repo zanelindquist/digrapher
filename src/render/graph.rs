@@ -53,7 +53,7 @@ pub fn graph(props: &GraphProps) -> Html{
                 ref={node_ref}
                 class="graph"
             >
-                <p>{format!("{:?}", relation.values)}</p>
+                // <p>{format!("{:?}", relation.values)}</p>
                 <Canvas position={(*canvas_position).clone()} relation={relation}/>
             </div>
         },
