@@ -126,6 +126,7 @@ impl Edge {
                         )}
                         fill={"transparent"}
                         stroke={styles.edge.stroke.to_string()}
+                        stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
                     {self.midpoint().draw(styles)}

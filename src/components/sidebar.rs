@@ -12,11 +12,8 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     let oninput: Callback<InputEvent> = {
         let input_value = props.on_input.clone();
         Callback::from(move |e: InputEvent| {
-            let target = e.target().unwrap();
-            let value = target.dyn_into::<web_sys::HtmlInputElement>()
-                .unwrap()
-                .value();
-            input_value.emit(value);
+            let input: web_sys::HtmlTextAreaElement = e.target_unchecked_into();
+            input_value.emit(input.value());
         })
     };
     
@@ -30,10 +27,10 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             <div class="sidebar__content">
                 <div class="sidebar__input-group">
                     <label class="sidebar__label" for="graph-input">{"Enter graph"}</label>
-                    <input 
+                    <textarea 
                         id="graph-input"
                         class="sidebar__input"
-                        type="text" 
+                        rows="5"
                         placeholder="{(a, b), (b, c), (c, c)}"
                         value={props.value.clone()}
                         oninput={oninput}
@@ -46,10 +43,6 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         <code class="sidebar__preview-code">{props.value.clone()}</code>
                     </div>
                 }
-            </div>
-            
-            <div class="sidebar__footer">
-                <button class="sidebar__button">{"Generate"}</button>
             </div>
         </aside>
     }
