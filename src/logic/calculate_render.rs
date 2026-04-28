@@ -34,7 +34,7 @@ pub fn position_edges(values: RawEdgePairs, points: PointVector) -> EdgeVector {
         let relation_type = if pair.0 == pair.1 {
             RelationProperty::REFLEXIVE
         } else if values.iter().find(|v| v.0 == pair.1 && v.1 == pair.0).is_some() {
-            RelationProperty::REFLEXIVE
+            RelationProperty::SYMMETRIC
         } else {
             RelationProperty::ANTISYMMETRIC
         };

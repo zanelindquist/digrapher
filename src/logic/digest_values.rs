@@ -47,21 +47,21 @@ pub fn digest_values(values: String) -> Result<Relation, ParseError> {
             let first = match parts.next() {
                 Some(p) if !p.trim().is_empty() => p.trim().to_string(),
                 _ => return Err(ParseError {
-                    message: format!("Pair {}: missing first element", i + 1)
+                    message: format!("Pair {} is missing first element", i + 1)
                 }),
             };
             
             let second = match parts.next() {
                 Some(p) if !p.trim().is_empty() => p.trim().to_string(),
                 _ => return Err(ParseError {
-                    message: format!("Pair {}: missing second element", i + 1)
+                    message: format!("Pair {} is missing second element", i + 1)
                 }),
             };
             
             // Check for extra elements
             if parts.next().is_some() {
                 return Err(ParseError {
-                    message: format!("Pair {}: too many elements (expected 2)", i + 1)
+                    message: format!("Pair {} has too many elements (expected 2)", i + 1)
                 });
             }
 

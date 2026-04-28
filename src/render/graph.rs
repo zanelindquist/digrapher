@@ -59,7 +59,7 @@ pub fn graph(props: &GraphProps) -> Html{
         },
         Err(e) => html! {
             <div class="graph">
-                <p>{ format!("Parsing error:\n{}", e.message)}</p>
+                <p class="graph__error">{ format!("Parsing error: {}", e.message)}</p>
             </div>
         }
     }

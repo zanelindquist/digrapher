@@ -130,6 +130,10 @@
     justify-content: space-between;
     height: 100vh;
 }
+.graph__error {
+    margin: 20px
+}
+
 .canvas {
     flex-grow: 1;
 }
