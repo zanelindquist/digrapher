@@ -1,7 +1,8 @@
+use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 
 use super::point::Point;
-use crate::logic::types::{PointRenderSymbol, RelationProperty};
+use crate::{logic::types::{PointRenderSymbol, RelationProperty}, render::styles::RenderStyles};
 
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -20,7 +21,7 @@ impl Edge {
         Point {
             x: (self.start.x + self.end.x) / 2.0,
             y: (self.start.y + self.end.y) / 2.0,
-            bearing: 0.0,
+            bearing: self.angle(),
             label: String::from(""),
             symbol: PointRenderSymbol::TRIANGLE
         }
@@ -33,5 +34,31 @@ impl Edge {
     // Calculate angle for arrow head
     pub fn angle(self) -> f32 {
         (self.end.y - self.start.y).atan2(self.end.x - self.start.x)
+    }
+
+    pub fn draw(self, styles: RenderStyles) -> Html {
+        match self.relation_type {
+            RelationProperty::REFLEXIVE => html!{
+
+            },
+            RelationProperty::SYMMETRIC => html! {
+
+            },
+            // Antisymmetrics
+            _=> html! {
+                <>
+                    <line
+                        x1={self.start.x.to_string()}
+                        y1={self.start.y.to_string()}
+                        x2={self.end.x.to_string()}
+                        y2={self.end.y.to_string()}
+                        stroke={styles.edge.stroke.to_string()}
+                        stroke-width={styles.edge.stroke_width.to_string()}
+                    />
+                    // Render the midpoint
+                    {self.midpoint().draw(styles)}
+                </>
+            }
+        }
     }
 }

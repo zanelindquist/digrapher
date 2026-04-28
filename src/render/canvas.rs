@@ -47,53 +47,8 @@ pub fn canvas(props: &CanvasProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                { for edges.iter().map(|edge| {
-                    match edge.relation_type {
-                        RelationProperty::REFLEXIVE => html!{
-
-                        },
-                        RelationProperty::SYMMETRIC => html! {
-
-                        },
-                        // Antisymmetrics
-                        _=> html! {
-                            <>
-                                <line
-                                    x1={edge.start.x.to_string()}
-                                    y1={edge.start.y.to_string()}
-                                    x2={edge.end.x.to_string()}
-                                    y2={edge.end.y.to_string()}
-                                    stroke={styles.edge.stroke.to_string()}
-                                    stroke-width={styles.edge.stroke_width.to_string()}
-                                />
-                                // Render the midpoint
-                                
-                            </>
-                        }
-                    }
-                })}
-
-                { for points.iter().map(|point| html! {
-                    <>
-                        <circle
-                            cx={point.x.to_string()}
-                            cy={point.y.to_string()}
-                            r={styles.dot.radius.to_string()}
-                            fill={styles.dot.fill}
-                            stroke={styles.dot.stroke}
-                            stroke-width={styles.dot.stroke_width.to_string()}
-                        />
-                        <text
-                            x={(point.x + point.bearing.cos() * (styles.font.size + 10.0)).to_string()}
-                            y={(point.y + point.bearing.sin() * (styles.font.size + 10.0)).to_string()}
-                            font-family={styles.font.family}
-                            font-size={styles.font.size.to_string()}
-                            fill={styles.font.fill}
-                        >
-                            { point.label.to_string() }
-                        </text>
-                    </>
-                })}
+                { for edges.iter().map(|edge| { edge.clone().draw(styles) })}
+                { for points.iter().map(|point| { point.clone().draw(styles) })}
             </svg>
         </div>
     }
