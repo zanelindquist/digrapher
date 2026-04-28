@@ -1,3 +1,5 @@
+use std::f32::consts::PI;
+
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
@@ -22,26 +24,60 @@ impl Point {
     }
 
     pub fn draw(self, styles: RenderStyles) -> Html {
-        html! {
-        <>
-            <circle
-                cx={self.x.to_string()}
-                cy={self.y.to_string()}
-                r={styles.dot.radius.to_string()}
-                fill={styles.dot.fill}
-                stroke={styles.dot.stroke}
-                stroke-width={styles.dot.stroke_width.to_string()}
-            />
-            <text
-                x={(self.x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
-                y={(self.y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
-                font-family={styles.font.family}
-                font-size={styles.font.size.to_string()}
-                fill={styles.font.fill}
-            >
-                { self.label.to_string() }
-            </text>
-        </>
+        let triangle_points: Vec<(f32, f32)> = vec![
+            (self.x + self.bearing.cos() * styles.dot.radius, self.y + self.bearing.sin() * styles.dot.radius),
+            (self.x + (self.bearing + 2.0/3.0 * PI).cos() * styles.dot.radius, self.y + (self.bearing + 2.0/3.0 * PI).sin() * styles.dot.radius),
+            (self.x + (self.bearing + 4.0/3.0 * PI).cos() * styles.dot.radius, self.y + (self.bearing + 4.0/3.0 * PI).sin() * styles.dot.radius),
+        ];
+        
+        match self.symbol {
+            PointRenderSymbol::TRIANGLE => html! {
+                <>
+                    <polygon
+                        points={
+                            triangle_points
+                            .iter()
+                            .map(|pair| format!("{}, {}", pair.0, pair.1).to_string())
+                            .collect::<Vec<String>>()
+                            .join(" ")
+                        }
+                        fill={styles.dot.fill}
+                        stroke={styles.dot.stroke}
+                        // stroke-width={styles.dot.stroke_width.to_string()}
+                    />
+                    <text
+                        x={(self.x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
+                        y={(self.y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
+                        font-family={styles.font.family}
+                        font-size={styles.font.size.to_string()}
+                        fill={styles.font.fill}
+                    >
+                        { self.label.to_string() }
+                    </text>
+                </>
+            },
+            // Default circle rendering
+            _ => html! {
+                <>
+                    <circle
+                        cx={self.x.to_string()}
+                        cy={self.y.to_string()}
+                        r={styles.dot.radius.to_string()}
+                        fill={styles.dot.fill}
+                        stroke={styles.dot.stroke}
+                        stroke-width={styles.dot.stroke_width.to_string()}
+                    />
+                    <text
+                        x={(self.x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
+                        y={(self.y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
+                        font-family={styles.font.family}
+                        font-size={styles.font.size.to_string()}
+                        fill={styles.font.fill}
+                    >
+                        { self.label.to_string() }
+                    </text>
+                </>
+            }
         }
     }
 }
