@@ -1,12 +1,12 @@
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::logic::digest_values::{digest_values};
+use crate::logic::types::DigestedValuesResult;
 use crate::render::canvas::{Canvas, CanvasPositioning};
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
-    pub input: String,
+    pub digested_values: UseStateHandle<DigestedValuesResult>
 }
 
 #[function_component(Graph)]
@@ -16,7 +16,6 @@ pub fn graph(props: &GraphProps) -> Html{
 
     // Define our view settings
     let canvas_position = use_state(|| CanvasPositioning::new());
-    let digested_values = digest_values(props.input.clone());
 
     use_effect({
         let node_ref = node_ref.clone();
@@ -44,7 +43,7 @@ pub fn graph(props: &GraphProps) -> Html{
     });
 
 
-    match digested_values {
+    match &*props.digested_values {
         Ok(relation) => html! {
             <div
                 ref={node_ref}
@@ -53,7 +52,7 @@ pub fn graph(props: &GraphProps) -> Html{
                 // <p>{format!("{:?}", relation.values)}</p>
                 <Canvas
                     position={(*canvas_position).clone()}
-                    relation={relation}
+                    relation={relation.clone()}
                 />
             </div>
         },

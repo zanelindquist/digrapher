@@ -121,6 +121,9 @@
 .sidebar__button:active {
     transform: scale(0.98);
 }
+.sidebar__analysis {
+    border-top: 1px solid var(--outlineVariant);
+}
 
 /* Graph */
 .graph {

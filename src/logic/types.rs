@@ -37,7 +37,7 @@ impl Default for RelationProperties {
     }
 }
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Clone)]
 pub struct Relation {
     pub values: RawEdgePairs,
     pub points: RawCharPoints,
@@ -46,8 +46,17 @@ pub struct Relation {
 
 
 // ERRORS
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseError {
     pub message: String,
 }
+impl ParseError {
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+}
+
+pub type DigestedValuesResult = Result<Relation, ParseError>;
+

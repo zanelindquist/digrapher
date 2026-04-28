@@ -36,13 +36,14 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         oninput={oninput}
                     />
                 </div>
-                
-                if !props.value.is_empty() {
-                    <div class="sidebar__preview">
-                        <span class="sidebar__preview-label">{"Preview"}</span>
-                        <code class="sidebar__preview-code">{props.value.clone()}</code>
-                    </div>
-                }
+                <div class="sidebar__preview">
+                    <span class="sidebar__preview-label">{"Preview"}</span>
+                    <code class="sidebar__preview-code">{ if props.value.is_empty() {String::from("No relations yet")} else {props.value.clone()} }</code>
+                </div>
+                <div class="sidebar__analysis">
+                    <label class="sidebar__label" for="graph-input">{"Relation properties"}</label>
+
+                </div>
             </div>
         </aside>
     }

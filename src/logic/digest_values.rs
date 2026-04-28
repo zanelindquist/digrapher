@@ -1,12 +1,12 @@
 use gloo_console::log;
 use std::collections::HashSet;
 
-use crate::logic::types::RawEdgePairs;
+use crate::logic::types::{DigestedValuesResult, RawEdgePairs};
 
 use super::types::{Relation, ParseError, RelationProperties};
 
 
-pub fn digest_values(values: String) -> Result<Relation, ParseError> {
+pub fn digest_values(values: String) -> DigestedValuesResult {
     if values.is_empty() {
         return Ok(Relation {
             values: HashSet::new(),

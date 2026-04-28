@@ -1,6 +1,8 @@
 use yew::prelude::*;
 use crate::components::sidebar::Sidebar;
-use crate::render::graph::{Graph, GraphProps};
+use crate::logic::digest_values::{digest_values};
+use crate::logic::types::{DigestedValuesResult, ParseError};
+use crate::render::graph::{Graph};
 
 // Theme embedded at compile time
 const THEME_JSON: &str = include_str!("assets/themes/organic.json");
@@ -29,19 +31,32 @@ fn generate_css_vars() -> String {
 pub fn app() -> Html {
     let theme_css = generate_css_vars();
     let input_value = use_state(String::new);
-    
+
+    let digested_values: UseStateHandle<DigestedValuesResult> =
+        use_state(|| Err(ParseError::new("No input")));
+
     let on_input = {
         let input_value = input_value.clone();
+        let digested_values = digested_values.clone();
+
         Callback::from(move |v: String| {
-            input_value.set(v);
+            input_value.set(v.clone());
+            digested_values.set(digest_values(v));
         })
     };
 
     html! {
         <div class="app">
             <style>{ theme_css }</style>
-            <Sidebar value={(*input_value).clone()} on_input={on_input.clone()}/>
-            <Graph input={(*input_value).clone()}/>
+
+            <Sidebar
+                value={(*input_value).clone()}
+                on_input={on_input}
+            />
+
+            <Graph
+                digested_values={digested_values.clone()}
+            />
         </div>
     }
 }
