@@ -1,0 +1,24 @@
+use yew::prelude::*;
+
+use crate::logic::types::Relation;
+
+#[derive(Properties, PartialEq)]
+pub struct AnalyticsProps {
+    pub relation: Relation
+}
+
+#[function_component(Analytics)]
+pub fn analytics(props: &AnalyticsProps) -> Html {
+    let properties = props.relation.properties.clone();
+
+    html! {
+        <div class="sidebar__preview">
+            <code class="sidebar__preview-code">
+                {format!("Antisymmetric: {}", properties.antisymmetric.to_string())} <br/>
+                {format!("Symmetric: {}", properties.symmetric.to_string())} <br/>
+                {format!("Relfexive: {}", properties.reflexive.to_string())} <br/>
+                {format!("Transitive: {}", properties.transitive.to_string())} <br/>
+            </code>
+        </div>
+    }
+}

@@ -1,10 +1,13 @@
 use yew::prelude::*;
 use wasm_bindgen::JsCast;
 
+use crate::{components::analytics::Analytics, logic::types::{DigestedValuesResult, Relation}};
+
 #[derive(Properties, PartialEq)]
 pub struct SidebarProps {
     pub value: String,
-    pub on_input: Callback<String>
+    pub on_input: Callback<String>,
+    pub digested_values: UseStateHandle<DigestedValuesResult>
 }
 
 #[function_component(Sidebar)]
@@ -42,7 +45,17 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 </div>
                 <div class="sidebar__analysis">
                     <label class="sidebar__label" for="graph-input">{"Relation properties"}</label>
+                    {
+                        match &*props.digested_values {
+                            Ok(relation) => html!{
+                                <Analytics relation={relation.clone()}/>
+                            },
+                            Err(e)  => html! {
+                                <p class="sidebar__subtitle">{"Waiting for valid relation"}</p>
+                            }
+                        }
 
+                    }
                 </div>
             </div>
         </aside>

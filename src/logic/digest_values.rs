@@ -1,9 +1,8 @@
+use std::{collections::HashSet, ops::Deref};
+
 use gloo_console::log;
-use std::collections::HashSet;
 
-use crate::logic::types::{DigestedValuesResult, RawEdgePairs};
-
-use super::types::{Relation, ParseError, RelationProperties};
+use crate::logic::types::{DigestedValuesResult, ParseError, RawEdgePairs, Relation, RelationProperties};
 
 
 pub fn digest_values(values: String) -> DigestedValuesResult {
@@ -14,7 +13,7 @@ pub fn digest_values(values: String) -> DigestedValuesResult {
             properties: RelationProperties {
                 antisymmetric: true,
                 symmetric: true,
-                reflexive: true,
+                reflexive: false,
                 transitive: true
             }
         });
@@ -73,13 +72,49 @@ pub fn digest_values(values: String) -> DigestedValuesResult {
         })
         .collect::<Result<RawEdgePairs, _>>()?;
 
+    let mut symmetric_set: HashSet<(String, String)> = HashSet::new();
+    let mut reflexive_num = 0;
+    let mut transitive = true;
+
+    for (a, b) in pairs.iter() {
+        // For symmetric, we just need to reduce a and b to an unordered pairing
+        
+        if a.deref().eq(b) {
+            // Increment the reflexive number
+            reflexive_num += 1;
+        } else {
+            let mut pair = (a.clone(), b.clone());
+
+            // Normalize order
+            if pair.0 > pair.1 {
+                std::mem::swap(&mut pair.0, &mut pair.1);
+            }
+
+            // Only add it to the symmetric set if the lengths are different
+            symmetric_set.insert(pair);
+        }
+    }
+
+    // In a symmetric relationship, when you unorder the pairs, the number of non-reflexive pairs should collapse twofold
+    // = pairs.len - symmetric_set.len - reflexive_num = 0
+    let symmetric = pairs.len() - reflexive_num == 2 * symmetric_set.len();
+    // Every point must be reflexive
+    let reflexive = reflexive_num == points.len();
+    // Antisymmetric if its not symmetric, or it is vacuously symmetric (the symmetric set is empty)
+    let antisymmetric = symmetric_set.len() == 0;
+
+    // {(a, b), (b, c), (a, c), (c, a)}
+    log!(format!("Plen SYMlen REFlen = {} {} {} {}", pairs.len(), symmetric_set.len(), reflexive_num, pairs.len() - symmetric_set.len() - reflexive_num));
+    log!(format!("PAIRS {:?}", pairs));
+    log!(format!("SYM {:?}", symmetric_set));
+
     Ok(Relation {
         values: pairs,
         points: points,
         properties: RelationProperties {
-            antisymmetric: true,
-            symmetric: true,
-            reflexive: true,
+            antisymmetric: antisymmetric,
+            symmetric: symmetric,
+            reflexive: reflexive,
             transitive: true
         }
     })

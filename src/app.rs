@@ -32,8 +32,7 @@ pub fn app() -> Html {
     let theme_css = generate_css_vars();
     let input_value = use_state(String::new);
 
-    let digested_values: UseStateHandle<DigestedValuesResult> =
-        use_state(|| Err(ParseError::new("No input")));
+    let digested_values: UseStateHandle<DigestedValuesResult> = use_state(|| Err(ParseError::new("No input")));
 
     let on_input = {
         let input_value = input_value.clone();
@@ -52,6 +51,7 @@ pub fn app() -> Html {
             <Sidebar
                 value={(*input_value).clone()}
                 on_input={on_input}
+                digested_values={digested_values.clone()}
             />
 
             <Graph
