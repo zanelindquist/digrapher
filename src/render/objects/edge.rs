@@ -1,4 +1,4 @@
-use std::f32::consts::PI;
+use std::f32::consts::{PI, SQRT_2};
 
 use js_sys::Math::atan2;
 use yew::prelude::*;
@@ -13,23 +13,35 @@ pub struct Edge {
     pub start: Point,
     pub end: Point,
     pub relation_type: RelationProperty,
-    pub bezier_arc_px: f32
+    pub bezier_arc_px: f32,
+    pub loop_radius: f32
 }
 
 impl Edge {
     pub fn new(start: Point, end: Point, relation_type: RelationProperty) -> Self {
-        Self { start, end, relation_type, bezier_arc_px: 40.0 }
+        Self { start, end, relation_type, bezier_arc_px: 40.0, loop_radius: 40.0 }
     }
     
-    pub fn midpoint(self) -> Point {
-        let x = (self.start.x + self.end.x) / 2.0 + (self.clone().angle() + PI / 2.0).cos() * self.bezier_arc_px;
-        let y = (self.start.y + self.end.y) / 2.0 + (self.clone().angle() + PI / 2.0).sin() * self.bezier_arc_px;
+    pub fn midpoint(&self) -> Point {
+        // Midpoint of for a symetric line
+        let sym_x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * self.bezier_arc_px;
+        let sym_y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * self.bezier_arc_px;
+
+        // Midpoint for a reflexive line
+        let ref_x = self.start.x + (self.start.bearing).cos() * (self.loop_radius * (1.0 + SQRT_2));
+        let ref_y = self.start.y + (self.start.bearing).sin() * (self.loop_radius * (1.0  + SQRT_2));
         
         match self.relation_type {
             RelationProperty::SYMMETRIC => Point {
                 // Point needs to be displaced 90 degrees orthagonal to the bearing
-                x, y,
+                x: sym_x, y: sym_y,
                 bearing: self.angle(),
+                label: String::from(""),
+                symbol: PointRenderSymbol::TRIANGLE
+            },
+            RelationProperty::REFLEXIVE => Point {
+                x: ref_x, y: ref_y,
+                bearing: self.start.bearing + PI / 2.0,
                 label: String::from(""),
                 symbol: PointRenderSymbol::TRIANGLE
             },
@@ -44,10 +56,10 @@ impl Edge {
         }
     }
 
-    pub fn bezier_control_point(self) -> Point {
+    pub fn bezier_control_point(&self) -> Point {
         let pixel_displacement = self.bezier_arc_px * 2.0;
-        let x = (self.start.x + self.end.x) / 2.0 + (self.clone().angle() + PI / 2.0).cos() * pixel_displacement;
-        let y = (self.start.y + self.end.y) / 2.0 + (self.clone().angle() + PI / 2.0).sin() * pixel_displacement;
+        let x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * pixel_displacement;
+        let y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * pixel_displacement;
         
         Point {
             x, y,
@@ -62,14 +74,40 @@ impl Edge {
     }
     
     // Calculate angle for arrow head
-    pub fn angle(self) -> f32 {
+    pub fn angle(&self) -> f32 {
         (self.end.y - self.start.y).atan2(self.end.x - self.start.x)
     }
 
     pub fn draw(self, styles: RenderStyles) -> Html {
         match self.relation_type {
             RelationProperty::REFLEXIVE => html!{
-
+                <>
+                    <path
+                        d={format!(
+                            "M {}
+                            L {}
+                            A {}
+                            Z",
+                            // Move to
+                            format!("{} {}", self.end.x, self.end.y),
+                            format!("{} {}",
+                                self.start.x + (self.start.bearing - PI / 4.0).cos() * self.loop_radius,
+                                self.start.y + (self.start.bearing - PI / 4.0).sin() * self.loop_radius,
+                            ),
+                            format!("{} {}, 0, 1, 1, {} {}",
+                                self.loop_radius,
+                                self.loop_radius, 
+                                // Start arc point
+                                self.start.x + (self.start.bearing + PI / 4.0).cos() * self.loop_radius,
+                                self.start.y + (self.start.bearing + PI / 4.0).sin() * self.loop_radius,
+                            )
+                        )}
+                        fill="transparent"
+                        stroke={styles.edge.stroke.to_string()}
+                        stroke-width={styles.edge.stroke_width.to_string()}
+                    />
+                    {self.midpoint().draw(styles)}
+                </>
             },
             RelationProperty::SYMMETRIC => html! {
 
@@ -80,15 +118,14 @@ impl Edge {
                             format!("{} {}", self.end.x, self.end.y),
                             // Quadradic belzier curve
                             format!("{} {}",
-                                self.clone().bezier_control_point().x.to_string(),
-                                self.clone().bezier_control_point().y.to_string()
+                                self.bezier_control_point().x.to_string(),
+                                self.bezier_control_point().y.to_string()
                             ),
                             format!("{} {}", self.start.x, self.start.y),
                             
                         )}
                         fill={"transparent"}
                         stroke={styles.edge.stroke.to_string()}
-                        stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
                     {self.midpoint().draw(styles)}
