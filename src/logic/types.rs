@@ -17,7 +17,8 @@ pub type EdgeVector = Vec<Edge>;
 pub enum RelationProperty {ANTISYMMETRIC, SYMMETRIC, REFLEXIVE, TRANSITIVE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
-
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum GraphModes{DIGRAPH, MATRIX}
 // RELATIONS
 
 #[derive(Properties, Clone, Debug, Deserialize, Serialize, PartialEq)]

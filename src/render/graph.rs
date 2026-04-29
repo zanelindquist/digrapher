@@ -3,10 +3,12 @@ use web_sys::{HtmlElement};
 
 use crate::logic::types::DigestedValuesResult;
 use crate::render::canvas::{Canvas, CanvasPositioning};
+use crate::components::toggle::{Toggle, ToggleOption};
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
-    pub digested_values: UseStateHandle<DigestedValuesResult>
+    pub digested_values: UseStateHandle<DigestedValuesResult>,
+    pub mode_change_callback: Callback<i32>
 }
 
 #[function_component(Graph)]
@@ -26,7 +28,6 @@ pub fn graph(props: &GraphProps) -> Html{
             if let Some(element) = node_ref.cast::<HtmlElement>() {
                 let width = element.offset_width();
                 let height = element.offset_height();
-                web_sys::console::log_1(&format!("Size: {}x{}", width, height).into());
 
                 let mut new_pos = (*canvas_pos).clone();
 
@@ -42,6 +43,14 @@ pub fn graph(props: &GraphProps) -> Html{
         }
     });
 
+    let toggle = html! {
+        <Toggle
+            callback={props.mode_change_callback.clone()}
+        >
+            <ToggleOption icon="digraph"/>
+            <ToggleOption icon="matrix"/>
+        </Toggle>
+    };
 
     match &*props.digested_values {
         Ok(relation) => html! {
@@ -50,6 +59,7 @@ pub fn graph(props: &GraphProps) -> Html{
                 class="graph"
             >
                 // <p>{format!("{:?}", relation.values)}</p>
+                {toggle}
                 <Canvas
                     position={(*canvas_position).clone()}
                     relation={relation.clone()}
@@ -58,6 +68,7 @@ pub fn graph(props: &GraphProps) -> Html{
         },
         Err(e) => html! {
             <div class="graph">
+                {toggle}
                 <p class="graph__error">{ format!("Parsing error: {}", e.message)}</p>
             </div>
         }
