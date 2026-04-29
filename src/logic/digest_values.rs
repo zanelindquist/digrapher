@@ -1,4 +1,4 @@
-use std::{collections::HashSet, ops::Deref};
+use std::{collections::{HashMap, HashSet}, ops::Deref};
 
 use gloo_console::log;
 
@@ -74,26 +74,50 @@ pub fn digest_values(values: String) -> DigestedValuesResult {
 
     let mut symmetric_set: HashSet<(String, String)> = HashSet::new();
     let mut reflexive_num = 0;
-    let mut transitive = true;
+    let mut trans_table: HashMap<String, HashSet<String>> = HashMap::new();
 
     for (a, b) in pairs.iter() {
-        // For symmetric, we just need to reduce a and b to an unordered pairing
-        
+        // Create a table
+        trans_table
+            // Check if it has an entry
+            .entry(a.clone())
+            // If no entry, insert a new row
+            .or_insert_with(HashSet::new)
+            // Finally, insert the new value in both cases
+            .insert(b.clone());
+
         if a.deref().eq(b) {
             // Increment the reflexive number
             reflexive_num += 1;
         } else {
+            // For symmetric, we just need to reduce a and b to an unordered pairing here
             let mut pair = (a.clone(), b.clone());
-
             // Normalize order
             if pair.0 > pair.1 {
                 std::mem::swap(&mut pair.0, &mut pair.1);
             }
-
             // Only add it to the symmetric set if the lengths are different
             symmetric_set.insert(pair);
         }
     }
+
+    // Transitive = (a, b) ^ (b, c) -> (a, c)
+    let transitive = || {
+        for (a, row) in &trans_table {
+            for b in row {
+                // For each point B parents, add collapsed relations to our set
+                if let Some(b_row) = trans_table.get(b) {
+                    for c in b_row{
+                        // Filter out (a, a) pairings, because those don't affect transitivity
+                        if a != c && !row.contains(c) {
+                            return false;
+                        }
+                    }
+                }                
+            }
+        }
+        return true;
+    };
 
     // In a symmetric relationship, when you unorder the pairs, the number of non-reflexive pairs should collapse twofold
     // = pairs.len - symmetric_set.len - reflexive_num = 0
@@ -101,12 +125,7 @@ pub fn digest_values(values: String) -> DigestedValuesResult {
     // Every point must be reflexive
     let reflexive = reflexive_num == points.len();
     // Antisymmetric if its not symmetric, or it is vacuously symmetric (the symmetric set is empty)
-    let antisymmetric = symmetric_set.len() == 0;
-
-    // {(a, b), (b, c), (a, c), (c, a)}
-    log!(format!("Plen SYMlen REFlen = {} {} {} {}", pairs.len(), symmetric_set.len(), reflexive_num, pairs.len() - symmetric_set.len() - reflexive_num));
-    log!(format!("PAIRS {:?}", pairs));
-    log!(format!("SYM {:?}", symmetric_set));
+    let antisymmetric = pairs.len() - reflexive_num == symmetric_set.len();
 
     Ok(Relation {
         values: pairs,
@@ -115,7 +134,7 @@ pub fn digest_values(values: String) -> DigestedValuesResult {
             antisymmetric: antisymmetric,
             symmetric: symmetric,
             reflexive: reflexive,
-            transitive: true
+            transitive: transitive()
         }
     })
 }
