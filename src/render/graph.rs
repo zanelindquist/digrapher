@@ -1,9 +1,11 @@
+use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::logic::types::DigestedValuesResult;
-use crate::render::canvas::{Canvas, CanvasPositioning};
+use crate::logic::types::{CanvasPositioning, DigestedValuesResult};
+use crate::render::canvas::{Canvas};
 use crate::components::toggle::{Toggle, ToggleOption};
+
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
@@ -18,6 +20,9 @@ pub fn graph(props: &GraphProps) -> Html{
 
     // Define our view settings
     let canvas_position = use_state(|| CanvasPositioning::new());
+
+    let pointer_down = use_state(|| false);
+    let last_pos = use_state(|| (0,0));
 
     use_effect({
         let node_ref = node_ref.clone();
@@ -43,6 +48,42 @@ pub fn graph(props: &GraphProps) -> Html{
         }
     });
 
+    // Support moving and zooming
+    let on_pointer_down = {
+        let pointer_down = pointer_down.clone();
+        let last_pos = last_pos.clone();
+        Callback::from(move |e: PointerEvent| {
+            pointer_down.set(true);
+            last_pos.set((e.client_x(), e.client_y()));
+        })
+    };
+
+    let on_pointer_up = {
+        let pointer_down = pointer_down.clone();
+        Callback::from(move |_| {
+            pointer_down.set(false);
+        })
+    };
+
+    let on_pointer_move = {
+        let pointer_down = pointer_down.clone();
+        let last_pos = last_pos.clone();
+        let canvas_position = canvas_position.clone();
+
+        Callback::from(move |e: web_sys::PointerEvent| {
+            if !*pointer_down {
+                return;
+            }
+            let new_offset_x = canvas_position.offset_x + e.x() - last_pos.0;
+            let new_offset_y = canvas_position.offset_y + e.y() - last_pos.1;
+
+            last_pos.set((e.x(), e.y()));
+
+            canvas_position.set(CanvasPositioning::create(new_offset_x, new_offset_y, canvas_position.width, canvas_position.height, canvas_position.zoom))
+        })
+    };
+
+
     let toggle = html! {
         <Toggle
             callback={props.mode_change_callback.clone()}
@@ -57,8 +98,10 @@ pub fn graph(props: &GraphProps) -> Html{
             <div
                 ref={node_ref}
                 class="graph"
+                onpointerdown={on_pointer_down}
+                onpointermove={on_pointer_move}
+                onpointerup={on_pointer_up}
             >
-                // <p>{format!("{:?}", relation.values)}</p>
                 {toggle}
                 <Canvas
                     position={(*canvas_position).clone()}

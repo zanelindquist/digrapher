@@ -1,7 +1,8 @@
+use std::cmp::min;
 use std::f32::consts::PI;
 
 use crate::logic::types::{EdgeVector, PointRenderSymbol, PointVector, RawEdgePairs, RelationProperty, SortedCharPoints};
-use crate::render::canvas::CanvasPositioning;
+use crate::logic::types::CanvasPositioning;
 use crate::render::objects::point::{Point};
 use crate::render::objects::edge::{Edge};
 
@@ -9,7 +10,7 @@ use crate::render::objects::edge::{Edge};
 pub fn position_points(points: SortedCharPoints, position: CanvasPositioning) -> PointVector {
     let n = points.len();
     let mut point_vec = PointVector::new();
-    let r = (position.width as f32) / 3.0 * position.zoom;
+    let r = (min(position.width, position.height) as f32) / 4.0 * position.zoom;
     let center_x = (position.width as f32) / 2.0 + position.offset_x as f32;
     let center_y = (position.height as f32) / 2.0 + position.offset_y as f32;
 
