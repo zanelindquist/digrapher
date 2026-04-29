@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use yew::prelude::*;
 
 use crate::logic::calculate_render::{position_edges, position_points};
@@ -34,11 +36,13 @@ pub struct CanvasProps {
 
 #[function_component(Canvas)]
 pub fn canvas(props: &CanvasProps) -> Html {
-    let points: PointVector = position_points(props.relation.points.clone(), props.position);
+    // Sort the points first so we have a same order every time
+    let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
+    sorted_points.sort();
+
+    let points: PointVector = position_points(sorted_points, props.position);
     let edges: EdgeVector = position_edges(props.relation.values.clone(), points.clone());
     let styles = props.styles;
-
-    web_sys::console::log_1(&format!("LEN {}", props.relation.points.clone().len()).into());
 
     html!{
         <div class="canvas" >

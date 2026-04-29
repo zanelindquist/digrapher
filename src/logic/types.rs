@@ -6,6 +6,7 @@ use crate::render::objects::{edge::Edge, point::Point};
 
 // TYPES
 pub type RawCharPoints = HashSet<String>;
+pub type SortedCharPoints = Vec<String>;
 pub type RawEdgePairs = HashSet<(String, String)>;
 pub type PointVector = Vec<Point>;
 pub type EdgeVector = Vec<Edge>;
