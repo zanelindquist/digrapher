@@ -83,6 +83,19 @@ pub fn graph(props: &GraphProps) -> Html{
         })
     };
 
+    let on_wheel = {
+        let canvas_position = canvas_position.clone();
+        
+        Callback::from(move |e: web_sys::WheelEvent| {
+            let delta_y = e.delta_y();
+            let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
+            web_sys::console::log_1(&format!("Scrolled: {}", delta_y).into());
+
+            canvas_position.set(CanvasPositioning::create(canvas_position.offset_x, canvas_position.offset_y, canvas_position.width, canvas_position.height,
+                new_zoom
+            ));
+        })
+};
 
     let toggle = html! {
         <Toggle
@@ -101,6 +114,7 @@ pub fn graph(props: &GraphProps) -> Html{
                 onpointerdown={on_pointer_down}
                 onpointermove={on_pointer_move}
                 onpointerup={on_pointer_up}
+                onwheel={on_wheel}
             >
                 {toggle}
                 <Canvas
