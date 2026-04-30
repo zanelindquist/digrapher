@@ -2,15 +2,17 @@ use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::logic::types::{CanvasPositioning, DigestedValuesResult};
+use crate::logic::types::{CanvasPositioning, DigestedValuesResult, GraphModes};
 use crate::render::canvas::{Canvas};
 use crate::components::toggle::{Toggle, ToggleOption};
+use crate::render::matrix::MatrixGraph;
 
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
     pub digested_values: UseStateHandle<DigestedValuesResult>,
-    pub mode_change_callback: Callback<i32>
+    pub mode_change_callback: Callback<i32>,
+    pub graph_mode: UseStateHandle<GraphModes>
 }
 
 #[function_component(Graph)]
@@ -89,7 +91,6 @@ pub fn graph(props: &GraphProps) -> Html{
         Callback::from(move |e: web_sys::WheelEvent| {
             let delta_y = e.delta_y();
             let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
-            web_sys::console::log_1(&format!("Scrolled: {}", delta_y).into());
 
             canvas_position.set(CanvasPositioning::create(canvas_position.offset_x, canvas_position.offset_y, canvas_position.width, canvas_position.height,
                 new_zoom
@@ -99,11 +100,22 @@ pub fn graph(props: &GraphProps) -> Html{
 
     let toggle = html! {
         <Toggle
-            callback={props.mode_change_callback.clone()}
+            onchange={props.mode_change_callback.clone()}
         >
             <ToggleOption icon="digraph"/>
             <ToggleOption icon="matrix"/>
         </Toggle>
+    };
+    let graph_info = html! {
+        <code class="graph__info">{format!(
+            "{}x{} {:.1},{:.1} zoom: {:.2} {}",
+            canvas_position.width,
+            canvas_position.height,
+            canvas_position.offset_x as f32,
+            canvas_position.offset_y as f32,
+            canvas_position.zoom,
+            if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"}
+        )}</code>
     };
 
     match &*props.digested_values {
@@ -117,10 +129,28 @@ pub fn graph(props: &GraphProps) -> Html{
                 onwheel={on_wheel}
             >
                 {toggle}
-                <Canvas
-                    position={(*canvas_position).clone()}
-                    relation={relation.clone()}
-                />
+                {graph_info}
+                {
+                    match *props.graph_mode {
+                        GraphModes::DIGRAPH => html!{
+                            <Canvas
+                                class={if *pointer_down { "grab"} else {""}}
+                                position={(*canvas_position).clone()}
+                                relation={relation.clone()}
+                            />
+                        },
+                        GraphModes::MATRIX => html! {
+                            <MatrixGraph
+                                position={(*canvas_position).clone()}
+                                relation={relation.clone()}
+                            />
+                        },
+                        _ => html! {
+                            <p>{"Unknown graph type"}</p>
+                        }
+                    }
+                }
+
             </div>
         },
         Err(e) => html! {

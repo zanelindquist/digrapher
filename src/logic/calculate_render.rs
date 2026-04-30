@@ -19,7 +19,7 @@ pub fn position_points(points: SortedCharPoints, position: CanvasPositioning) ->
         let theta = -(i as f32) * (2.0 * PI / n as f32);
         let x = center_x + r * theta.cos();
         let y = center_y + r * theta.sin();
-        let new_point = Point::new(x, y, theta, p.clone(), PointRenderSymbol::CIRCLE);
+        let new_point = Point::new(x, y, theta, p.clone(), PointRenderSymbol::CIRCLE, i as i32);
         point_vec.push(new_point);
     }
 

@@ -10,7 +10,7 @@ pub struct ToggleProps {
     pub children: Children,
     #[prop_or(40)]
     pub size: i32,
-    pub callback: Callback<i32>
+    pub onchange: Callback<i32>
 }
 
 #[function_component(Toggle)]
@@ -25,8 +25,10 @@ pub fn toggle(props: &ToggleProps) -> Html {
 
             let onclick = {
                 let selected = selected.clone();
+                let onchange = props.onchange.clone();
                 Callback::from(move |_| {
                     selected.set(i as i32);
+                    onchange.emit(i as i32);
                 })
             };
 

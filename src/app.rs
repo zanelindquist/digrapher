@@ -1,3 +1,4 @@
+use gloo_console::log;
 use yew::prelude::*;
 use crate::components::sidebar::Sidebar;
 use crate::logic::digest_values::{digest_values};
@@ -69,6 +70,7 @@ pub fn app() -> Html {
             <Graph
                 digested_values={digested_values.clone()}
                 mode_change_callback={on_mode_change}
+                graph_mode={graph_mode.clone()}
             />
         </div>
     }

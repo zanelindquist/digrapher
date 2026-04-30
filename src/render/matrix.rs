@@ -1,12 +1,12 @@
 use yew::prelude::*;
 
 use crate::logic::calculate_render::{position_edges, position_points};
-use crate::logic::types::{CanvasPositioning, EdgeVector, PointVector, Relation};
+use crate::logic::types::{CanvasPositioning, EdgeVector, Matrix, PointVector, Relation};
 use crate::render::styles::RenderStyles;
 
 
 #[derive(Properties, PartialEq)]
-pub struct CanvasProps {
+pub struct MatrixProps {
     pub position: CanvasPositioning,
     pub relation: Relation,
     #[prop_or_default]
@@ -15,8 +15,8 @@ pub struct CanvasProps {
     pub class: Classes
 }
 
-#[function_component(Canvas)]
-pub fn canvas(props: &CanvasProps) -> Html {
+#[function_component(MatrixGraph)]
+pub fn matrix(props: &MatrixProps) -> Html {
     // Sort the points first so we have a same order every time
     let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
     sorted_points.sort();
@@ -25,17 +25,18 @@ pub fn canvas(props: &CanvasProps) -> Html {
     let edges: EdgeVector = position_edges(props.relation.values.clone(), points.clone());
     let styles = props.styles;
 
+    let matrix: Matrix = Matrix::from_edges(points, edges);
+
     html!{
         <div
-            class={classes!("canvas", props.class.clone())}
+            class={classes!("matrix", props.class.clone())}
         >
             <svg
-                class="canvas__svg"
+                class="matrix__svg"
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                { for edges.iter().map(|edge| { edge.clone().draw(styles) })}
-                { for points.iter().map(|point| { point.clone().draw(styles) })}
+                {matrix.draw(styles, props.position)}
             </svg>
         </div>
     }

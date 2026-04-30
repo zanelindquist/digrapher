@@ -11,12 +11,13 @@ pub struct Point {
     pub y: f32,
     pub bearing: f32, // Direction away from the centerself
     pub label: String,
-    pub symbol: PointRenderSymbol
+    pub symbol: PointRenderSymbol,
+    pub index: i32,
 }
 
 impl Point {
-    pub fn new(x: f32, y: f32, bearing: f32, label: String, symbol: PointRenderSymbol) -> Self {
-        Self { x, y, bearing, label, symbol }
+    pub fn new(x: f32, y: f32, bearing: f32, label: String, symbol: PointRenderSymbol, index: i32) -> Self {
+        Self { x, y, bearing, label, symbol, index }
     }
     
     pub fn distance_to(self, other: Point) -> f32 {
