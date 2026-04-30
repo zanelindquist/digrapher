@@ -8,5 +8,12 @@ body {
     margin: 0;
 }
 button {
-    background-color: var(--primary);
+    all: unset;
+}
+code {
+    font-family: "Fira Code", monospace;
+    font-size: 13px;
+    color: var(--onSurface);
+    word-break: break-all;
+    margin: 0;
 }

@@ -1,23 +1,25 @@
+use std::cmp::min;
 use std::f32::consts::PI;
 
-use crate::logic::types::{EdgeVector, PointRenderSymbol, PointVector, RawCharPoints, RawEdgePairs, RelationProperty};
-use crate::render::canvas::CanvasPositioning;
+use crate::logic::types::{EdgeVector, PointRenderSymbol, PointVector, RawEdgePairs, RelationProperty, SortedCharPoints};
+use crate::logic::types::CanvasPositioning;
 use crate::render::objects::point::{Point};
 use crate::render::objects::edge::{Edge};
 
 
-pub fn position_points(points: RawCharPoints, position: CanvasPositioning) -> PointVector {
+pub fn position_points(points: SortedCharPoints, position: CanvasPositioning) -> PointVector {
     let n = points.len();
     let mut point_vec = PointVector::new();
-    let r = (position.width as f32) / 3.0 * position.zoom;
+    let r = (min(position.width, position.height) as f32) / 4.0 * position.zoom;
     let center_x = (position.width as f32) / 2.0 + position.offset_x as f32;
     let center_y = (position.height as f32) / 2.0 + position.offset_y as f32;
 
     for (i, p) in points.iter().enumerate() {
-        let theta = (i as f32) * (2.0 * PI / n as f32);
+        // Draw counterclockwise
+        let theta = -(i as f32) * (2.0 * PI / n as f32);
         let x = center_x + r * theta.cos();
         let y = center_y + r * theta.sin();
-        let new_point = Point::new(x, y, theta, p.clone(), PointRenderSymbol::CIRCLE);
+        let new_point = Point::new(x, y, theta, p.clone(), PointRenderSymbol::CIRCLE, i as i32);
         point_vec.push(new_point);
     }
 
@@ -27,7 +29,7 @@ pub fn position_points(points: RawCharPoints, position: CanvasPositioning) -> Po
 pub fn position_edges(values: RawEdgePairs, points: PointVector) -> EdgeVector {
     let mut edges = EdgeVector::new();
 
-    for (i, pair) in values.iter().enumerate() {
+    for (_, pair) in values.iter().enumerate() {
         // Every pair will produce an edge
         let point1 = points.iter().find(|p| p.label == pair.0 ).unwrap();
         let point2 = points.iter().find(|p| p.label == pair.1 ).unwrap();

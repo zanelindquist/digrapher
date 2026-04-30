@@ -1,6 +1,5 @@
 use std::f32::consts::{PI, SQRT_2};
 
-use js_sys::Math::atan2;
 use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 
@@ -37,13 +36,15 @@ impl Edge {
                 x: sym_x, y: sym_y,
                 bearing: self.angle(),
                 label: String::from(""),
-                symbol: PointRenderSymbol::TRIANGLE
+                symbol: PointRenderSymbol::TRIANGLE,
+                index: 0
             },
             RelationProperty::REFLEXIVE => Point {
                 x: ref_x, y: ref_y,
                 bearing: self.start.bearing + PI / 2.0,
                 label: String::from(""),
-                symbol: PointRenderSymbol::TRIANGLE
+                symbol: PointRenderSymbol::TRIANGLE,
+                index: 0
             },
             // Antisymmetric default
             _=> Point {
@@ -51,7 +52,8 @@ impl Edge {
                 y: (self.start.y + self.end.y) / 2.0,
                 bearing: self.angle(),
                 label: String::from(""),
-                symbol: PointRenderSymbol::TRIANGLE
+                symbol: PointRenderSymbol::TRIANGLE,
+                index: 0
             }
         }
     }
@@ -65,7 +67,8 @@ impl Edge {
             x, y,
             bearing: self.angle(),
             label: String::from(""),
-            symbol: PointRenderSymbol::TRIANGLE
+            symbol: PointRenderSymbol::TRIANGLE,
+            index: 0
         }
     }
     

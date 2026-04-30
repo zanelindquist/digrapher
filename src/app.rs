@@ -1,7 +1,8 @@
+use gloo_console::log;
 use yew::prelude::*;
 use crate::components::sidebar::Sidebar;
 use crate::logic::digest_values::{digest_values};
-use crate::logic::types::{DigestedValuesResult, ParseError};
+use crate::logic::types::{DigestedValuesResult, GraphModes, ParseError};
 use crate::render::graph::{Graph};
 
 // Theme embedded at compile time
@@ -31,6 +32,7 @@ fn generate_css_vars() -> String {
 pub fn app() -> Html {
     let theme_css = generate_css_vars();
     let input_value = use_state(String::new);
+    let graph_mode = use_state(|| GraphModes::DIGRAPH);
 
     let digested_values: UseStateHandle<DigestedValuesResult> = use_state(|| Err(ParseError::new("No input")));
 
@@ -41,6 +43,17 @@ pub fn app() -> Html {
         Callback::from(move |v: String| {
             input_value.set(v.clone());
             digested_values.set(digest_values(v));
+        })
+    };
+
+    let on_mode_change: Callback<i32> = {
+        let graph_mode = graph_mode.clone();
+        Callback::from(move |int: i32| {
+            graph_mode.set(match int {
+                0 => {GraphModes::DIGRAPH},
+                1 => {GraphModes::MATRIX},
+                _ => {GraphModes::DIGRAPH}
+            });
         })
     };
 
@@ -56,6 +69,8 @@ pub fn app() -> Html {
 
             <Graph
                 digested_values={digested_values.clone()}
+                mode_change_callback={on_mode_change}
+                graph_mode={graph_mode.clone()}
             />
         </div>
     }

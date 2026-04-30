@@ -1,7 +1,6 @@
 use yew::prelude::*;
-use wasm_bindgen::JsCast;
 
-use crate::{components::analytics::Analytics, logic::types::{DigestedValuesResult, Relation}};
+use crate::{components::analytics::Analytics, logic::types::{DigestedValuesResult}};
 
 #[derive(Properties, PartialEq)]
 pub struct SidebarProps {
@@ -50,7 +49,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             Ok(relation) => html!{
                                 <Analytics relation={relation.clone()}/>
                             },
-                            Err(e)  => html! {
+                            Err(_)  => html! {
                                 <p class="sidebar__subtitle">{"Waiting for valid relation"}</p>
                             }
                         }

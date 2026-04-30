@@ -18,11 +18,13 @@ pub fn analytics(props: &AnalyticsProps) -> Html {
                     {format!("Antisymmetric: {}", properties.antisymmetric.to_string())} <br/>
                     {format!("Symmetric: {}", properties.symmetric.to_string())} <br/>
                     {format!("Relfexive: {}", properties.reflexive.to_string())} <br/>
-                    {format!("Transitive: {}", properties.transitive.to_string())} <br/>
+                    {format!("Transitive: {}", properties.transitive.to_string())} <br/> <br/>
+                    {format!("Partial Ordering: {}", (properties.reflexive && properties.antisymmetric && properties.transitive).to_string())} <br/>
+                    {format!("Equivalence Relation: {}", (properties.reflexive && properties.symmetric && properties.transitive).to_string())} <br/>
                 </code>
                 
             </div>
-            <label class="sidebar__label" for="graph-input">{"Relation explorer"}</label>
+            // <label class="sidebar__label" for="graph-input">{"Relation explorer"}</label>
         </div>
         
     }
