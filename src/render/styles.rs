@@ -50,14 +50,17 @@ impl Default for FontStyle {
 #[derive(Clone, Copy, PartialEq)]
 pub struct MatrixStyle {
     pub font: FontStyle,
+    pub legend_font: FontStyle,
     pub cell_size: i32,
     pub stroke: &'static str,
     pub stroke_width: i32
 }
 impl Default for MatrixStyle {
     fn default() -> Self {
+        let lf = FontStyle { size: 16.0, fill: "var(--outlineVariant)", family: "" };
         Self {
             font: FontStyle::default(),
+            legend_font: lf,
             cell_size: 40,
             stroke: "var(--outlineVariant)",
             stroke_width: 2,

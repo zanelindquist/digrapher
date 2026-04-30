@@ -24,7 +24,7 @@ pub fn analytics(props: &AnalyticsProps) -> Html {
                 </code>
                 
             </div>
-            <label class="sidebar__label" for="graph-input">{"Relation explorer"}</label>
+            // <label class="sidebar__label" for="graph-input">{"Relation explorer"}</label>
         </div>
         
     }

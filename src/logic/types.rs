@@ -1,7 +1,7 @@
 use gloo_console::log;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-use std::collections::HashSet;
+use std::{array, cell, collections::HashSet};
 
 use crate::render::{objects::{edge::Edge, point::Point}, styles::RenderStyles};
 
@@ -86,21 +86,23 @@ pub struct Relation {
 
 pub struct Matrix {
     data: MatrixData,
+    labels: Vec<String>,
     pub rows: i32,
     pub cols: i32
 } 
 impl Matrix {
     pub fn create(rows: i32, cols: i32) -> Self {
         let data = Matrix::initialize_matrix(rows, cols);
-        Self {rows, cols, data}
+        Self {rows, cols, data, labels: vec![String::default(); rows as usize]}
     }
     pub fn from_edges(points: PointVector, edges: EdgeVector) -> Self {
         let size = points.len() as i32;
+        let labels = points.iter().map(|p| p.label.clone()).collect();
         let mut data = Matrix::initialize_matrix(size, size);
         for edge in edges {
             data[edge.start.index as usize][edge.end.index as usize] = true;
         };
-        Self {rows: size, cols: size, data}
+        Self {rows: size, cols: size, data, labels}
     }
     fn initialize_matrix(rows: i32, cols: i32) -> MatrixData {
         vec![vec![false; cols as usize]; rows as usize]
@@ -123,6 +125,40 @@ impl Matrix {
                 width={position.width.to_string()}
                 height={position.height.to_string()}
             >
+                // Legend
+                {
+                    for self.data.iter().enumerate().map(|(i, row)| {
+                        let x1 = ul_x - cell_size / 2;
+                        let y1 = ul_y + i as i32 * cell_size + cell_size / 2;
+                        let x2 = ul_x + i as i32 * cell_size + cell_size / 2;
+                        let y2 = ul_y - cell_size / 2;
+                        html! {
+                            <>
+                                <text
+                                    x={x1.to_string()}
+                                    y={y1.to_string()}
+                                    text-anchor="middle"
+                                    dominant-baseline="middle"
+                                    font-size={style.matrix.legend_font.size.to_string()}
+                                    fill={style.matrix.legend_font.fill}
+                                >
+                                    { self.labels[i].clone() }
+                                </text>
+                                <text
+                                    x={x2.to_string()}
+                                    y={y2.to_string()}
+                                    text-anchor="middle"
+                                    dominant-baseline="middle"
+                                    font-size={style.matrix.legend_font.size.to_string()}
+                                    fill={style.matrix.legend_font.fill}
+                                >
+                                    { self.labels[i].clone() }
+                                </text>
+                            </>
+                        }
+                    })
+                }
+                // Matrix
                 {
                     for self.data.iter().enumerate().flat_map(|(i, row)| {
                         row.iter().enumerate().map(move |(j, val)| {
