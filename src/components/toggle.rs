@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::assets::icons::icon::{Icon};
+use crate::components::icon::{Icon};
 
 #[derive(Properties, PartialEq)]
 pub struct ToggleProps {

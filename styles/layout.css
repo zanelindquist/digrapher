@@ -92,11 +92,7 @@
     letter-spacing: 0.5px;
 }
 .sidebar__preview-code {
-    font-family: "Fira Code", monospace;
-    font-size: 13px;
-    color: var(--onSurface);
-    word-break: break-all;
-    margin: 0;
+
 }
 .sidebar__footer {
     padding-top: 16px;
@@ -136,20 +132,13 @@
 }
 .graph__error {
     margin: 20px;
-    font-family: "Fira Code", monospace;
     font-size: 16px;
-    color: var(--onSurface);
-    word-break: break-all;
 }
 .graph__info {
     position: absolute;
     right: 10px;
     bottom: 10px;
-    font-family: "Fira Code", monospace;
-    font-size: 13px;
     color: var(--onSurface);
-    word-break: break-all;
-    margin: 0;
 }
 
 .canvas {

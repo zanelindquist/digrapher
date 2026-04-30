@@ -19,6 +19,9 @@ impl Point {
     pub fn new(x: f32, y: f32, bearing: f32, label: String, symbol: PointRenderSymbol, index: i32) -> Self {
         Self { x, y, bearing, label, symbol, index }
     }
+    pub fn from_xy(x: f32, y: f32) -> Point {
+        Point::new(x, y, 0.0, String::default(), PointRenderSymbol::CIRCLE, 0)
+    }
     
     pub fn distance_to(self, other: Point) -> f32 {
         ((other.x - self.x).powi(2) + (other.y - self.y).powi(2)).sqrt()

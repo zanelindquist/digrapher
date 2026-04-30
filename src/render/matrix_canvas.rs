@@ -1,12 +1,14 @@
 use yew::prelude::*;
 
 use crate::logic::calculate_render::{position_edges, position_points};
-use crate::logic::types::{CanvasPositioning, EdgeVector, Matrix, PointVector, Relation};
+use crate::logic::types::{CanvasPositioning, EdgeVector, PointVector, Relation};
+use crate::logic::objects::matrix::{Matrix};
+use crate::render::objects::point::Point;
 use crate::render::styles::RenderStyles;
 
 
 #[derive(Properties, PartialEq)]
-pub struct MatrixProps {
+pub struct MatrixCanvasProps {
     pub position: CanvasPositioning,
     pub relation: Relation,
     #[prop_or_default]
@@ -15,8 +17,8 @@ pub struct MatrixProps {
     pub class: Classes
 }
 
-#[function_component(MatrixGraph)]
-pub fn matrix(props: &MatrixProps) -> Html {
+#[function_component(MatrixCanvas)]
+pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     // Sort the points first so we have a same order every time
     let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
     sorted_points.sort();
@@ -26,6 +28,7 @@ pub fn matrix(props: &MatrixProps) -> Html {
     let styles = props.styles;
 
     let matrix: Matrix = Matrix::from_edges(points, edges);
+    let center_point: Point = Point::from_xy((props.position.width/2) as f32, (props.position.height/2) as f32);
 
     html!{
         <div
@@ -36,7 +39,7 @@ pub fn matrix(props: &MatrixProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                {matrix.draw(styles, props.position)}
+                {matrix.draw(styles.matrix, center_point)}
             </svg>
         </div>
     }

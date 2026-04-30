@@ -29,7 +29,7 @@ pub fn position_points(points: SortedCharPoints, position: CanvasPositioning) ->
 pub fn position_edges(values: RawEdgePairs, points: PointVector) -> EdgeVector {
     let mut edges = EdgeVector::new();
 
-    for (i, pair) in values.iter().enumerate() {
+    for (_, pair) in values.iter().enumerate() {
         // Every pair will produce an edge
         let point1 = points.iter().find(|p| p.label == pair.0 ).unwrap();
         let point2 = points.iter().find(|p| p.label == pair.1 ).unwrap();

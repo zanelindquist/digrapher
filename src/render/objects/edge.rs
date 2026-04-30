@@ -1,6 +1,5 @@
 use std::f32::consts::{PI, SQRT_2};
 
-use js_sys::Math::atan2;
 use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 

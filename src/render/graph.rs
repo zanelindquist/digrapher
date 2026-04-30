@@ -3,9 +3,9 @@ use yew::prelude::*;
 use web_sys::{HtmlElement};
 
 use crate::logic::types::{CanvasPositioning, DigestedValuesResult, GraphModes};
-use crate::render::canvas::{Canvas};
+use crate::render::digraph_canvas::DigraphCanvas;
 use crate::components::toggle::{Toggle, ToggleOption};
-use crate::render::matrix::MatrixGraph;
+use crate::render::matrix_canvas::MatrixCanvas;
 
 
 #[derive(Properties, PartialEq)]
@@ -109,10 +109,8 @@ pub fn graph(props: &GraphProps) -> Html{
     let graph_info = html! {
         <code class="graph__info">{format!(
             "{}x{} {:.1},{:.1} zoom: {:.2} {}",
-            canvas_position.width,
-            canvas_position.height,
-            canvas_position.offset_x as f32,
-            canvas_position.offset_y as f32,
+            canvas_position.width, canvas_position.height,
+            canvas_position.offset_x as f32, canvas_position.offset_y as f32,
             canvas_position.zoom,
             if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"}
         )}</code>
@@ -133,14 +131,14 @@ pub fn graph(props: &GraphProps) -> Html{
                 {
                     match *props.graph_mode {
                         GraphModes::DIGRAPH => html!{
-                            <Canvas
+                            <DigraphCanvas
                                 class={if *pointer_down { "grab"} else {""}}
                                 position={(*canvas_position).clone()}
                                 relation={relation.clone()}
                             />
                         },
                         GraphModes::MATRIX => html! {
-                            <MatrixGraph
+                            <MatrixCanvas
                                 position={(*canvas_position).clone()}
                                 relation={relation.clone()}
                             />
@@ -156,7 +154,7 @@ pub fn graph(props: &GraphProps) -> Html{
         Err(e) => html! {
             <div class="graph">
                 {toggle}
-                <p class="graph__error">{ format!("Parsing error: {}", e.message)}</p>
+                <code class="graph__error">{ format!("Parsing error: {}", e.message)}</code>
             </div>
         }
     }

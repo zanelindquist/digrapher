@@ -6,7 +6,7 @@ use crate::render::styles::RenderStyles;
 
 
 #[derive(Properties, PartialEq)]
-pub struct CanvasProps {
+pub struct DigraphCanvasProps {
     pub position: CanvasPositioning,
     pub relation: Relation,
     #[prop_or_default]
@@ -15,8 +15,8 @@ pub struct CanvasProps {
     pub class: Classes
 }
 
-#[function_component(Canvas)]
-pub fn canvas(props: &CanvasProps) -> Html {
+#[function_component(DigraphCanvas)]
+pub fn canvas(props: &DigraphCanvasProps) -> Html {
     // Sort the points first so we have a same order every time
     let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
     sorted_points.sort();
