@@ -1,5 +1,6 @@
 use std::f32::consts::{PI, SQRT_2};
 
+use gloo_console::log;
 use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 
@@ -81,7 +82,11 @@ impl Edge {
         (self.end.y - self.start.y).atan2(self.end.x - self.start.x)
     }
 
-    pub fn draw(self, styles: RenderStyles) -> Html {
+    pub fn draw(self, styles: RenderStyles, is_selected: bool) -> Html {
+        log!("IS SELECTED {}", is_selected);
+
+        let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
+
         match self.relation_type {
             RelationProperty::REFLEXIVE => html!{
                 <>
@@ -106,7 +111,7 @@ impl Edge {
                             )
                         )}
                         fill="transparent"
-                        stroke={styles.edge.stroke.to_string()}
+                        stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     {self.midpoint().draw(styles)}
@@ -128,7 +133,7 @@ impl Edge {
                             
                         )}
                         fill={"transparent"}
-                        stroke={styles.edge.stroke.to_string()}
+                        stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
@@ -143,7 +148,7 @@ impl Edge {
                         y1={self.start.y.to_string()}
                         x2={self.end.x.to_string()}
                         y2={self.end.y.to_string()}
-                        stroke={styles.edge.stroke.to_string()}
+                        stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint

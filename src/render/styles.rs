@@ -20,6 +20,7 @@ impl Default for DotStyle {
 pub struct EdgeStyle {
     pub stroke: &'static str,
     pub stroke_width: f32,
+    pub highlighted_stroke: &'static str
 }
 
 impl Default for EdgeStyle {
@@ -27,6 +28,7 @@ impl Default for EdgeStyle {
         Self {
             stroke: "var(--outline)",
             stroke_width: 2.0,
+            highlighted_stroke: "var(--inversePrimary)"
         }
     }
 }

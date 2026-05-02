@@ -69,13 +69,14 @@ pub fn app() -> Html {
                 value={(*input_value).clone()}
                 on_input={on_input}
                 digested_values={digested_values.clone()}
-                object_selection={selection_object}
+                object_selection={selection_object.clone()}
             />
 
             <Graph
                 digested_values={digested_values.clone()}
                 mode_change_callback={on_mode_change}
                 graph_mode={graph_mode.clone()}
+                object_selection={selection_object}
             />
         </div>
     }

@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 use crate::logic::calculate_render::{position_edges, position_points};
-use crate::logic::types::{CanvasPositioning, EdgeVector, PointVector, Relation};
+use crate::logic::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointVector, Relation};
 use crate::render::styles::RenderStyles;
 
 
@@ -12,7 +12,8 @@ pub struct DigraphCanvasProps {
     #[prop_or_default]
     pub styles: RenderStyles,
     #[prop_or_default]
-    pub class: Classes
+    pub class: Classes,
+    pub object_selection: UseStateHandle<ObjectSelection>
 }
 
 #[function_component(DigraphCanvas)]
@@ -34,7 +35,14 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                { for edges.iter().map(|edge| { edge.clone().draw(styles) })}
+                { for edges.iter().map(|edge| {
+                    let is_selected = matches!(
+                        &props.object_selection.selection,
+                        Some(DrawObjectSelection::Edge(label))
+                            if edge.start.label == label.0 && edge.end.label == label.1
+                    );
+                    edge.clone().draw(styles, is_selected)
+                })}
                 { for points.iter().map(|point| { point.clone().draw(styles) })}
             </svg>
         </div>
