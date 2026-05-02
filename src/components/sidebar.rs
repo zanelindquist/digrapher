@@ -1,12 +1,15 @@
 use yew::prelude::*;
 
-use crate::{components::analytics::Analytics, logic::types::{DigestedValuesResult}};
+use crate::components::analytics::Analytics;
+use crate::components::explorer::Explorer;
+use crate::logic::types::{DigestedValuesResult, ObjectSelection};
 
 #[derive(Properties, PartialEq)]
 pub struct SidebarProps {
     pub value: String,
     pub on_input: Callback<String>,
-    pub digested_values: UseStateHandle<DigestedValuesResult>
+    pub digested_values: UseStateHandle<DigestedValuesResult>,
+    pub object_selection: UseStateHandle<ObjectSelection>
 }
 
 #[function_component(Sidebar)]
@@ -43,7 +46,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     <code class="sidebar__preview-code">{ if props.value.is_empty() {String::from("No relations yet")} else {props.value.clone()} }</code>
                 </div>
                 <div class="sidebar__analysis">
-                    <label class="sidebar__label" for="graph-input">{"Relation properties"}</label>
+                    <label class="sidebar__label" for="graph-preview">{"Relation properties"}</label>
                     {
                         match &*props.digested_values {
                             Ok(relation) => html!{
@@ -56,6 +59,21 @@ pub fn sidebar(props: &SidebarProps) -> Html {
 
                     }
                 </div>
+                {
+                    match &*props.digested_values {
+                        Ok(relation) => html!{
+                            <div class="sidebar__explorer">
+                                <label class="sidebar__label" for="graph-explorer">{"Relation explorer"}</label>
+                                <Explorer
+                                    relation={relation.clone()}
+                                    object_selection={props.object_selection.clone()}
+                                />
+                            </div>
+                        },
+                        Err(_)  => html! {}
+                    }
+
+                }
             </div>
         </aside>
     }

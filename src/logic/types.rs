@@ -1,14 +1,16 @@
 use gloo_console::log;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
-use std::{array, cell, collections::HashSet};
+use std::{collections::HashSet};
 
-use crate::render::{objects::{edge::Edge, point::Point}, styles::RenderStyles};
+use crate::render::{objects::{edge::Edge, point::Point}};
 
 // TYPES
+pub type PointLabel = String;
+pub type EdgePair = (String, String);
 pub type RawCharPoints = HashSet<String>;
 pub type SortedCharPoints = Vec<String>;
-pub type RawEdgePairs = HashSet<(String, String)>;
+pub type RawEdgePairs = HashSet<EdgePair>;
 pub type PointVector = Vec<Point>;
 pub type EdgeVector = Vec<Edge>;
 pub type MatrixData = Vec<Vec<bool>>;
@@ -21,6 +23,12 @@ pub enum RelationProperty {ANTISYMMETRIC, SYMMETRIC, REFLEXIVE, TRANSITIVE}
 pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
+
+#[derive(PartialEq)]
+pub enum DrawObjectSelection {
+    Point(PointLabel),
+    Edge(EdgePair),
+}
 
 // INFRASTRUCTURE
 
@@ -53,6 +61,28 @@ impl CanvasPositioning {
     }
     pub fn from(self, other: &CanvasPositioning) -> CanvasPositioning {
         CanvasPositioning::create(self.offset_x, self.offset_y, self.width, self.height, self.zoom)
+    }
+}
+
+#[derive(PartialEq)]
+pub struct ObjectSelection {
+    pub selection: Option<DrawObjectSelection>
+}
+impl ObjectSelection {
+    pub fn from_edge(paring: EdgePair) -> Self {
+        Self{
+            selection: Option::from(DrawObjectSelection::Edge(paring))
+        }
+    }
+    pub fn from_point(point: PointLabel) -> Self {
+        Self{
+            selection: Option::from(DrawObjectSelection::Point(point))
+        }
+    }
+    pub fn default() -> Self {
+        Self {
+            selection: None
+        }
     }
 }
 

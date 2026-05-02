@@ -51,6 +51,8 @@
 .sidebar__label {
     font-size: 12px;
     font-weight: 500;
+    margin-top: 10px;
+    margin-bottom: 10px;
     color: var(--onSurfaceVariant);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -120,6 +122,25 @@
 .sidebar__analysis {
     border-top: 1px solid var(--outlineVariant);
 }
+.sidebar__explorer {
+    border-top: 1px solid var(--outlineVariant);
+}
+
+.explorer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+.explorer__row {
+    padding: 3px;
+    padding-left: 10px;
+    border-radius: 4px;
+}
+.explorer__row--selected {
+    background-color: var(--primaryContainer);
+}
+
 
 /* Graph */
 .graph {

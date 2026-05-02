@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 use crate::components::sidebar::Sidebar;
 use crate::logic::digest_values::{digest_values};
-use crate::logic::types::{DigestedValuesResult, GraphModes, ParseError};
+use crate::logic::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError};
 use crate::render::graph::{Graph};
 
 // Theme embedded at compile time
@@ -33,15 +33,19 @@ pub fn app() -> Html {
     let theme_css = generate_css_vars();
     let input_value = use_state(String::new);
     let graph_mode = use_state(|| GraphModes::DIGRAPH);
+    let selection_object = use_state(|| ObjectSelection::default());
 
     let digested_values: UseStateHandle<DigestedValuesResult> = use_state(|| Err(ParseError::new("No input")));
 
     let on_input = {
         let input_value = input_value.clone();
         let digested_values = digested_values.clone();
+        let selection_object = selection_object.clone();
 
         Callback::from(move |v: String| {
+            // Set the input value
             input_value.set(v.clone());
+            // Update the digested values for our pipeline
             digested_values.set(digest_values(v));
         })
     };
@@ -65,6 +69,7 @@ pub fn app() -> Html {
                 value={(*input_value).clone()}
                 on_input={on_input}
                 digested_values={digested_values.clone()}
+                object_selection={selection_object}
             />
 
             <Graph
