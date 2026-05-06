@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::logic::types::{DrawObjectSelection, EdgePair, ObjectSelection, Relation};
+use crate::{components::toggle::{Toggle, ToggleOption}, logic::types::{DrawObjectSelection, EdgePair, ObjectSelection, Relation, RelationExplorerModes}};
 
 #[derive(Properties, PartialEq)]
 pub struct ExplorerProps {
@@ -12,9 +12,25 @@ pub struct ExplorerProps {
 pub fn analytics(props: &ExplorerProps) -> Html {
     let properties = props.relation.properties.clone();
     // Our own internal way of keeping track of the selection for scrolling
-    let selected_index = use_state(|| 0);
-
     let values: Vec<_> = props.relation.values.iter().cloned().collect();
+
+    let selected_index = use_state(|| 0);
+    let display_mode = use_state(|| RelationExplorerModes::EDGES);
+
+    let toggle_mode = {
+        let diplay_mode = display_mode.clone();
+        Callback::from(move |int| {
+            match int {
+                0 => {
+                    display_mode.set(RelationExplorerModes::EDGES);
+                },
+                1 => {
+                    display_mode.set(RelationExplorerModes::POINTS);
+                },
+                _ => {}
+            }
+        })
+    };
 
     let selected = {
         let selection = props.object_selection.clone();
@@ -65,13 +81,20 @@ pub fn analytics(props: &ExplorerProps) -> Html {
             tabindex="0" // makes it focusable
             {onkeydown}
         >
+            <Toggle
+                class="explorer__toggle"
+                onchange={toggle_mode}
+                size={20}
+            >
+                <ToggleOption icon="edge" size={20}/>
+                <ToggleOption icon="point" size={20}/>
+            </Toggle>
             {for props.relation.values.iter().enumerate().map(|(index, (a, b))| {
                 let selected = selected.clone();
                 let pairing = (a.clone(), b.clone());
                 
                 html!{
                     <button
-                        // class="explorer__row"
                         class={classes!(
                                 "explorer__row",
                                 match &props.object_selection.selection {
@@ -84,10 +107,13 @@ pub fn analytics(props: &ExplorerProps) -> Html {
                                     },
                                     _ => {String::default()}
                                 }
-                            )}
-                        onclick={Callback::from(move |_| {
-                            selected.emit((pairing.clone(), index as i32));
-                        })}
+                            )
+                        }
+                        onclick={
+                            Callback::from(move |_| {
+                                selected.emit((pairing.clone(), index as i32));
+                            })
+                        }
                     >
                         <code>{format!("({}, {})", a, b)}</code>
                     </button>

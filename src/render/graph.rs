@@ -101,6 +101,7 @@ pub fn graph(props: &GraphProps) -> Html{
 
     let toggle = html! {
         <Toggle
+            class="graph__toggle"
             onchange={props.mode_change_callback.clone()}
         >
             <ToggleOption icon="digraph"/>

@@ -127,9 +127,14 @@
 }
 
 .explorer {
+    position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+.explorer__toggle {
+    right: 5px;
+    top: 0px;
 }
 .explorer__row {
     padding: 3px;
@@ -179,6 +184,10 @@
     bottom: 10px;
     color: var(--onSurface);
 }
+.graph__toggle {
+    right: 10px;
+    top: 10px;
+}
 
 .canvas {
     flex-grow: 1;
@@ -190,8 +199,6 @@
 
 .toggle {
     position: absolute;
-    right: 10px;
-    top: 10px;
     height: fit-content;
     width: fit-content;
     padding: 10px;

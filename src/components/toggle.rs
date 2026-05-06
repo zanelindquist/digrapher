@@ -1,3 +1,4 @@
+use gloo_console::log;
 use yew::prelude::*;
 
 use crate::components::icon::{Icon};
@@ -60,7 +61,6 @@ pub struct ToggleOptionProps {
 
 #[function_component(ToggleOption)]
 pub fn toggle_option(props: &ToggleOptionProps) -> Html {
-
     html!{
         <Icon icon={props.icon.clone()} size={props.size} color="onSurface"/>
     }

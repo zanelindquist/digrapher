@@ -23,6 +23,7 @@ pub enum RelationProperty {ANTISYMMETRIC, SYMMETRIC, REFLEXIVE, TRANSITIVE}
 pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
+pub enum RelationExplorerModes{EDGES, POINTS}
 
 #[derive(PartialEq)]
 pub enum DrawObjectSelection {
