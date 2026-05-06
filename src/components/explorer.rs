@@ -18,14 +18,14 @@ pub fn analytics(props: &ExplorerProps) -> Html {
     let display_mode = use_state(|| RelationExplorerModes::EDGES);
 
     let toggle_mode = {
-        let diplay_mode = display_mode.clone();
+        let dm = display_mode.clone();
         Callback::from(move |int| {
             match int {
                 0 => {
-                    display_mode.set(RelationExplorerModes::EDGES);
+                    dm.set(RelationExplorerModes::EDGES);
                 },
                 1 => {
-                    display_mode.set(RelationExplorerModes::POINTS);
+                    dm.set(RelationExplorerModes::POINTS);
                 },
                 _ => {}
             }
@@ -35,9 +35,9 @@ pub fn analytics(props: &ExplorerProps) -> Html {
     let selected = {
         let selection = props.object_selection.clone();
         let selected_index = selected_index.clone();
-        Callback::from(move |(pairing, index)| {
+        Callback::from(move |(obj_sel, index)| {
             selected_index.set(index as i32);
-            selection.set(ObjectSelection::from_edge(pairing))
+            selection.set(obj_sel)
         })
     };
 
@@ -71,7 +71,7 @@ pub fn analytics(props: &ExplorerProps) -> Html {
             selected_index.set(index);
 
             let pairing = values[index as usize].clone();
-            selected.emit((pairing, index));
+            selected.emit((ObjectSelection::from_edge(pairing), index));
         })
     };
 
@@ -89,36 +89,76 @@ pub fn analytics(props: &ExplorerProps) -> Html {
                 <ToggleOption icon="edge" size={20}/>
                 <ToggleOption icon="point" size={20}/>
             </Toggle>
-            {for props.relation.values.iter().enumerate().map(|(index, (a, b))| {
-                let selected = selected.clone();
-                let pairing = (a.clone(), b.clone());
-                
-                html!{
-                    <button
-                        class={classes!(
-                                "explorer__row",
-                                match &props.object_selection.selection {
-                                    Some(DrawObjectSelection::Edge(pair)) => {
-                                        if pair.0 == *a && pair.1 == *b {
-                                            String::from("explorer__row--selected")
-                                        } else {
-                                            String::default()
+
+            {match *display_mode {
+                // Display edges    
+                RelationExplorerModes::EDGES => html!{
+                    <>{for props.relation.values.iter().enumerate().map(|(index, (a, b))| {
+                        let selected = selected.clone();
+                        let pairing = (a.clone(), b.clone());
+
+                        html!{
+                            <button
+                                class={classes!(
+                                        "explorer__row",
+                                        match &props.object_selection.selection {
+                                            Some(DrawObjectSelection::Edge(pair)) => {
+                                                if pair.0 == *a && pair.1 == *b {
+                                                    String::from("explorer__row--selected")
+                                                } else {
+                                                    String::default()
+                                                }
+                                            },
+                                            _ => {String::default()}
                                         }
-                                    },
-                                    _ => {String::default()}
+                                    )
                                 }
-                            )
+                                onclick={
+                                    Callback::from(move |_| {
+                                        selected.emit((ObjectSelection::from_edge(pairing.clone()), index as i32));
+                                    })
+                                }
+                            >
+                                <code>{format!("({}, {})", a, b)}</code>
+                            </button>
                         }
-                        onclick={
-                            Callback::from(move |_| {
-                                selected.emit((pairing.clone(), index as i32));
-                            })
+                    })}</>
+                },
+                RelationExplorerModes::POINTS => html!{
+                    <>{for props.relation.points.iter().enumerate().map(|(index, point)| {
+                        let selected = selected.clone();
+                        let point = point.clone();
+                        let point_borrow = point.clone();
+                        
+                        html!{
+                            <button
+                                class={classes!(
+                                        "explorer__row",
+                                        match &props.object_selection.selection {
+                                            Some(DrawObjectSelection::Point(p)) => {
+                                                if *p == *point {
+                                                    String::from("explorer__row--selected")
+                                                } else {
+                                                    String::default()
+                                                }
+                                            },
+                                            _ => {String::default()}
+                                        }
+                                    )
+                                }
+                                onclick={
+                                    Callback::from(move |_| {
+                                        selected.emit((ObjectSelection::from_point(point_borrow.clone()), index as i32));
+                                    })
+                                }
+                            >
+                                <code>{format!("{}", point)}</code>
+                            </button>
                         }
-                    >
-                        <code>{format!("({}, {})", a, b)}</code>
-                    </button>
+                    })}</>
                 }
-            })}
+            }}
+
         </div>
     }
 }

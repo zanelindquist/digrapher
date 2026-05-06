@@ -144,6 +144,7 @@
     border-radius: 4px;
 }
 .explorer__row--selected {
+    z-index: 0;
     background: linear-gradient(
         90deg,
         var(--primaryContainer),
@@ -201,6 +202,7 @@
     position: absolute;
     height: fit-content;
     width: fit-content;
+    z-index: 1;
     padding: 10px;
     background-color: var(--surface);
     display: flex;
@@ -211,7 +213,7 @@
 }
 .toggle__option {
     color: var(--onSurface);
-    z-index: 1
+    z-index: 2
 }
 .toggle__option:hover{
     cursor: pointer;
