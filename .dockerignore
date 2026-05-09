@@ -1,0 +1,6 @@
+target
+dist
+.git
+.github
+Dockerfile
+.dockerignore
