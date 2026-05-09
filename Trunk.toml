@@ -1,12 +1,18 @@
 [build]
+target = "index.html"
+dist = "dist"
+release = true
 
 [serve]
 # Specify the default address to bind the dev server to
 addresses = ["127.0.0.1"]
+
 # Specify a port to bind the dev server to (default is 8080)
 port = 8080
+
 # Specify which files to watch. Can be any glob pattern.
 watch = ["src/**"]
+
 # Specify which file to serve at the root of the dev server.
 # This is useful when using a static frontend framework.
 index = "index.html"
