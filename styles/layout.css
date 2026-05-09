@@ -39,7 +39,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    overflow-y: auto;
+    overflow:visible;
     min-height: 0;
 }
 .sidebar__input-group {
@@ -51,6 +51,8 @@
 .sidebar__label {
     font-size: 12px;
     font-weight: 500;
+    margin-top: 10px;
+    margin-bottom: 10px;
     color: var(--onSurfaceVariant);
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -120,6 +122,42 @@
 .sidebar__analysis {
     border-top: 1px solid var(--outlineVariant);
 }
+.sidebar__explorer {
+    border-top: 1px solid var(--outlineVariant);
+}
+
+.explorer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.explorer__toggle {
+    right: 5px;
+    top: 5px;
+}
+.explorer__rows {
+    margin-top: 10px;
+    padding-right: 10px;
+}
+.explorer__row {
+    padding: 3px;
+    margin-right: 3px;
+    margin-left: 3px;
+    border-radius: 4px;
+}
+.explorer__row--selected {
+    z-index: 0;
+    background: linear-gradient(90deg, var(--primaryContainer),rgba(205, 237, 163, 0.7));
+    border-left: 2px solid var(--tertiary);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+    transform: translateX(2px);
+    transition: 
+        background 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
+}
+
 
 /* Graph */
 .graph {
@@ -140,6 +178,10 @@
     bottom: 10px;
     color: var(--onSurface);
 }
+.graph__toggle {
+    right: 10px;
+    top: 10px;
+}
 
 .canvas {
     flex-grow: 1;
@@ -151,10 +193,9 @@
 
 .toggle {
     position: absolute;
-    right: 10px;
-    top: 10px;
     height: fit-content;
     width: fit-content;
+    z-index: 1;
     padding: 10px;
     background-color: var(--surface);
     display: flex;
@@ -165,7 +206,7 @@
 }
 .toggle__option {
     color: var(--onSurface);
-    z-index: 1
+    z-index: 2
 }
 .toggle__option:hover{
     cursor: pointer;

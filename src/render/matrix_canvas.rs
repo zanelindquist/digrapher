@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
 use crate::logic::calculate_render::{position_edges, position_points};
-use crate::logic::types::{CanvasPositioning, EdgeVector, PointVector, Relation};
+use crate::logic::types::{CanvasPositioning, EdgeVector, ObjectSelection, PointVector, Relation};
 use crate::logic::objects::matrix::{Matrix};
 use crate::render::objects::point::Point;
 use crate::render::styles::RenderStyles;
@@ -14,7 +14,8 @@ pub struct MatrixCanvasProps {
     #[prop_or_default]
     pub styles: RenderStyles,
     #[prop_or_default]
-    pub class: Classes
+    pub class: Classes,
+    pub object_selection: UseStateHandle<ObjectSelection>
 }
 
 #[function_component(MatrixCanvas)]
@@ -39,7 +40,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                {matrix.draw(styles.matrix, center_point)}
+                {matrix.draw(styles.matrix, center_point, props.object_selection.clone())}
             </svg>
         </div>
     }

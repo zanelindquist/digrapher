@@ -1,7 +1,8 @@
 use gloo_console::log;
 use yew::prelude::*;
 
-use crate::{logic::types::{EdgeVector, MatrixData, PointVector}, render::{objects::point::Point, styles::MatrixStyle}};
+use crate::logic::types::{EdgeVector, MatrixData, ObjectSelection, PointVector, DrawObjectSelection};
+use crate::render::{objects::point::Point, styles::MatrixStyle};
 
 pub struct Matrix {
     data: MatrixData,
@@ -27,7 +28,7 @@ impl Matrix {
         vec![vec![false; cols as usize]; rows as usize]
     }
     
-    pub fn draw(self, style: MatrixStyle, center: Point) -> Html {
+    pub fn draw(self, style: MatrixStyle, center: Point, object_selection: UseStateHandle<ObjectSelection>) -> Html {
         let cell_size = style.cell_size; // spacing between cells
         let total_w = self.cols * cell_size;
         let total_h = self.rows * cell_size;
@@ -41,7 +42,7 @@ impl Matrix {
             <g>
                 // Legend
                 {
-                    for self.data.iter().enumerate().map(|(i, row)| {
+                    for self.data.iter().enumerate().map(|(i, _)| {
                         let x1 = ul_x - cell_size / 2;
                         let y1 = ul_y + i as i32 * cell_size + cell_size / 2;
                         let x2 = ul_x + i as i32 * cell_size + cell_size / 2;
@@ -75,23 +76,55 @@ impl Matrix {
                 // Matrix
                 {
                     for self.data.iter().enumerate().flat_map(|(i, row)| {
+                        let object_selection = object_selection.clone();
+                        let labels = self.labels.clone();
                         row.iter().enumerate().map(move |(j, val)| {
                             let x = j as i32 * cell_size + cell_size / 2 + ul_x;
-                            let y = i as i32 * cell_size + cell_size / 2 + ul_y; 
+                            let y = i as i32 * cell_size + cell_size / 2 + ul_y;
+                            
+                            // See if this is the selected relation
+                            let is_selected = matches!(
+                                &object_selection.selection,
+                                // If the selected object is an edge
+                                Some(DrawObjectSelection::Edge(edge))
+                                    // And the i and j correspond to the indexes of the labels in our self object
+                                    if labels.iter().position(|l| *l == *(edge).0).unwrap() == i
+                                        && labels.iter().position(|l| *l == *(edge).1).unwrap() == j
+                            );
 
                             let text = if *val { "1" } else { "0" };
+                            let text_fill = if is_selected {style.selected_text_color} else {style.font.fill};
 
                             html! {
-                                <text
-                                    x={x.to_string()}
-                                    y={y.to_string()}
-                                    text-anchor="middle"
-                                    dominant-baseline="middle"
-                                    font-size={style.font.size.to_string()}
-                                    fill={style.font.fill}
-                                >
-                                    { text }
-                                </text>
+                                <>
+                                    {match is_selected {
+                                        // Draw a box around this item if it is selected
+                                        true => html! {
+                                            <path
+                                                d={format!("M {} {} L {} {} L {} {} L {} {} Z",
+                                                    ul_x + j as i32 * cell_size, ul_y + i as i32 * cell_size,
+                                                    ul_x + j as i32 * cell_size, ul_y + (i as i32 + 1) * cell_size,
+                                                    ul_x + (j as i32 + 1) * cell_size, ul_y + (i as i32 + 1) * cell_size,
+                                                    ul_x + (j as i32 + 1) * cell_size, ul_y + i as i32 * cell_size,
+                                                )}
+                                                fill="none"
+                                                stroke={style.selected_outline_color}
+                                                stroke-width={style.selected_stroke_width.to_string()}
+                                            />
+                                        },
+                                        false => html!{}
+                                    }}
+                                    <text
+                                        x={x.to_string()}
+                                        y={y.to_string()}
+                                        text-anchor="middle"
+                                        dominant-baseline="middle"
+                                        font-size={style.font.size.to_string()}
+                                        fill={text_fill}
+                                    >
+                                        { text }
+                                    </text>
+                                </>
                             }
                         })
                     })

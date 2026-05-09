@@ -12,7 +12,8 @@ pub fn analytics(props: &AnalyticsProps) -> Html {
     let properties = props.relation.properties.clone();
 
     html! {
-        <div>
+        <div class="analytics">
+            <label class="sidebar__label" for="graph-preview">{"Relation properties"}</label>
             <div class="sidebar__preview">
                 <code class="sidebar__preview-code">
                     {format!("Antisymmetric: {}", properties.antisymmetric.to_string())} <br/>
@@ -24,8 +25,6 @@ pub fn analytics(props: &AnalyticsProps) -> Html {
                 </code>
                 
             </div>
-            // <label class="sidebar__label" for="graph-input">{"Relation explorer"}</label>
         </div>
-        
     }
 }

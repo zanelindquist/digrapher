@@ -1,17 +1,19 @@
 #[derive(Clone, Copy, PartialEq)]
-pub struct DotStyle {
+pub struct PointStyle {
     pub radius: f32,
     pub fill: &'static str,
     pub stroke: &'static str,
     pub stroke_width: f32,
+    pub highlighted_stroke: &'static str
 }
-impl Default for DotStyle {
+impl Default for PointStyle {
     fn default() -> Self {
         Self {
             radius: 6.0,
             fill: "var(--primary)",
             stroke: "var(--outline)",
             stroke_width: 2.0,
+            highlighted_stroke: "var(--inversePrimary)"
         }
     }
 }
@@ -20,6 +22,7 @@ impl Default for DotStyle {
 pub struct EdgeStyle {
     pub stroke: &'static str,
     pub stroke_width: f32,
+    pub highlighted_stroke: &'static str
 }
 
 impl Default for EdgeStyle {
@@ -27,6 +30,7 @@ impl Default for EdgeStyle {
         Self {
             stroke: "var(--outline)",
             stroke_width: 2.0,
+            highlighted_stroke: "var(--inversePrimary)"
         }
     }
 }
@@ -53,7 +57,10 @@ pub struct MatrixStyle {
     pub legend_font: FontStyle,
     pub cell_size: i32,
     pub stroke: &'static str,
-    pub stroke_width: i32
+    pub stroke_width: i32,
+    pub selected_text_color: &'static str,
+    pub selected_outline_color: &'static str,
+    pub selected_stroke_width: i32,
 }
 impl Default for MatrixStyle {
     fn default() -> Self {
@@ -64,13 +71,16 @@ impl Default for MatrixStyle {
             cell_size: 40,
             stroke: "var(--outlineVariant)",
             stroke_width: 2,
+            selected_text_color: "var(--onBackground)",
+            selected_outline_color: "var(--onPrimaryContainer)",
+            selected_stroke_width: 1
         }        
     }
 }
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct RenderStyles {
-    pub dot: DotStyle,
+    pub point: PointStyle,
     pub edge: EdgeStyle,
     pub font: FontStyle,
     pub matrix: MatrixStyle
@@ -78,7 +88,7 @@ pub struct RenderStyles {
 impl Default for RenderStyles {
     fn default() -> Self {
         Self {
-            dot: DotStyle::default(),
+            point: PointStyle::default(),
             edge: EdgeStyle::default(),
             font: FontStyle::default(),
             matrix: MatrixStyle::default()

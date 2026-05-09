@@ -81,7 +81,9 @@ impl Edge {
         (self.end.y - self.start.y).atan2(self.end.x - self.start.x)
     }
 
-    pub fn draw(self, styles: RenderStyles) -> Html {
+    pub fn draw(self, styles: RenderStyles, is_selected: bool) -> Html {
+        let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
+
         match self.relation_type {
             RelationProperty::REFLEXIVE => html!{
                 <>
@@ -106,10 +108,10 @@ impl Edge {
                             )
                         )}
                         fill="transparent"
-                        stroke={styles.edge.stroke.to_string()}
+                        stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
-                    {self.midpoint().draw(styles)}
+                    {self.midpoint().draw(styles, is_selected)}
                 </>
             },
             RelationProperty::SYMMETRIC => html! {
@@ -128,11 +130,11 @@ impl Edge {
                             
                         )}
                         fill={"transparent"}
-                        stroke={styles.edge.stroke.to_string()}
+                        stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles)}
+                    {self.midpoint().draw(styles, is_selected)}
                 </>
             },
             // Antisymmetrics
@@ -143,11 +145,11 @@ impl Edge {
                         y1={self.start.y.to_string()}
                         x2={self.end.x.to_string()}
                         y2={self.end.y.to_string()}
-                        stroke={styles.edge.stroke.to_string()}
+                        stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles)}
+                    {self.midpoint().draw(styles, is_selected)}
                 </>
             }
         }

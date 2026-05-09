@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::logic::types::{CanvasPositioning, DigestedValuesResult, GraphModes};
+use crate::logic::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection};
 use crate::render::digraph_canvas::DigraphCanvas;
 use crate::components::toggle::{Toggle, ToggleOption};
 use crate::render::matrix_canvas::MatrixCanvas;
@@ -12,7 +12,8 @@ use crate::render::matrix_canvas::MatrixCanvas;
 pub struct GraphProps {
     pub digested_values: UseStateHandle<DigestedValuesResult>,
     pub mode_change_callback: Callback<i32>,
-    pub graph_mode: UseStateHandle<GraphModes>
+    pub graph_mode: UseStateHandle<GraphModes>,
+    pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
 }
 
 #[function_component(Graph)]
@@ -100,6 +101,7 @@ pub fn graph(props: &GraphProps) -> Html{
 
     let toggle = html! {
         <Toggle
+            class="graph__toggle"
             onchange={props.mode_change_callback.clone()}
         >
             <ToggleOption icon="digraph"/>
@@ -135,12 +137,14 @@ pub fn graph(props: &GraphProps) -> Html{
                                 class={if *pointer_down { "grab"} else {""}}
                                 position={(*canvas_position).clone()}
                                 relation={relation.clone()}
+                                object_selection={props.object_selection.clone()}
                             />
                         },
                         GraphModes::MATRIX => html! {
                             <MatrixCanvas
                                 position={(*canvas_position).clone()}
                                 relation={relation.clone()}
+                                object_selection={props.object_selection.clone()}
                             />
                         },
                         _ => html! {
