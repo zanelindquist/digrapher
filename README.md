@@ -1,18 +1,31 @@
 # Digrapher
+Digrapher is a discrete math toolchain that helps users visualize concepts like relations, matricies, and other data strucutes.
 
-Digrapher is a mini intro to Rust project that is a math toolchain. Primarily, it helps visualize relations on a set, but in the future I will expand it to handle other upper-level math features.
+The term *digraph* refers to [directed graphs](https://en.wikipedia.org/wiki/Directed_graph):
+>In mathematics, and more specifically in graph theory, a directed graph (or digraph) is a graph that is made up of a set of vertices connected by directed edges, often called arcs.
 
-## 🚀 What is Digrapher?
-Digrapher will automatically generate digraphs of relations to help mathematicians visualize properties on relations. It will also check for properties like symmetry, reflexiveness, transitivity, and asymmetry.
+<img src="assets/demo_images/digraph.png" alt="digraph" style="height: 150px; justify-self: center;"/>
+<img src="assets/demo_images/matrix.png" alt="matrix" style="height: 150px; justify-self: center;"/>
 
-## 🎯 Key Features
-- Inputting relation text and quickly generating a visual
-- Visualizing links between points
+## Key Features
+- Visualize relations on sets with digraph diagrams
+- Inspect relations in matrix view
+- View tree structures
+- Build relations
 
-## 📸 Demo / Screenshots
+<img src="assets/demo_images/demo.png" alt="project demo" style="height: 300px; justify-self: center;"/>
 
-## 🛠️ Tech Stack
-- Rust backend with Yew
-- Served with Docker in deployment
-## 🚧 Future Plans (optional but impressive)
-- Add other features like matrix multiplication and complex integration
+## Deploy Locally
+Digrapher can be deployed locally through a Docker Virtual Machine
+1. Install [Docker](https://www.docker.com/)
+2. Run `docker run -p 8080:80 zanelindquist/digrapher`
+3. Navigate to [localhost:8080](localhost:8080)
+
+## Contributing
+Contributions are gladly appreciated! Please view [current issues](https://github.com/zanelindquist/digrapher/issues), or feel free to [create a new issue](https://github.com/zanelindquist/digrapher/issues/new/choose)!
+
+For more information, refer to [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Tech Stack
+- **Rust** utilizing **Yew**, which builds the app into **WASM**
+- **Docker Container** to serve the application locally
