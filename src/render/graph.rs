@@ -13,7 +13,7 @@ pub struct GraphProps {
     pub digested_values: UseStateHandle<DigestedValuesResult>,
     pub mode_change_callback: Callback<i32>,
     pub graph_mode: UseStateHandle<GraphModes>,
-    pub object_selection: UseStateHandle<ObjectSelection>
+    pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
 }
 
 #[function_component(Graph)]

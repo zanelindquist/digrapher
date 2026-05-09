@@ -1,4 +1,3 @@
-use gloo_console::log;
 use yew::prelude::*;
 
 use crate::components::icon::{Icon};

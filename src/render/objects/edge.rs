@@ -1,6 +1,5 @@
 use std::f32::consts::{PI, SQRT_2};
 
-use gloo_console::log;
 use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 

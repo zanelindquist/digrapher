@@ -1,4 +1,3 @@
-use gloo_console::log;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use std::{collections::HashSet};
@@ -70,11 +69,13 @@ pub struct ObjectSelection {
     pub selection: Option<DrawObjectSelection>
 }
 impl ObjectSelection {
+    // Intake a raw tuple string pairing and set it as the selected object type
     pub fn from_edge(paring: EdgePair) -> Self {
         Self{
             selection: Option::from(DrawObjectSelection::Edge(paring))
         }
     }
+    // Intake a raw string and set it as the selected object type
     pub fn from_point(point: PointLabel) -> Self {
         Self{
             selection: Option::from(DrawObjectSelection::Point(point))

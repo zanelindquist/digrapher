@@ -36,19 +36,27 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 height={props.position.height.to_string()}
             >
                 { for edges.iter().map(|edge| {
+                    // Pass is_selected to the draw function based on:
                     let is_selected = matches!(
                         &props.object_selection.selection,
+                        // If we have a selection that is valid AND is an Edge
                         Some(DrawObjectSelection::Edge(label))
+                            // AND the labels on the start and end match the selection
                             if edge.start.label == label.0 && edge.end.label == label.1
                     );
+                    // Draw the edge on the digraph
                     edge.clone().draw(styles, is_selected)
                 })}
                 { for points.iter().map(|point| {
+                    // Pass is_selected to the draw function based on:
                     let is_selected = matches!(
                         &props.object_selection.selection,
+                        // If we have a defined selection that is a point
                         Some(DrawObjectSelection::Point(pt))
+                            // AND the point's string label is equal to this point
                             if point.label == *pt
                     );
+                    // Draw the point on the digraph
                     point.clone().draw(styles, is_selected)
                 })}
             </svg>

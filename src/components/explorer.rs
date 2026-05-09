@@ -1,5 +1,3 @@
-use std::any::Any;
-
 use yew::prelude::*;
 
 use crate::{components::toggle::{Toggle, ToggleOption}, logic::types::{DrawObjectSelection, EdgePair, ObjectSelection, Relation, RelationExplorerModes}};
@@ -16,12 +14,15 @@ pub fn explorer(props: &ExplorerProps) -> Html {
     let edges: Vec<_> = props.relation.values.iter().cloned().collect();
     let points: Vec<_> = props.relation.points.iter().cloned().collect();
 
+    // Keep track of the toggle and selected item
     let selected_index = use_state(|| 0);
     let display_mode = use_state(|| RelationExplorerModes::EDGES);
 
+    // Callback for the <Toggle/> component to select which type of object we are selecting
     let toggle_mode = {
         let dm = display_mode.clone();
         let selected_index = selected_index.clone();
+        // Takes in an integer based on the option selected
         Callback::from(move |int| {
             // Reset the selected index so we don't go out of bounds
             selected_index.set(0);
@@ -37,6 +38,8 @@ pub fn explorer(props: &ExplorerProps) -> Html {
         })
     };
 
+    // Callback for dynamically setting the object that is selected whether it is an edge or a point
+    // Takes in an ObjectSelection object and an index corresponding to the object in its respective vector defined above
     let selected = {
         let selection = props.object_selection.clone();
         let selected_index = selected_index.clone();
@@ -46,7 +49,10 @@ pub fn explorer(props: &ExplorerProps) -> Html {
         })
     };
 
+    // Used for arrow key scrolling
+    // Returns a callback to be inserted into a div
     let onkeydown = {
+        // Clone variables
         let selected_index = selected_index.clone();
         let selected = selected.clone();
         let edges = edges.clone();
@@ -54,6 +60,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
         let display_mode = display_mode.clone();
 
         Callback::from(move |e: KeyboardEvent| {
+            // If we have no edges or points then forget about it
             if edges.is_empty() && points.is_empty() {
                 return;
             }
@@ -72,12 +79,12 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                 _ => return,
             }
 
+            // Based on our display mode, toggle the index to select new points
             match *display_mode {
                 RelationExplorerModes::EDGES => {
                     let len = edges.len() as i32;
+                    // Allow for looped scrolling
                     let index = (index + len) % len;
-
-                    selected_index.set(index);
 
                     let pairing = edges[index as usize].clone();
                     selected.emit((ObjectSelection::from_edge(pairing), index));
@@ -85,8 +92,6 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                 RelationExplorerModes::POINTS => {
                     let len = points.len() as i32;
                     let index = (index + len) % len;
-
-                    selected_index.set(index);
 
                     let point = points[index as usize].clone();
                     selected.emit((ObjectSelection::from_point(point), index));
@@ -98,12 +103,12 @@ pub fn explorer(props: &ExplorerProps) -> Html {
     html! {
         <div
             class="explorer"
-            tabindex="0" // makes it focusable
-            {onkeydown}
+            tabindex="0" // Makes this div focusable
+            {onkeydown} // Connect our keydown callback for scrolling
         >
             <Toggle
                 class="explorer__toggle"
-                onchange={toggle_mode}
+                onchange={toggle_mode} // Connect the toggle mode callback for switching between edges and points
                 size={20}
             >
                 <ToggleOption icon="edge" size={20}/>
@@ -113,6 +118,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
             {match *display_mode {
                 // Display edges    
                 RelationExplorerModes::EDGES => html!{
+                    // Map all of the edges as options
                     <>{for props.relation.values.iter().enumerate().map(|(index, (a, b))| {
                         let selected = selected.clone();
                         let pairing = (a.clone(), b.clone());
@@ -121,6 +127,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                             <button
                                 class={classes!(
                                         "explorer__row",
+                                        // Based on the object selection, see if we ned to add a class that highlights this row
                                         match &props.object_selection.selection {
                                             Some(DrawObjectSelection::Edge(pair)) => {
                                                 if pair.0 == *a && pair.1 == *b {
@@ -133,18 +140,21 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                                         }
                                     )
                                 }
+                                // Register an onclick callback to set this as the selected object
                                 onclick={
                                     Callback::from(move |_| {
                                         selected.emit((ObjectSelection::from_edge(pairing.clone()), index as i32));
                                     })
                                 }
                             >
+                                // Render the text for the relation
                                 <code>{format!("({}, {})", a, b)}</code>
                             </button>
                         }
                     })}</>
                 },
                 RelationExplorerModes::POINTS => html!{
+                    // Map all of the points for selection
                     <>{for props.relation.points.iter().enumerate().map(|(index, point)| {
                         let selected = selected.clone();
                         let point = point.clone();
@@ -154,6 +164,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                             <button
                                 class={classes!(
                                         "explorer__row",
+                                        // Based on the object selection, see if we ned to add a class that highlights this row
                                         match &props.object_selection.selection {
                                             Some(DrawObjectSelection::Point(p)) => {
                                                 if *p == *point {
@@ -166,13 +177,15 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                                         }
                                     )
                                 }
+                                // Register an onclick callback to set this as the selected object
                                 onclick={
                                     Callback::from(move |_| {
                                         selected.emit((ObjectSelection::from_point(point_borrow.clone()), index as i32));
                                     })
                                 }
                             >
-                                <code>{format!("{}", point)}</code>
+                                // Render the text for the point
+                                <code>{point}</code>
                             </button>
                         }
                     })}</>
