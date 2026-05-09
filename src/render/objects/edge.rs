@@ -83,8 +83,6 @@ impl Edge {
     }
 
     pub fn draw(self, styles: RenderStyles, is_selected: bool) -> Html {
-        log!("IS SELECTED {}", is_selected);
-
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
 
         match self.relation_type {
@@ -114,7 +112,7 @@ impl Edge {
                         stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
-                    {self.midpoint().draw(styles)}
+                    {self.midpoint().draw(styles, is_selected)}
                 </>
             },
             RelationProperty::SYMMETRIC => html! {
@@ -137,7 +135,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles)}
+                    {self.midpoint().draw(styles, is_selected)}
                 </>
             },
             // Antisymmetrics
@@ -152,7 +150,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles)}
+                    {self.midpoint().draw(styles, is_selected)}
                 </>
             }
         }

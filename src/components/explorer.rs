@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use yew::prelude::*;
 
 use crate::{components::toggle::{Toggle, ToggleOption}, logic::types::{DrawObjectSelection, EdgePair, ObjectSelection, Relation, RelationExplorerModes}};
@@ -9,17 +11,20 @@ pub struct ExplorerProps {
 }
 
 #[function_component(Explorer)]
-pub fn analytics(props: &ExplorerProps) -> Html {
-    let properties = props.relation.properties.clone();
+pub fn explorer(props: &ExplorerProps) -> Html {
     // Our own internal way of keeping track of the selection for scrolling
-    let values: Vec<_> = props.relation.values.iter().cloned().collect();
+    let edges: Vec<_> = props.relation.values.iter().cloned().collect();
+    let points: Vec<_> = props.relation.points.iter().cloned().collect();
 
     let selected_index = use_state(|| 0);
     let display_mode = use_state(|| RelationExplorerModes::EDGES);
 
     let toggle_mode = {
         let dm = display_mode.clone();
+        let selected_index = selected_index.clone();
         Callback::from(move |int| {
+            // Reset the selected index so we don't go out of bounds
+            selected_index.set(0);
             match int {
                 0 => {
                     dm.set(RelationExplorerModes::EDGES);
@@ -44,10 +49,12 @@ pub fn analytics(props: &ExplorerProps) -> Html {
     let onkeydown = {
         let selected_index = selected_index.clone();
         let selected = selected.clone();
-        let values = values.clone();
+        let edges = edges.clone();
+        let points = points.clone();
+        let display_mode = display_mode.clone();
 
         Callback::from(move |e: KeyboardEvent| {
-            if values.is_empty() {
+            if edges.is_empty() && points.is_empty() {
                 return;
             }
 
@@ -65,13 +72,26 @@ pub fn analytics(props: &ExplorerProps) -> Html {
                 _ => return,
             }
 
-            let len = values.len() as i32;
-            let index = (index + len) % len;
+            match *display_mode {
+                RelationExplorerModes::EDGES => {
+                    let len = edges.len() as i32;
+                    let index = (index + len) % len;
 
-            selected_index.set(index);
+                    selected_index.set(index);
 
-            let pairing = values[index as usize].clone();
-            selected.emit((ObjectSelection::from_edge(pairing), index));
+                    let pairing = edges[index as usize].clone();
+                    selected.emit((ObjectSelection::from_edge(pairing), index));
+                },
+                RelationExplorerModes::POINTS => {
+                    let len = points.len() as i32;
+                    let index = (index + len) % len;
+
+                    selected_index.set(index);
+
+                    let point = points[index as usize].clone();
+                    selected.emit((ObjectSelection::from_point(point), index));
+                }
+            }
         })
     };
 

@@ -43,7 +43,14 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                     );
                     edge.clone().draw(styles, is_selected)
                 })}
-                { for points.iter().map(|point| { point.clone().draw(styles) })}
+                { for points.iter().map(|point| {
+                    let is_selected = matches!(
+                        &props.object_selection.selection,
+                        Some(DrawObjectSelection::Point(pt))
+                            if point.label == *pt
+                    );
+                    point.clone().draw(styles, is_selected)
+                })}
             </svg>
         </div>
     }

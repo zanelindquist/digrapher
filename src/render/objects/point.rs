@@ -27,12 +27,14 @@ impl Point {
         ((other.x - self.x).powi(2) + (other.y - self.y).powi(2)).sqrt()
     }
 
-    pub fn draw(self, styles: RenderStyles) -> Html {
+    pub fn draw(self, styles: RenderStyles, is_selected: bool) -> Html {
         let triangle_points: Vec<(f32, f32)> = vec![
-            (self.x + self.bearing.cos() * styles.dot.radius, self.y + self.bearing.sin() * styles.dot.radius),
-            (self.x + (self.bearing + 2.0/3.0 * PI).cos() * styles.dot.radius, self.y + (self.bearing + 2.0/3.0 * PI).sin() * styles.dot.radius),
-            (self.x + (self.bearing + 4.0/3.0 * PI).cos() * styles.dot.radius, self.y + (self.bearing + 4.0/3.0 * PI).sin() * styles.dot.radius),
+            (self.x + self.bearing.cos() * styles.point.radius, self.y + self.bearing.sin() * styles.point.radius),
+            (self.x + (self.bearing + 2.0/3.0 * PI).cos() * styles.point.radius, self.y + (self.bearing + 2.0/3.0 * PI).sin() * styles.point.radius),
+            (self.x + (self.bearing + 4.0/3.0 * PI).cos() * styles.point.radius, self.y + (self.bearing + 4.0/3.0 * PI).sin() * styles.point.radius),
         ];
+
+        let fill_color = if is_selected {styles.point.highlighted_stroke.to_string()} else {styles.point.fill.to_string()};
         
         match self.symbol {
             PointRenderSymbol::TRIANGLE => html! {
@@ -45,16 +47,16 @@ impl Point {
                             .collect::<Vec<String>>()
                             .join(" ")
                         }
-                        fill={styles.dot.fill}
-                        stroke={styles.dot.stroke}
-                        // stroke-width={styles.dot.stroke_width.to_string()}
+                        fill={fill_color.clone()}
+                        stroke={styles.point.stroke}
+                        // stroke-width={styles.point.stroke_width.to_string()}
                     />
                     <text
                         x={(self.x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
                         y={(self.y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
                         font-family={styles.font.family}
                         font-size={styles.font.size.to_string()}
-                        fill={styles.font.fill}
+                        fill={fill_color.clone()}
                     >
                         { self.label.to_string() }
                     </text>
@@ -66,17 +68,17 @@ impl Point {
                     <circle
                         cx={self.x.to_string()}
                         cy={self.y.to_string()}
-                        r={styles.dot.radius.to_string()}
-                        fill={styles.dot.fill}
-                        stroke={styles.dot.stroke}
-                        stroke-width={styles.dot.stroke_width.to_string()}
+                        r={styles.point.radius.to_string()}
+                        fill={fill_color.clone()}
+                        stroke={styles.point.stroke}
+                        stroke-width={styles.point.stroke_width.to_string()}
                     />
                     <text
                         x={(self.x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
                         y={(self.y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
                         font-family={styles.font.family}
                         font-size={styles.font.size.to_string()}
-                        fill={styles.font.fill}
+                        fill={fill_color.clone()}
                     >
                         { self.label.to_string() }
                     </text>
