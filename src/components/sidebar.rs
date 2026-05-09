@@ -46,7 +46,6 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     <code class="sidebar__preview-code">{ if props.value.is_empty() {String::from("No relations yet")} else {props.value.clone()} }</code>
                 </div>
                 <div class="sidebar__analysis">
-                    <label class="sidebar__label" for="graph-preview">{"Relation properties"}</label>
                     {
                         match &*props.digested_values {
                             Ok(relation) => html!{
@@ -63,7 +62,6 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     match &*props.digested_values {
                         Ok(relation) => html!{
                             <div class="sidebar__explorer">
-                                <label class="sidebar__label" for="graph-explorer">{"Relation explorer"}</label>
                                 <Explorer
                                     relation={relation.clone()}
                                     object_selection={props.object_selection.clone()}

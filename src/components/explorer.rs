@@ -106,6 +106,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
             tabindex="0" // Makes this div focusable
             {onkeydown} // Connect our keydown callback for scrolling
         >
+            <label class="sidebar__label" for="graph-explorer">{"Relation explorer"}</label>
             <Toggle
                 class="explorer__toggle"
                 onchange={toggle_mode} // Connect the toggle mode callback for switching between edges and points
@@ -115,6 +116,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                 <ToggleOption icon="point" size={20}/>
             </Toggle>
 
+            <div class="explorer__rows">
             {match *display_mode {
                 // Display edges    
                 RelationExplorerModes::EDGES => html!{
@@ -191,7 +193,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                     })}</>
                 }
             }}
-
+            </div>
         </div>
     }
 }
