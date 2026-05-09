@@ -57,7 +57,10 @@ pub struct MatrixStyle {
     pub legend_font: FontStyle,
     pub cell_size: i32,
     pub stroke: &'static str,
-    pub stroke_width: i32
+    pub stroke_width: i32,
+    pub selected_text_color: &'static str,
+    pub selected_outline_color: &'static str,
+    pub selected_stroke_width: i32,
 }
 impl Default for MatrixStyle {
     fn default() -> Self {
@@ -68,6 +71,9 @@ impl Default for MatrixStyle {
             cell_size: 40,
             stroke: "var(--outlineVariant)",
             stroke_width: 2,
+            selected_text_color: "var(--onBackground)",
+            selected_outline_color: "var(--onPrimaryContainer)",
+            selected_stroke_width: 1
         }        
     }
 }
