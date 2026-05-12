@@ -1,8 +1,8 @@
 use yew::prelude::*;
 
-use crate::components::analytics::Analytics;
-use crate::components::explorer::Explorer;
-use crate::logic::types::{DigestedValuesResult, ObjectSelection};
+use crate::components::digraph_tools::analytics::Analytics;
+use crate::components::digraph_tools::explorer::Explorer;
+use crate::logic::digraph_logic::types::{DigestedValuesResult, ObjectSelection};
 
 #[derive(Properties, PartialEq)]
 pub struct SidebarProps {

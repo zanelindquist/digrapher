@@ -1,6 +1,7 @@
 use yew::prelude::*;
 
-use crate::{components::toggle::{Toggle, ToggleOption}, logic::types::{DrawObjectSelection, EdgePair, ObjectSelection, Relation, RelationExplorerModes}};
+use crate::components::misc::toggle::{Toggle, ToggleOption};
+use crate::logic::digraph_logic::types::{DrawObjectSelection, EdgePair, ObjectSelection, Relation, RelationExplorerModes};
 
 #[derive(Properties, PartialEq)]
 pub struct ExplorerProps {

@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
-use crate::logic::calculate_render::{position_edges, position_points};
-use crate::logic::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointVector, Relation};
+use crate::logic::digraph_logic::calculate_render::{position_edges, position_points};
+use crate::logic::digraph_logic::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointVector, Relation};
 use crate::render::styles::RenderStyles;
 
 

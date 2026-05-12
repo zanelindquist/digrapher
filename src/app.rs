@@ -1,9 +1,9 @@
 use gloo_console::log;
 use yew::prelude::*;
-use crate::components::sidebar::Sidebar;
-use crate::logic::digest_values::{digest_values};
-use crate::logic::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError};
-use crate::render::graph::{Graph};
+use crate::components::digraph_tools::sidebar::Sidebar;
+use crate::logic::digraph_logic::digest_values::{digest_values};
+use crate::logic::digraph_logic::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError};
+use crate::render::digraph_render::graph::{Graph};
 
 // Theme embedded at compile time
 const THEME_JSON: &str = include_str!("assets/themes/organic.json");

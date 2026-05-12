@@ -1,5 +1,3 @@
-pub mod graph;
-pub mod digraph_canvas;
+pub mod digraph_render;
 pub mod objects;
 pub mod styles;
-pub mod matrix_canvas;

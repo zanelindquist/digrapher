@@ -1,5 +1,2 @@
-pub mod sidebar;
-pub mod analytics;
-pub mod toggle;
-pub mod icon;
-pub mod explorer;
+pub mod digraph_tools;
+pub mod misc;
