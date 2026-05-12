@@ -1,7 +1,7 @@
 /* App Layout */
 .app {
     display: flex;
-    height: 100vh;
+    height: 100%;
     width: 100vw;
     overflow: hidden;
 }
@@ -20,7 +20,6 @@
     overflow: hidden;
     background-color: var(--surface);
 }
-
 .topbar {
     height: 64px;
     min-height: 64px;
@@ -40,14 +39,15 @@
     backdrop-filter: blur(10px);
     z-index: 100;
 }
-
 .topbar__left,
 .topbar__right {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
+.topbar__logo {
+    border-right: 1px solid var(--outlineVariant);
+}
 .topbar__nav {
     display: flex;
     align-items: center;
@@ -57,7 +57,6 @@
     border-radius: 12px;
     background-color: var(--surfaceContainer);
 }
-
 .topbar__link {
     position: relative;
     padding: 8px 14px;
@@ -72,16 +71,13 @@
         color 0.18s ease,
         transform 0.12s ease;
 }
-
 .topbar__link:hover {
     background-color: var(--surfaceContainerHighest);
     color: var(--onSurface);
 }
-
 .topbar__link:active {
     transform: scale(0.98);
 }
-
 .topbar__status {
     display: flex;
     align-items: center;
@@ -93,7 +89,6 @@
     color: var(--onSurfaceVariant);
     font-size: 13px;
 }
-
 .topbar__dot {
     width: 8px;
     height: 8px;
@@ -101,12 +96,47 @@
     background-color: var(--tertiary);
     box-shadow: 0 0 10px rgba(120, 255, 160, 0.4);
 }
-
 .topbar__content {
     flex: 1;
     min-height: 0;
     display: flex;
     overflow: hidden;
+}
+
+/*
+===================
+===== HOME =====
+===================
+*/
+
+.home {
+    width: 100vw;
+    overflow-y: scroll;
+    padding: 100px;
+    padding-top: 20%;
+    flex-direction: column;
+    justify-content: center;
+}
+.home__logo {
+    display: inline;
+    justify-self: center;
+    text-align: center;
+}
+.home__description {
+    display: block;
+    padding-top: 50px;
+    font-size: 1.2rem;
+    line-height: 2.5rem;
+}
+.home__tools {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 50px;
+}
+.home__tool {
+    flex: 1;
+    flex-grow: 1;
 }
 
 
@@ -276,7 +306,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    height: 100vh;
+    height: 100%;
 }
 .graph__error {
     margin: 20px;

@@ -16,7 +16,7 @@ pub fn topbar_layout(props: &TopbarProps) -> Html {
         <div class="topbar__layout">
             <header class="topbar">
                 <div class="topbar__left">
-                    <Logo size={22}/>
+                    <Logo size={22} class="topbar__logo"/>
                 </div>
 
                 <nav class="topbar__nav">

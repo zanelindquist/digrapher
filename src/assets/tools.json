@@ -1,0 +1,23 @@
+[
+    {
+        "name": "Digraph",
+        "description": "Create directed graphs and matricies for discrete math relationships",
+        "published_date": "Published 5/9/2026",
+        "image_path": "digraph.png",
+        "url": "/digraph"
+    },
+    {
+        "name": "Matrix Multiplication",
+        "description": "Visualize vector, matrix, and even tensor multiplication.",
+        "published_date": "⚠️ Under construction",
+        "image_path": "matrix.png",
+        "url": "/matrixmultiplication"
+    },
+    {
+        "name": "Line Integrals",
+        "description": "Visualize the integration of integrals on parametric paths.",
+        "published_date": "⚠️ Under construction",
+        "image_path": "integrals.png",
+        "url": "/404"
+    }
+]

@@ -45,12 +45,36 @@
     align-items: center;
     gap: 10px;
     padding-right: 18px;
-    border-right: 1px solid var(--outlineVariant);
 }
-
 .logo code {
     font-size: 18px;
     font-weight: 600;
     color: var(--onSurface);
     letter-spacing: -0.02em;
+    display: inline;
+}
+
+.tool-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid var(--outlineVariant);
+    margin: 15px;
+}
+.tool-preview__img {
+    width: 200px;
+    min-height: 100px;
+}
+.tool-preview__name {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+.tool-preview__description {
+    font-size: 1.1rem;
+}
+.tool-preview__date {
+    font-size: 0.9rem;
+    color: var(--outlineVariant);
 }
