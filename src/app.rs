@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use yew::prelude::*;
 use yew_router::prelude::*;
 use gloo_storage::{LocalStorage, Storage};
@@ -12,7 +14,7 @@ pub fn app() -> Html {
     let theme = use_state(||stored_theme);
 
     let context = ThemeContext {
-        theme: (*theme).clone(),
+        theme: theme.deref().clone(),
         set_theme: {
             let theme = theme.clone();
             Callback::from(move |new_theme: String| {

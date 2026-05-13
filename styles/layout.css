@@ -49,9 +49,6 @@
     align-items: center;
     gap: 12px;
 }
-.topbar__themeing {
-
-}
 .topbar__logo {
     border-right: 1px solid var(--outlineVariant);
 }
