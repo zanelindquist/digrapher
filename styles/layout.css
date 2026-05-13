@@ -324,7 +324,7 @@
 }
 .explorer__row--selected {
     z-index: 0;
-    background: linear-gradient(90deg, var(--primaryContainer),rgba(205, 237, 163, 0.7));
+    background: var(--primaryContainer);
     border-left: 2px solid var(--tertiary);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
     transform: translateX(2px);

@@ -53,6 +53,7 @@ pub fn style_toggle() -> Html {
             } else {
                 "light"
             };
+            // Set the global theme context
             theme_ctx.set_theme.emit(next.to_string());
         })
     };

@@ -1,19 +1,22 @@
 use yew::prelude::*;
 use yew_router::prelude::*;
+use gloo_storage::{LocalStorage, Storage};
 
 use crate::router::{switch, Route};
 use crate::components::contexts::theme_context::{ThemeContext, StyleProvider};
 
 #[function_component(App)]
 pub fn app() -> Html {
-    let theme = use_state(||"light".to_string());
+    // Get localstorage theme that was set
+    let stored_theme = LocalStorage::get::<String>("theme").unwrap_or("light".to_string());
+    let theme = use_state(||stored_theme);
 
     let context = ThemeContext {
         theme: (*theme).clone(),
         set_theme: {
             let theme = theme.clone();
-
             Callback::from(move |new_theme: String| {
+                LocalStorage::set("theme", &new_theme).unwrap();
                 theme.set(new_theme)
             })
         },
