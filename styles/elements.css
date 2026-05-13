@@ -20,6 +20,15 @@ code {
     color: var(--onSurface);
     margin: 0;
 }
+code a {
+    color: var(--primary)
+}
+footer {
+    margin-top: 100px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    background-color: var(--surfaceVariant);
+}
 
 * {
     scrollbar-width: thin;

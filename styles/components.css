@@ -93,3 +93,30 @@
     color: var(--outlineVariant);
     justify-self: flex-end;
 }
+
+.footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+}
+.footer h1 {
+    font-family: "Fira Code", monospace;
+    font-size: 1.5rem;
+}
+.footer a {
+    font-family: "Fira Code", monospace;
+    color: var(--primary)
+}
+.footer p {
+    font-family: "Fira Code", monospace;
+    font-size: 13px;
+    color: var(--onSurface);
+}
+.footer code {
+    display: block;
+}
+.footer__column {
+    flex: 1;
+    align-items: center;
+}

@@ -1,7 +1,10 @@
 use gloo_console::log;
 use yew::prelude::*;
 
-use crate::components::navigation::topbar_layout::TopbarLayout;
+use crate::components::navigation::{
+    topbar_layout::TopbarLayout,
+    footer::Footer
+};
 use crate::components::misc::{
     logo::Logo,
     tool_preview::{ToolPreview, ToolData}
@@ -21,7 +24,7 @@ pub fn home_page() -> Html {
     });
 
     html! {
-        <TopbarLayout class="center">
+        <TopbarLayout class="home__container">
             <div class="home dynamic-padding">
                 <Logo class="home__logo" hide_logo={true} size={60}/>
                 <code class="home__description">
@@ -37,6 +40,7 @@ pub fn home_page() -> Html {
                     })}
                 </div>
             </div>
+            <Footer />
         </TopbarLayout>
     }
 }
