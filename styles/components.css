@@ -1,3 +1,7 @@
+/*
+    THIS FILE IS FOR SPECIFIC COMPONNTS
+*/
+
 .toggle {
     position: absolute;
     height: fit-content;
@@ -58,17 +62,24 @@
     border-radius: 8px;
     border: 1px solid var(--outlineVariant);
     margin: 15px;
+    padding: 20px;
 }
 .tool-preview__link {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     gap: 15px;
-    padding: 20px;
     text-decoration: none;
     height: 100%;
 }
 .tool-preview__img {
     width: 100%;
+    min-height: 150px;
+}
+.tool-preview__bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 .tool-preview__name {
     font-size: 1.5rem;

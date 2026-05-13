@@ -57,6 +57,7 @@ version = "1.1.0"
 dependencies = [
  "gloo-console 0.4.0",
  "gloo-net 0.7.0",
+ "gloo-utils 0.3.0",
  "js-sys",
  "serde",
  "serde_json",

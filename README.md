@@ -9,7 +9,7 @@ The term *digraph* refers to [directed graphs](https://en.wikipedia.org/wiki/Dir
 ## Deploy Locally
 Digrapher can be deployed locally through a Docker Virtual Machine
 1. Install [Docker](https://www.docker.com/)
-2. Run `docker run -p 8080:80 zanelindquist/digrapher`
+2. Run `docker run -p 8080:80 zanelindquist/digrapher` to use the latest build, or use a version postfix like `zanelindquist/digrapher:1.1.0` for a specific build
 3. Navigate to [localhost:8080](localhost:8080)
 
 ## Key Features

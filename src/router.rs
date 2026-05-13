@@ -23,5 +23,6 @@ pub fn switch(routes: Route) -> Html {
     match routes {
         Route::Home => html! { <HomePage /> },
         Route::Digraph => html! { <DigraphPage /> },
-        Route::NotFound => html! { <NotFoundPage /> },}
+        Route::NotFound => html! { <NotFoundPage /> },
+    }
 }

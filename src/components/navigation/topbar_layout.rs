@@ -8,6 +8,8 @@ use crate::router::Route;
 #[derive(Properties, PartialEq)]
 pub struct TopbarProps {
     pub children: Children,
+    #[prop_or_default]
+    pub class: Classes
 }
 
 #[function_component(TopbarLayout)]
@@ -43,7 +45,7 @@ pub fn topbar_layout(props: &TopbarProps) -> Html {
                 </div>
             </header>
 
-            <main class="topbar__content">
+            <main class={classes!("topbar__content", props.class.clone())}>
                 {props.children.clone()}
             </main>
         </div>

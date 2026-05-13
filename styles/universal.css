@@ -1,0 +1,12 @@
+/*
+    THIS FILE IS FOR GENERALLY APPLICABLE STYLES
+*/
+
+.center {
+    justify-content: center;
+}
+
+.dynamic-padding {
+    padding-left: calc(100px + max(68vw - 800px, 0px));
+    padding-right: calc(100px + max(68vw - 800px, 0px));
+}

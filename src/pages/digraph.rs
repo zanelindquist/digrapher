@@ -43,6 +43,12 @@ pub fn digraph_page() -> Html {
         })
     };
 
+    // Set page name
+    use_effect(|| {
+        gloo_utils::document().set_title("Digraph");
+        || ()
+    });
+
     html! {
         <TopbarLayout>
             <div class="app">

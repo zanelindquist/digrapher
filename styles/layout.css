@@ -1,4 +1,8 @@
-/* App Layout */
+/*
+    THIS FILE HAS TO DO WITH PAGE LAYOUT STYLES
+*/
+
+/* App Root Layout */
 .app {
     display: flex;
     height: 100%;
@@ -110,10 +114,9 @@
 */
 
 .home {
-    width: 100vw;
     overflow-y: scroll;
-    padding: 100px;
     padding-top: 20%;
+    padding-bottom: 100px;
     flex-direction: column;
     justify-content: center;
 }
