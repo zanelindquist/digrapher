@@ -2,7 +2,7 @@ use yew::prelude::*;
 use yew_router::prelude::*;
 
 use crate::components::misc::logo::Logo;
-use crate::components::navigation::footer::Footer;
+use crate::components::contexts::theme_context::StyleToggle;
 use crate::router::Route;
 
 
@@ -36,6 +36,7 @@ pub fn topbar_layout(props: &TopbarProps) -> Html {
                     </Link<Route>>
                 </nav>
                 <div class="topbar__right">
+                    <StyleToggle/>
                     <div class="topbar__status">
                         <span class="topbar__dot"></span>
                         <code>{"stable"}</code>

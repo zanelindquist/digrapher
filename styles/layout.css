@@ -49,6 +49,9 @@
     align-items: center;
     gap: 12px;
 }
+.topbar__themeing {
+
+}
 .topbar__logo {
     border-right: 1px solid var(--outlineVariant);
 }
@@ -153,8 +156,14 @@
 ===================
 */
 
+.not-found__container {
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
 .not-found {
     margin: 50px;
+    flex-grow: 1;
 }
 .not-found__heading {
 

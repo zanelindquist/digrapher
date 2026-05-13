@@ -103,6 +103,7 @@
 .footer h1 {
     font-family: "Fira Code", monospace;
     font-size: 1.5rem;
+    color: var(--onSurface)
 }
 .footer a {
     font-family: "Fira Code", monospace;
@@ -119,4 +120,11 @@
 .footer__column {
     flex: 1;
     align-items: center;
+}
+
+.style-toggle {
+
+}
+.style-toggle {
+    
 }
