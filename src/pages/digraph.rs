@@ -2,8 +2,8 @@ use gloo_console::log;
 use yew::prelude::*;
 use crate::components::digraph_tools::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
-use crate::logic::digraph_logic::digest_values::{digest_values};
-use crate::logic::digraph_logic::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError};
+use crate::services::digraph_services::digest_values::{digest_values};
+use crate::services::digraph_services::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError};
 use crate::render::digraph_render::graph::{Graph};
 
 

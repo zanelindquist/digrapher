@@ -1,7 +1,7 @@
 mod app;
 mod components;
 mod render;
-mod logic;
+mod services;
 mod router;
 mod pages;
 

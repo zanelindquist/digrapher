@@ -13,6 +13,7 @@ pub type RawEdgePairs = HashSet<EdgePair>;
 pub type PointVector = Vec<Point>;
 pub type EdgeVector = Vec<Edge>;
 pub type MatrixData = Vec<Vec<bool>>;
+pub type StoredRelations = Vec<StoredRelation>;
 
 // ENUMS
 
@@ -116,6 +117,23 @@ pub struct Relation {
     pub properties: RelationProperties
 }
 
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+pub struct StoredRelation {
+    pub name: String,
+    pub id: i32,
+    pub raw_text: String,
+    pub date_saved: String
+}
+impl Default for StoredRelation {
+    fn default() -> Self {
+        Self {
+            name: String::new(),
+            id: -1,
+            raw_text: String::new(),
+            date_saved: String::new()
+        }
+    }
+}
 
 // ERRORS
 #[derive(Debug, PartialEq, Clone)]

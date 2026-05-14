@@ -1,8 +1,8 @@
 use std::cmp::min;
 use std::f32::consts::PI;
 
-use crate::logic::digraph_logic::types::{EdgeVector, PointRenderSymbol, PointVector, RawEdgePairs, RelationProperty, SortedCharPoints};
-use crate::logic::digraph_logic::types::CanvasPositioning;
+use crate::services::digraph_services::types::{EdgeVector, PointRenderSymbol, PointVector, RawEdgePairs, RelationProperty, SortedCharPoints};
+use crate::services::digraph_services::types::CanvasPositioning;
 use crate::render::objects::point::{Point};
 use crate::render::objects::edge::{Edge};
 

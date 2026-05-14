@@ -1,7 +1,7 @@
 use gloo_console::log;
 use yew::prelude::*;
 
-use crate::logic::digraph_logic::types::{EdgeVector, MatrixData, ObjectSelection, PointVector, DrawObjectSelection};
+use crate::services::digraph_services::types::{EdgeVector, MatrixData, ObjectSelection, PointVector, DrawObjectSelection};
 use crate::render::{objects::point::Point, styles::MatrixStyle};
 
 pub struct Matrix {

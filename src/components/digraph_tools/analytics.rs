@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::logic::digraph_logic::types::Relation;
+use crate::services::digraph_services::types::Relation;
 
 #[derive(Properties, PartialEq)]
 pub struct AnalyticsProps {

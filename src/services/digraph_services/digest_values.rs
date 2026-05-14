@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, ops::Deref};
 
 use gloo_console::log;
 
-use crate::logic::digraph_logic::types::{DigestedValuesResult, ParseError, RawEdgePairs, Relation, RelationProperties};
+use crate::services::digraph_services::types::{DigestedValuesResult, ParseError, RawEdgePairs, Relation, RelationProperties};
 
 
 pub fn digest_values(values: String) -> DigestedValuesResult {

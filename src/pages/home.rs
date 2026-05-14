@@ -9,7 +9,7 @@ use crate::components::misc::{
     logo::Logo,
     tool_preview::{ToolPreview, ToolData}
 };
-use crate::logic::utils::routes::get_route_by_name;
+use crate::services::utils::routes::get_route_by_name;
 
 const TOOLS_JSON: &str = include_str!("../assets/tools.json");
 

@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
-use crate::{logic::digraph_logic::types::PointRenderSymbol, render::styles::RenderStyles};
+use crate::{services::digraph_services::types::PointRenderSymbol, render::styles::RenderStyles};
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct Point {

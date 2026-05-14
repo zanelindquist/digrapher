@@ -4,7 +4,7 @@ use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 
 use super::point::Point;
-use crate::{logic::digraph_logic::types::{PointRenderSymbol, RelationProperty}, render::styles::RenderStyles};
+use crate::{services::digraph_services::types::{PointRenderSymbol, RelationProperty}, render::styles::RenderStyles};
 
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
