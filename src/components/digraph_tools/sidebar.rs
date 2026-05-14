@@ -1,7 +1,11 @@
+use std::ops::Deref;
+
 use yew::prelude::*;
 
 use crate::components::digraph_tools::analytics::Analytics;
 use crate::components::digraph_tools::explorer::Explorer;
+use crate::components::digraph_tools::library::RelationLibrary;
+use crate::components::misc::button::Button;
 use crate::services::digraph_services::types::{DigestedValuesResult, ObjectSelection};
 
 #[derive(Properties, PartialEq)]
@@ -14,11 +18,20 @@ pub struct SidebarProps {
 
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
+    let display_library = use_state(|| false);
+
     let oninput: Callback<InputEvent> = {
         let input_value = props.on_input.clone();
         Callback::from(move |e: InputEvent| {
             let input: web_sys::HtmlTextAreaElement = e.target_unchecked_into();
             input_value.emit(input.value());
+        })
+    };
+
+    let on_toggle_library: Callback<MouseEvent> = {
+        let display_library = display_library.clone();
+        Callback::from(move |_: MouseEvent| {
+            display_library.set(!*display_library);
         })
     };
     
@@ -31,15 +44,26 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             
             <div class="sidebar__content">
                 <div class="sidebar__input-group">
-                    <label class="sidebar__label" for="graph-input">{"Enter graph"}</label>
-                    <textarea 
-                        id="graph-input"
-                        class="sidebar__input"
-                        rows="5"
-                        placeholder="{(a, b), (b, c), (c, c)}"
-                        value={props.value.clone()}
-                        oninput={oninput}
-                    />
+                    <div class="sidebar__input__container">
+                        <label class="sidebar__label" for="graph-input">{"Enter graph"}</label>
+                        <Button
+                            class="sidebar__input__toggle"
+                            onclick={on_toggle_library}
+                        >{if *display_library {"Library"} else {"Create"}}</Button>
+                    </div>
+                    
+                    if *display_library {
+                        <RelationLibrary />
+                    } else {
+                        <textarea 
+                            id="graph-input"
+                            class="sidebar__input"
+                            rows="5"
+                            placeholder="{(a, b), (b, c), (c, c)}"
+                            value={props.value.clone()}
+                            oninput={oninput}
+                        />
+                    }
                 </div>
                 <div class="sidebar__preview">
                     <span class="sidebar__preview-label">{"Preview"}</span>

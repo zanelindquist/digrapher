@@ -17,10 +17,20 @@ use std::fmt;
 use crate::services::digraph_services::types::{Relation, StoredRelation, StoredRelations};
 
 #[derive(Debug, Clone)]
-pub struct RelationStorageErr;
+pub enum RelationStorageErr {
+    StorageRead,
+    StorageWrite,
+    JsonParse,
+}
 impl fmt::Display for RelationStorageErr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Relation could not be stored.")
+        let msg = match self {
+            RelationStorageErr::StorageRead => "Failed to read from storage",
+            RelationStorageErr::StorageWrite => "Failed to write to storage",
+            RelationStorageErr::JsonParse => "Failed to parse JSON",
+        };
+
+        write!(f, "{}", msg)
     }
 }
 
@@ -43,12 +53,12 @@ pub fn store_new_relation(new_relation: Relation) -> Result<StoredRelations, Rel
 
             match LocalStorage::set("stored_relations", serde_json::to_string(&new_vec).unwrap_or_default()) {
                 Ok(_) => Ok(relations.to_vec()),
-                Err(_) => Err(RelationStorageErr)
+                Err(_) => Err(RelationStorageErr::StorageWrite)
             }
             
         },
-        Err(_) => {
-            Err(RelationStorageErr)
+        Err(e) => {
+            Err(e.clone())
         }
     }
 }
@@ -59,9 +69,15 @@ pub fn get_stored_relations() -> Result<StoredRelations, RelationStorageErr> {
         Ok(raw_text) => {
             match serde_json::from_str::<Vec<StoredRelation>>(raw_text.as_str()) {
                 Ok(relations) => Ok(relations),
-                Err(_) => Err(RelationStorageErr)
+                Err(_) => Err(RelationStorageErr::JsonParse)
             }
         },
-        Err(_) => Err(RelationStorageErr)
+        // If it can't read it, then we want to set stored_relations to []
+        Err(_) => {
+            match LocalStorage::set("stored_relations", "[]") {
+                Ok(_) => get_stored_relations(),
+                Err(_) => Err(RelationStorageErr::StorageWrite)
+            }
+        }
     }
 }

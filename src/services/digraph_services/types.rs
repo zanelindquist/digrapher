@@ -117,7 +117,7 @@ pub struct Relation {
     pub properties: RelationProperties
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Clone)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]
 pub struct StoredRelation {
     pub name: String,
     pub id: i32,
