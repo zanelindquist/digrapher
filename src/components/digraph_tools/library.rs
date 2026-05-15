@@ -27,14 +27,23 @@ pub fn relation_library(props: &RelationLibraryProps) -> Html {
     html! {
         <div class="library">
             {match &relations.deref() {
-                Ok(rels) => html! {
-                    for rels.iter().map(|rel| html!{
+                Ok(rels) => html!{
+                    <>
+                    {for rels.iter().map(|rel| html!{
                         <RelationLibraryRow
                             stored_relation={rel.clone()}
                             onselect={props.onselect.clone()}
                             ondelete={on_delete.clone()}
                         />
-                    })
+                    })}
+                    {if rels.is_empty() {
+                        html! {
+                            <code>{"No saved relations yet..."}</code>
+                        }
+                    }else {
+                        html! {}
+                    }}
+                    </>
                 },
                 Err(e) => html! {
                     <code>{"Failed to load relations: "} {format!("{}", e).to_lowercase() + "."}</code>

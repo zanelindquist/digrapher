@@ -50,6 +50,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         let failed_delete_flash = failed_delete_flash.clone();
         Callback::from(move |_: MouseEvent| {
             if let Ok(relation) = dv.deref() {
+                // If we successfully saved the relation, flash a checkmark
                 if let Ok(_) = store_new_relation(relation) {
                     display_check.set(true);
                     let dc = display_check.clone();
@@ -57,7 +58,9 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         dc.set(false);
                     });
                     timeout.forget();
-                } else {
+                }
+                // Otherwise, flash an X
+                else {
                     failed_delete_flash.set(true);
                     let f = failed_delete_flash.clone();
                     let timeout = Timeout::new(1_000, move || {
@@ -68,6 +71,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             }
         })
     };
+    // Used for piping a loaded saved relation into the input box to be loaded and parsed
     let load_saved_relation: Callback<StoredRelation> = {
         let input_value = props.on_input.clone();
         Callback::from(move |relation: StoredRelation| {
@@ -90,6 +94,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             class="sidebar__input__toggle"
                             onclick={on_toggle_library}
                         >
+                        // Show the button for the next mode to switch to
                         {match *input_display_mode {
                             2 => {"Create"},
                             0 => {"Library"},
@@ -98,7 +103,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         }}
                         </Button>
                     </div>
-                    
+                    // Render different selection modes
                     {match *input_display_mode {
                         0 => html! {
                             <textarea 
@@ -123,12 +128,20 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     }}
                 </div>
                 <div class="sidebar__input__save">
+                    // Show the save relation button
                     <Button
                         onclick={save_relation}
-                        disabled={*input_display_mode == 1}
+                        // Disable the button if we are on saved relations
+                        // OR if we don't have a valid relation being displayed
+                        disabled={
+                            *input_display_mode == 1
+                            || !props.digested_values.is_ok()
+                        }
                     >{"Save relation"}</Button>
+                    // Display the icon to flash a success or failure
                     if *display_check || *failed_delete_flash {
                         <Icon
+                            // Set its values based on it being a success or failure
                             icon={if *failed_delete_flash {"close"} else {"check"}}
                             color={if *failed_delete_flash {"error"} else {"onSecondaryContainer"}}
                             class={if *failed_delete_flash {"relation-row__right__trash--error"} else {"sidebar__input__save__check"}}
@@ -145,7 +158,6 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                                 <p class="sidebar__subtitle">{"Waiting for valid relation"}</p>
                             }
                         }
-
                     }
                 </div>
                 {
@@ -160,7 +172,6 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         },
                         Err(_)  => html! {}
                     }
-
                 }
             </div>
         </aside>
