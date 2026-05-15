@@ -167,7 +167,7 @@
 .library {
     max-height: 300px;
     overflow-y: auto;
-    padding: 3px;
+    padding: 4px;
 }
 
 .relation-row {
@@ -185,8 +185,8 @@
 }
 .relation-row:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
-    background-color: var(--surfaceHover, #252525);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+    background-color: var(--surfaceHover);
 }
 .relation-row__left {
     display: flex;
@@ -243,4 +243,17 @@
 .relation-row__right__trash {
     background-color: var(--primaryContainer);
     padding: 3px;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+.relation-row__right__trash:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+.relation-row__right__trash:active {
+    transform: scale(0.95);
+}
+
+.style-toggle {
+    cursor: pointer;
 }

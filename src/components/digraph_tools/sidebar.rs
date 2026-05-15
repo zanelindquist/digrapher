@@ -3,6 +3,7 @@ use yew::prelude::*;
 use gloo_timers::callback::Timeout;
 
 use crate::components::digraph_tools::analytics::Analytics;
+use crate::components::digraph_tools::browse::RelationBrowse;
 use crate::components::digraph_tools::explorer::Explorer;
 use crate::components::digraph_tools::library::RelationLibrary;
 use crate::components::misc::button::Button;
@@ -21,7 +22,7 @@ pub struct SidebarProps {
 
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
-    let display_library = use_state(|| false);
+    let input_display_mode = use_state(|| 0);
     let display_check = use_state(|| false);
 
     let oninput: Callback<InputEvent> = {
@@ -33,9 +34,9 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     };
 
     let on_toggle_library: Callback<MouseEvent> = {
-        let display_library = display_library.clone();
+        let input_display_mode = input_display_mode.clone();
         Callback::from(move |_: MouseEvent| {
-            display_library.set(!*display_library);
+            input_display_mode.set((*input_display_mode + 1) % 3);
         })
     };
     let save_relation: Callback<MouseEvent> = {
@@ -75,23 +76,38 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         <Button
                             class="sidebar__input__toggle"
                             onclick={on_toggle_library}
-                        >{if *display_library {"Library"} else {"Create"}}</Button>
+                        >
+                        {match *input_display_mode {
+                            0 => {"Create"},
+                            1 => {"Library"},
+                            2 => {"Browse"},
+                            _ => {""}
+                        }}
+                        </Button>
                     </div>
                     
-                    if *display_library {
-                        <RelationLibrary
-                            onselect={load_saved_relation}
-                        />
-                    } else {
-                        <textarea 
-                            id="graph-input"
-                            class="sidebar__input"
-                            rows="5"
-                            placeholder="{(a, b), (b, c), (c, c)}"
-                            value={props.value.clone()}
-                            oninput={oninput}
-                        />
-                    }
+                    {match *input_display_mode {
+                        0 => html! {
+                            <textarea 
+                                id="graph-input"
+                                class="sidebar__input"
+                                rows="5"
+                                placeholder="{(a, b), (b, c), (c, c)}"
+                                value={props.value.clone()}
+                                oninput={oninput}
+                            />
+                        },
+                        1 => html! {
+                            <RelationLibrary
+                                onselect={load_saved_relation}
+                            />},
+                        2 => html! {
+                            <RelationBrowse
+                                onselect={load_saved_relation}
+                            />
+                        },
+                        _ => html! {}
+                    }}
                 </div>
                 // <div class="sidebar__preview">
                 //     <span class="sidebar__preview-label">{"Preview"}</span>
@@ -100,7 +116,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 <div class="sidebar__input__save">
                     <Button
                         onclick={save_relation}
-                        disabled={*display_library}
+                        disabled={*input_display_mode != 0}
                     >{"Save relation"}</Button>
                     if *display_check {
                         <Icon icon="check" color="onSecondaryContainer" class="sidebar__input__save__check"/>

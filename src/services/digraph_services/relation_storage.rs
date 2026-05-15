@@ -12,9 +12,7 @@
 */
 
 use gloo_storage::{LocalStorage, Storage};
-use std::{fmt, ops::Deref};
-use gloo_console::log;
-use web_sys::console;
+use std::{fmt};
 
 use crate::services::digraph_services::types::{Relation, StoredRelation, StoredRelations};
 
@@ -78,6 +76,20 @@ pub fn clear_all_relations() {
 // Returns the string from localstorage for the recipient to process
 pub fn get_stored_relations() -> Result<Vec<StoredRelation>, RelationStorageErr> {
     match LocalStorage::get::<Vec<StoredRelation>>("stored_relations") {
+        Ok(relations) => Ok(relations),
+        Err(e) => {
+            web_sys::console::log_1(
+                &format!("Storage read error: {:?}", e).into()
+            );
+            Err(RelationStorageErr::StorageRead)
+        }
+    }
+}
+
+const CURATED_RELATIONS: &'static str = include_str!("../../assets/digraph_assets/curated_relations.json");
+
+pub fn get_stored_relations_from_json() -> Result<Vec<StoredRelation>, RelationStorageErr> {
+    match serde_json::from_str::<Vec<StoredRelation>>(CURATED_RELATIONS) {
         Ok(relations) => Ok(relations),
         Err(e) => {
             web_sys::console::log_1(

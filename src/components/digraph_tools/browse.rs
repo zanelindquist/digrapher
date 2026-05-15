@@ -1,35 +1,27 @@
-use std::ops::Deref;
 use yew::prelude::*;
 
-use crate::services::digraph_services::relation_storage::remove_relation;
-use crate::services::digraph_services::{relation_storage::get_stored_relations, types::StoredRelation};
+use crate::services::digraph_services::relation_storage::{get_stored_relations_from_json, remove_relation};
+use crate::services::digraph_services::{types::StoredRelation};
 use crate::components::misc::icon::Icon;
 
 #[derive(PartialEq, Properties)]
-pub struct RelationLibraryProps {
+pub struct RelationBrowseProps {
     pub onselect: Callback<StoredRelation>
 }
 
-#[function_component(RelationLibrary)]
-pub fn relation_library(props: &RelationLibraryProps) -> Html {
-    let relations = use_state(|| get_stored_relations());
-
-    let on_delete: Callback<i32> = {
-        let relations = relations.clone();
-        Callback::from(move |_| {
-            relations.set(get_stored_relations());
-        })
-    };
+#[function_component(RelationBrowse)]
+pub fn relation_library(props: &RelationBrowseProps) -> Html {
+    let relations = get_stored_relations_from_json();
 
     html! {
         <div class="library">
-            {match &relations.deref() {
+            {match &relations {
                 Ok(rels) => html! {
                     for rels.iter().map(|rel| html!{
-                        <RelationLibraryRow
+                        <RelationBrowseRow
                             stored_relation={rel.clone()}
                             onselect={props.onselect.clone()}
-                            ondelete={on_delete.clone()}
+                            ondelete={|_|{}}
                         />
                     })
                 },
@@ -42,19 +34,16 @@ pub fn relation_library(props: &RelationLibraryProps) -> Html {
 }
 
 #[derive(PartialEq, Properties, Clone)]
-pub struct RelationLibraryRowProps {
+pub struct RelationBrowseRowProps {
     pub stored_relation: StoredRelation,
     pub onselect: Callback<StoredRelation>,
-    #[prop_or_default]
     pub ondelete: Callback<i32>
 }
-#[function_component(RelationLibraryRow)]
-pub fn relation_library_row(props: &RelationLibraryRowProps) -> Html {
+#[function_component(RelationBrowseRow)]
+pub fn relation_library_row(props: &RelationBrowseRowProps) -> Html {
     let rel = &props.stored_relation;
     let relation = props.stored_relation.clone();
-    let id = props.stored_relation.id.clone();
     let onselect = props.onselect.clone();
-    let ondelete = props.ondelete.clone();
 
     html! {
         <div class="relation-row">
@@ -75,18 +64,6 @@ pub fn relation_library_row(props: &RelationLibraryRowProps) -> Html {
                     })}
                 >
                     { "Open" }
-                </button>
-                <button
-                    onclick={Callback::from(move |_| {
-                        remove_relation(id.clone());
-                        ondelete.emit(0);
-                    })}
-                >
-                    <Icon
-                        icon="trashcan"
-                        color="onPrimaryContainer"
-                        class="relation-row__right__trash"
-                    />
                 </button>
             </div>
         </div>

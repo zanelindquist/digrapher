@@ -1,0 +1,122 @@
+[
+    {
+        "name": "Triangle Cycle",
+        "id": 1,
+        "raw_text": "{(a, b), (b, c), (c, a)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Linear Chain",
+        "id": 2,
+        "raw_text": "{(1, 2), (2, 3), (3, 4), (4, 5)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Friend Group",
+        "id": 3,
+        "raw_text": "{(alice, bob), (alice, claire), (bob, david), (claire, emma), (emma, frank)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Planetary Orbit",
+        "id": 4,
+        "raw_text": "{(sun, mercury), (sun, venus), (sun, earth), (sun, mars)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Binary Tree",
+        "id": 5,
+        "raw_text": "{(1, 2), (1, 3), (2, 4), (2, 5), (3, 6), (3, 7)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Social Web",
+        "id": 6,
+        "raw_text": "{(amy, ben), (amy, cara), (ben, dan), (cara, ella), (dan, finn), (ella, finn), (finn, gabe)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Food Chain",
+        "id": 7,
+        "raw_text": "{(grass, rabbit), (rabbit, fox), (fox, wolf), (wolf, bacteria)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Computer Network",
+        "id": 8,
+        "raw_text": "{(router, pc1), (router, pc2), (router, server), (server, database), (database, backup)}",
+        "date_saved": ""
+    },
+    {
+        "name": "DNA Pairing",
+        "id": 9,
+        "raw_text": "{(A, T), (T, A), (C, G), (G, C)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Complete Four Graph",
+        "id": 10,
+        "raw_text": "{(a, b), (a, c), (a, d), (b, c), (b, d), (c, d)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Transportation Map",
+        "id": 11,
+        "raw_text": "{(station1, station2), (station2, station3), (station3, station4), (station2, station5), (station5, station6), (station6, station7)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Neuron Connections",
+        "id": 12,
+        "raw_text": "{(n1, n2), (n2, n3), (n3, n4), (n2, n5), (n5, n6), (n6, n7), (n4, n7)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Double Cluster",
+        "id": 13,
+        "raw_text": "{(a, b), (b, c), (c, a), (x, y), (y, z), (z, x)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Separated Communities",
+        "id": 14,
+        "raw_text": "{(1, 2), (2, 3), (3, 1), (8, 9), (9, 10), (10, 11), (11, 8)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Star Topology",
+        "id": 15,
+        "raw_text": "{(hub, a), (hub, b), (hub, c), (hub, d), (hub, e), (hub, f), (hub, g)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Classroom Collaboration",
+        "id": 16,
+        "raw_text": "{(john, maya), (maya, lucas), (lucas, sophie), (sophie, ethan), (ethan, ava), (ava, john), (maya, ethan)}",
+        "date_saved": ""
+    },
+    {
+        "name": "River System",
+        "id": 17,
+        "raw_text": "{(spring, creek1), (spring, creek2), (creek1, river), (creek2, river), (river, lake), (lake, ocean)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Knowledge Graph",
+        "id": 18,
+        "raw_text": "{(math, algebra), (math, geometry), (science, physics), (science, chemistry), (physics, calculus), (chemistry, biology), (biology, genetics)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Large Connected Web",
+        "id": 19,
+        "raw_text": "{(1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 1)}",
+        "date_saved": ""
+    },
+    {
+        "name": "Complex Ecosystem",
+        "id": 20,
+        "raw_text": "{(sun, plant), (plant, insect), (plant, rabbit), (insect, bird), (rabbit, fox), (bird, hawk), (fox, wolf), (hawk, wolf), (wolf, fungi), (fungi, soil)}",
+        "date_saved": ""
+    }
+]
