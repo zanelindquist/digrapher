@@ -1,8 +1,7 @@
 use yew::prelude::*;
 
-use crate::services::digraph_services::relation_storage::{get_stored_relations_from_json, remove_relation};
+use crate::services::digraph_services::relation_storage::{get_stored_relations_from_json};
 use crate::services::digraph_services::{types::StoredRelation};
-use crate::components::misc::icon::Icon;
 
 #[derive(PartialEq, Properties)]
 pub struct RelationBrowseProps {
@@ -11,11 +10,13 @@ pub struct RelationBrowseProps {
 
 #[function_component(RelationBrowse)]
 pub fn relation_library(props: &RelationBrowseProps) -> Html {
+    // Get the relations from json
     let relations = get_stored_relations_from_json();
 
     html! {
         <div class="library">
             {match &relations {
+                // If we successfully obtained the relations, then render a row for each loaded relation
                 Ok(rels) => html! {
                     for rels.iter().map(|rel| html!{
                         <RelationBrowseRow
@@ -25,6 +26,7 @@ pub fn relation_library(props: &RelationBrowseProps) -> Html {
                         />
                     })
                 },
+                // If loading from memory failed, show the user an error
                 Err(e) => html! {
                     <code>{"Failed to load relations: "} {format!("{}", e).to_lowercase() + "."}</code>
                 }
@@ -41,6 +43,7 @@ pub struct RelationBrowseRowProps {
 }
 #[function_component(RelationBrowseRow)]
 pub fn relation_library_row(props: &RelationBrowseRowProps) -> Html {
+    // Define variables for cloning
     let rel = &props.stored_relation;
     let relation = props.stored_relation.clone();
     let onselect = props.onselect.clone();
@@ -60,6 +63,7 @@ pub fn relation_library_row(props: &RelationBrowseRowProps) -> Html {
                 <button
                     class="relation-row__button"
                     onclick={Callback::from(move |_| {
+                        // Call the passed onselect callback with the stored relation data
                         onselect.emit(relation.clone())
                     })}
                 >

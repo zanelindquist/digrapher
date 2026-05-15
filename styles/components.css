@@ -248,6 +248,12 @@
     cursor: pointer;
     transition: transform 0.1s ease, filter 0.15s ease;
 }
+.relation-row__right__trash--error {
+    background-color: var(--onError);
+    padding: 3px;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
 .relation-row__right__trash:hover {
     filter: brightness(1.1);
     transform: translateY(-1px);

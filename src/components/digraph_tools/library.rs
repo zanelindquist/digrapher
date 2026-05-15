@@ -1,5 +1,6 @@
 use std::ops::Deref;
 use yew::prelude::*;
+use gloo_timers::callback::Timeout;
 
 use crate::services::digraph_services::relation_storage::remove_relation;
 use crate::services::digraph_services::{relation_storage::get_stored_relations, types::StoredRelation};
@@ -14,9 +15,11 @@ pub struct RelationLibraryProps {
 pub fn relation_library(props: &RelationLibraryProps) -> Html {
     let relations = use_state(|| get_stored_relations());
 
+    // Callback for deleting a saved relation from memory
     let on_delete: Callback<i32> = {
         let relations = relations.clone();
         Callback::from(move |_| {
+            // Update the displayed relations to refelct the change
             relations.set(get_stored_relations());
         })
     };
@@ -50,11 +53,15 @@ pub struct RelationLibraryRowProps {
 }
 #[function_component(RelationLibraryRow)]
 pub fn relation_library_row(props: &RelationLibraryRowProps) -> Html {
+    let failed_delete_flash = use_state(|| false);
+
+    // Cloning for callbacks
     let rel = &props.stored_relation;
     let relation = props.stored_relation.clone();
     let id = props.stored_relation.id.clone();
     let onselect = props.onselect.clone();
     let ondelete = props.ondelete.clone();
+    let fdf = failed_delete_flash.clone();
 
     html! {
         <div class="relation-row">
@@ -78,14 +85,28 @@ pub fn relation_library_row(props: &RelationLibraryRowProps) -> Html {
                 </button>
                 <button
                     onclick={Callback::from(move |_| {
-                        remove_relation(id.clone());
-                        ondelete.emit(0);
+                        match remove_relation(id.clone()) {
+                            Ok(_) => {
+                                ondelete.emit(0);
+                            },
+                            // If there is an error, we will just flash the trash icon red. Idek if remove_relation() will ever return an error tho
+                            Err(_) => {
+                                fdf.set(true);
+                                let f = fdf.clone();
+                                let timeout = Timeout::new(1_000, move || {
+                                    f.set(false);
+                                });
+                                timeout.forget();
+                            }
+                        }
                     })}
+                    disabled={*failed_delete_flash}
                 >
+                    // If the deletion fails, we will flash the delete icon
                     <Icon
                         icon="trashcan"
-                        color="onPrimaryContainer"
-                        class="relation-row__right__trash"
+                        color={if *failed_delete_flash {"error"} else {"onPrimaryContainer"}}
+                        class={if *failed_delete_flash {"relation-row__right__trash--error"} else {"relation-row__right__trash"}}
                     />
                 </button>
             </div>

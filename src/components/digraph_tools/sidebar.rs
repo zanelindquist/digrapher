@@ -24,7 +24,9 @@ pub struct SidebarProps {
 pub fn sidebar(props: &SidebarProps) -> Html {
     let input_display_mode = use_state(|| 0);
     let display_check = use_state(|| false);
+    let failed_delete_flash = use_state(|| false);
 
+    // When the user puts in text
     let oninput: Callback<InputEvent> = {
         let input_value = props.on_input.clone();
         Callback::from(move |e: InputEvent| {
@@ -33,15 +35,19 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         })
     };
 
+    // When the button to switch between selection modes is pressed
     let on_toggle_library: Callback<MouseEvent> = {
         let input_display_mode = input_display_mode.clone();
         Callback::from(move |_: MouseEvent| {
+            // Circular scroll the display mode
             input_display_mode.set((*input_display_mode + 1) % 3);
         })
     };
+    // Whent the suers presses save relation
     let save_relation: Callback<MouseEvent> = {
         let dv = props.digested_values.clone();
         let display_check = display_check.clone();
+        let failed_delete_flash = failed_delete_flash.clone();
         Callback::from(move |_: MouseEvent| {
             if let Ok(relation) = dv.deref() {
                 if let Ok(_) = store_new_relation(relation) {
@@ -49,6 +55,13 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     let dc = display_check.clone();
                     let timeout = Timeout::new(1_000, move || {
                         dc.set(false);
+                    });
+                    timeout.forget();
+                } else {
+                    failed_delete_flash.set(true);
+                    let f = failed_delete_flash.clone();
+                    let timeout = Timeout::new(1_000, move || {
+                        f.set(false);
                     });
                     timeout.forget();
                 }
@@ -109,17 +122,17 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         _ => html! {}
                     }}
                 </div>
-                // <div class="sidebar__preview">
-                //     <span class="sidebar__preview-label">{"Preview"}</span>
-                //     <code class="sidebar__preview-code">{ if props.value.is_empty() {String::from("No relations yet")} else {props.value.clone()} }</code>
-                // </div>
                 <div class="sidebar__input__save">
                     <Button
                         onclick={save_relation}
                         disabled={*input_display_mode == 1}
                     >{"Save relation"}</Button>
-                    if *display_check {
-                        <Icon icon="check" color="onSecondaryContainer" class="sidebar__input__save__check"/>
+                    if *display_check || *failed_delete_flash {
+                        <Icon
+                            icon={if *failed_delete_flash {"close"} else {"check"}}
+                            color={if *failed_delete_flash {"error"} else {"onSecondaryContainer"}}
+                            class={if *failed_delete_flash {"relation-row__right__trash--error"} else {"sidebar__input__save__check"}}
+                        />
                     }
                 </div>
                 <div class="sidebar__analysis">
