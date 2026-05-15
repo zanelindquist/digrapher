@@ -121,6 +121,7 @@
 }
 
 .button {
+    width: max-content;
     background-color: var(--primaryContainer);
     border-radius: 999px;
     color: var(--onPrimaryContainer);
@@ -160,4 +161,75 @@
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+.relation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    background-color: var(--surface, #1e1e1e);
+    color: var(--onSurface, #ffffff);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.relation-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    background-color: var(--surfaceHover, #252525);
+}
+.relation-row__left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+.relation-row__title {
+    font-size: 14px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.relation-row__text {
+    font-size: 12px;
+    opacity: 0.7;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.relation-row__right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.relation-row__date {
+    font-size: 11px;
+    opacity: 0.6;
+    white-space: nowrap;
+}
+.relation-row__button {
+    background-color: var(--primary);
+    color: var(--onPrimary);
+    border: none;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 0.1s ease, filter 0.15s ease;
+}
+.relation-row__button:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+.relation-row__button:active {
+    transform: scale(0.95);
 }
