@@ -98,6 +98,8 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    box-sizing: border-box;
+    gap: 24px;
     width: 100%;
 }
 .footer h1 {
