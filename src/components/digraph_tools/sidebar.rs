@@ -78,9 +78,9 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             onclick={on_toggle_library}
                         >
                         {match *input_display_mode {
-                            0 => {"Create"},
-                            1 => {"Library"},
-                            2 => {"Browse"},
+                            2 => {"Create"},
+                            0 => {"Library"},
+                            1 => {"Browse"},
                             _ => {""}
                         }}
                         </Button>
@@ -116,7 +116,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 <div class="sidebar__input__save">
                     <Button
                         onclick={save_relation}
-                        disabled={*input_display_mode != 0}
+                        disabled={*input_display_mode == 1}
                     >{"Save relation"}</Button>
                     if *display_check {
                         <Icon icon="check" color="onSecondaryContainer" class="sidebar__input__save__check"/>

@@ -94,10 +94,14 @@
 }
 
 .footer {
+    width: 100vw;
+    flex-direction: row;
+    justify-content: center;
+}
+.footer__center {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    width: 100%;
 }
 .footer h1 {
     font-family: "Fira Code", monospace;
@@ -117,8 +121,6 @@
     display: block;
 }
 .footer__column {
-    flex: 1;
-    align-items: center;
 }
 
 .button {
