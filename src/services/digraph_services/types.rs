@@ -128,6 +128,7 @@ impl Default for StoredRelation {
     fn default() -> Self {
         Self {
             name: String::new(),
+            // To indicate if an object exists or not lol idk
             id: -1,
             raw_text: String::new(),
             date_saved: String::new()
