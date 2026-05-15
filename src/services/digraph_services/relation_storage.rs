@@ -12,7 +12,7 @@
 */
 
 use gloo_storage::{LocalStorage, Storage};
-use std::fmt;
+use std::{fmt, ops::Deref};
 use gloo_console::log;
 use web_sys::console;
 
@@ -41,7 +41,7 @@ pub fn store_new_relation(new_relation: &Relation) -> Result<StoredRelations, Re
 
     let stored_new_relation = StoredRelation {
         name: String::new(),
-        id: 0,
+        id: relations.len() as i32,
         raw_text: format!(
             "{{{}}}",
             new_relation.values
@@ -57,6 +57,22 @@ pub fn store_new_relation(new_relation: &Relation) -> Result<StoredRelations, Re
     LocalStorage::set("stored_relations", &relations).map_err(|_| RelationStorageErr::StorageWrite)?;
 
     Ok(relations)
+}
+
+pub fn remove_relation(id: i32) -> Result<Vec<StoredRelation>, RelationStorageErr> {
+    let mut relations = get_stored_relations()?;
+
+    clear_all_relations();
+
+    relations = relations.iter().filter(|rel| rel.id != id).map(|v: &StoredRelation| (*v).clone()).collect::<Vec<StoredRelation>>();
+
+    LocalStorage::set("stored_relations", &relations).map_err(|_| RelationStorageErr::StorageWrite)?;
+
+    Ok(relations)
+}
+
+pub fn clear_all_relations() {
+    LocalStorage::set("stored_relations", "[]");
 }
 
 // Returns the string from localstorage for the recipient to process

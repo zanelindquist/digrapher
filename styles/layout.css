@@ -187,7 +187,7 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    overflow-y: scroll;
+    overflow-y: auto;
     direction: rtl;
 }
 .sidebar__header {
@@ -256,6 +256,16 @@
 .sidebar__input::placeholder {
     color: var(--onSurfaceVariant);
     opacity: 0.6;
+}
+.sidebar__input__save {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+.sidebar__input__save__check {
+    background-color: var(--secondaryContainer);
+    padding: 3px;
+    border-radius: 999px;
 }
 .sidebar__preview {
     padding: 16px;

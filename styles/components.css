@@ -35,6 +35,7 @@
 
 .icon {
     color: var(--onSurface);
+    border-radius: 999px;
 }
 .icon svg {
     width: 100%;
@@ -163,6 +164,12 @@
     box-shadow: none;
 }
 
+.library {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 3px;
+}
+
 .relation-row {
     display: flex;
     justify-content: space-between;
@@ -232,4 +239,8 @@
 }
 .relation-row__button:active {
     transform: scale(0.95);
+}
+.relation-row__right__trash {
+    background-color: var(--primaryContainer);
+    padding: 3px;
 }

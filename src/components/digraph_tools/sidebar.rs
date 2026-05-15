@@ -1,13 +1,15 @@
 use std::ops::Deref;
-
 use yew::prelude::*;
+use gloo_timers::callback::Timeout;
 
 use crate::components::digraph_tools::analytics::Analytics;
 use crate::components::digraph_tools::explorer::Explorer;
 use crate::components::digraph_tools::library::RelationLibrary;
 use crate::components::misc::button::Button;
+use crate::components::misc::icon::Icon;
 use crate::services::digraph_services::types::{DigestedValuesResult, ObjectSelection, StoredRelation};
 use crate::services::digraph_services::relation_storage::{store_new_relation};
+
 
 #[derive(Properties, PartialEq)]
 pub struct SidebarProps {
@@ -20,6 +22,7 @@ pub struct SidebarProps {
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
     let display_library = use_state(|| false);
+    let display_check = use_state(|| false);
 
     let oninput: Callback<InputEvent> = {
         let input_value = props.on_input.clone();
@@ -37,9 +40,17 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     };
     let save_relation: Callback<MouseEvent> = {
         let dv = props.digested_values.clone();
+        let display_check = display_check.clone();
         Callback::from(move |_: MouseEvent| {
             if let Ok(relation) = dv.deref() {
-                let _ = store_new_relation(relation);
+                if let Ok(_) = store_new_relation(relation) {
+                    display_check.set(true);
+                    let dc = display_check.clone();
+                    let timeout = Timeout::new(1_000, move || {
+                        dc.set(false);
+                    });
+                    timeout.forget();
+                }
             }
         })
     };
@@ -82,13 +93,19 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         />
                     }
                 </div>
-                <div class="sidebar__preview">
-                    <span class="sidebar__preview-label">{"Preview"}</span>
-                    <code class="sidebar__preview-code">{ if props.value.is_empty() {String::from("No relations yet")} else {props.value.clone()} }</code>
+                // <div class="sidebar__preview">
+                //     <span class="sidebar__preview-label">{"Preview"}</span>
+                //     <code class="sidebar__preview-code">{ if props.value.is_empty() {String::from("No relations yet")} else {props.value.clone()} }</code>
+                // </div>
+                <div class="sidebar__input__save">
+                    <Button
+                        onclick={save_relation}
+                        disabled={*display_library}
+                    >{"Save relation"}</Button>
+                    if *display_check {
+                        <Icon icon="check" color="onSecondaryContainer" class="sidebar__input__save__check"/>
+                    }
                 </div>
-                <Button
-                    onclick={save_relation}
-                >{"Save relation"}</Button>
                 <div class="sidebar__analysis">
                     {
                         match &*props.digested_values {

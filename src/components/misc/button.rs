@@ -6,7 +6,9 @@ pub struct ButtonProps {
     pub class: Classes,
     #[prop_or_default]
     pub children: Children,
-    pub onclick: Callback<MouseEvent>
+    pub onclick: Callback<MouseEvent>,
+    #[prop_or(false)]
+    pub disabled: bool
 }
 
 
@@ -17,6 +19,7 @@ pub fn button(props: &ButtonProps) -> Html {
         <button
             onclick={props.onclick.clone()}
             class={classes!("button", props.class.clone())}
+            disabled={props.disabled.clone()}
         >
             {props.children.clone()}
         </button>

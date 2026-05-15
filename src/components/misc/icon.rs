@@ -6,7 +6,9 @@ pub struct IconProps {
     #[prop_or(24)]
     pub size: i32,
     #[prop_or(String::from("onSurface"))]
-    pub color: String
+    pub color: String,
+    #[prop_or_default]
+    pub class: Classes
 }
 
 #[function_component(Icon)]
@@ -30,6 +32,12 @@ pub fn icon(props: &IconProps) -> Html {
         "moon" => html! {
             <path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path>
         },
+        "trashcan"=> html! {
+            <path d="M9,3V4H4V6H5V19A2,2 0 0,0 7,21H17A2,2 0 0,0 19,19V6H20V4H15V3H9M7,6H17V19H7V6M9,8V17H11V8H9M13,8V17H15V8H13Z" />
+        },
+        "check" => html! {
+            <path d="M12 2C6.5 2 2 6.5 2 12S6.5 22 12 22 22 17.5 22 12 17.5 2 12 2M12 20C7.59 20 4 16.41 4 12S7.59 4 12 4 20 7.59 20 12 16.41 20 12 20M16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" />
+        },
         _ => html! {
             <path />
         }, // fallback
@@ -49,7 +57,7 @@ pub fn icon(props: &IconProps) -> Html {
 
     html! {
         <div
-            class="icon"
+            class={classes!("icon", props.class.clone())}
             style={format!("width: {}px; height: {}px;", props.size, props.size)}
         >
             {svg}
