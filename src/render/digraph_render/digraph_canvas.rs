@@ -91,8 +91,6 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
             // Get logical coords
             let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
 
-            log!(offset_lx, offset_ly);
-
             // Modify the selected point's coordinates
             modified_point.x = offset_lx;
             modified_point.y = offset_ly;

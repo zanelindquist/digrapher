@@ -33,7 +33,7 @@ pub enum DrawObjectSelection {
 }
 
 // INFRASTRUCTURE
-
+const SCALING_CONSTANT: f32 = 4.0;
 #[derive(Clone, Copy, PartialEq)]
 pub struct CanvasPositioning {
     pub offset_x: i32,
@@ -76,31 +76,31 @@ impl CanvasPositioning {
         // Logical points are in a -1 to 1 x, y plane
         let center_vx = (self.width as f32) / 2.0 + self.offset_x as f32;
         let center_vy = (self.height as f32) / 2.0 + self.offset_y as f32;
-        let v_over_l = (min(self.width, self.height) as f32) / 4.0 * self.zoom;
+        let v_over_l = self.zoom * (min(self.width, self.height) as f32) / SCALING_CONSTANT;
 
         (center_vx + lx * v_over_l, center_vy + ly * v_over_l)
     }
     pub fn logical_to_visual_scalar(self, l: f32) -> f32 {
-        l * (min(self.width, self.height) as f32) / 4.0 * self.zoom
+        self.zoom * (min(self.width, self.height) as f32) / SCALING_CONSTANT
     }
 
     pub fn visual_to_logical_xy(self, vx: f32, vy: f32) -> (f32, f32) {
         // Logical points are in a -1 to 1 x, y plane
         let center_vx = (self.width as f32) / 2.0 + self.offset_x as f32;
         let center_vy = (self.height as f32) / 2.0 + self.offset_y as f32;
-        let l_over_v = 4.0 * self.zoom / (min(self.width, self.height) as f32);
+        let l_over_v = SCALING_CONSTANT / ((min(self.width, self.height) as f32) * self.zoom);
 
         ((vx - center_vx) * l_over_v, (vy - center_vy) * l_over_v)
     }
     pub fn visual_to_logical_scalar(self, l: f32) -> f32 {
-        l / ((min(self.width, self.height) as f32) / 4.0 * self.zoom)
+        l / ((min(self.width, self.height) as f32) / SCALING_CONSTANT * self.zoom)
     }
 
     pub fn pointer_to_logical_xy(self, vx: f32, vy: f32) -> (f32, f32) {
         // Logical points are in a -1 to 1 x, y plane
         let center_vx = (self.width as f32) / 2.0 + self.offset_x as f32;
         let center_vy = (self.height as f32) / 2.0 + self.offset_y as f32;
-        let l_over_v = 4.0 * self.zoom / (min(self.width, self.height) as f32);
+        let l_over_v = SCALING_CONSTANT / ((min(self.width, self.height) as f32) * self.zoom);
 
         ((vx - self.dom_element_offset_x - center_vx) * l_over_v, (vy - self.dom_element_offset_y - center_vy) * l_over_v)
     }
