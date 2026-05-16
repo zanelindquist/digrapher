@@ -22,7 +22,8 @@ pub fn position_points(points: SortedCharPoints) -> PointVector {
     point_vec
 }
 
-pub fn position_edges(values: RawEdgePairs, points: PointVector) -> EdgeVector {
+// Transforms the raw text edge parings (a, b) into edges that correspond to real points
+pub fn create_edges(values: RawEdgePairs, points: PointVector) -> EdgeVector {
     let mut edges = EdgeVector::new();
 
     for (_, pair) in values.iter().enumerate() {

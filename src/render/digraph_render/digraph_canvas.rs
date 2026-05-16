@@ -1,7 +1,7 @@
 use gloo_console::log;
 use yew::prelude::*;
 
-use crate::services::digraph_services::calculate_render::{position_edges, position_points};
+use crate::services::digraph_services::calculate_render::{create_edges, position_points};
 use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointVector, Relation};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
@@ -27,7 +27,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
     // The actual points live here
     let points: UseStateHandle<PointVector> = use_state(|| position_points(sorted_points.clone()));
-    let edges: UseStateHandle<EdgeVector> = use_state(|| position_edges(props.relation.values.clone(), (*points).clone()));
+    let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(props.relation.values.clone(), (*points).clone()));
     let styles = props.styles;
 
     // Point selecton and moving
@@ -52,7 +52,6 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
                     // Interrup the graph's scrolling
                     interrupt.set(true);
-                    log!("INTERRUPT");
                     // Set the point as our selected point
                     selected_point.set(Some(point.clone()));
                     // Set the last_position as the mouse's current position
@@ -71,10 +70,46 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         })
     };
 
+    // Update the selected point's location 
     let on_pointer_move = {
+        let selected_point = selected_point.clone();
+        let canvas_pos = props.position.clone();
+        let points = points.clone();
+        let edges = edges.clone();
+        let values = props.relation.values.clone();
+        Callback::from(move |e: PointerEvent| {
+            let Some(mut modified_point) = (*selected_point).clone() else {
+                return;
+            };
 
-        Callback::from(move |_| {
+            // Get visual px difference in moving the mouse
+            let offset_vx = e.client_x();// - (*last_pos).0;
+            let offset_vy = e.client_y();// - (*last_pos).1;
 
+            last_pos.set((e.client_x(), e.client_y()));
+
+            // Get logical coords
+            let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
+
+            log!(offset_lx, offset_ly);
+
+            // Modify the selected point's coordinates
+            modified_point.x = offset_lx;
+            modified_point.y = offset_ly;
+
+            // Replace old point
+            let mut new_points: PointVector = points
+                .iter()
+                .filter(|pt| pt.index != modified_point.index)
+                .cloned()
+                .collect();
+
+            new_points.push(modified_point);
+
+            // Update state
+            points.set(new_points.clone());
+            // Update the edges
+            edges.set(create_edges(values.clone(), new_points));
         })
     };
 

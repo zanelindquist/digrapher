@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::services::digraph_services::calculate_render::{position_edges, position_points};
+use crate::services::digraph_services::calculate_render::{create_edges, position_points};
 use crate::services::digraph_services::types::{CanvasPositioning, EdgeVector, ObjectSelection, PointVector, Relation};
 use crate::services::objects::matrix::{Matrix};
 use crate::render::objects::point::Point;
@@ -25,7 +25,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     sorted_points.sort();
 
     let points: PointVector = position_points(sorted_points);
-    let edges: EdgeVector = position_edges(props.relation.values.clone(), points.clone());
+    let edges: EdgeVector = create_edges(props.relation.values.clone(), points.clone());
     let styles = props.styles;
 
     let matrix: Matrix = Matrix::from_edges(points, edges);

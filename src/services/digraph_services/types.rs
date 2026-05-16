@@ -95,6 +95,15 @@ impl CanvasPositioning {
     pub fn visual_to_logical_scalar(self, l: f32) -> f32 {
         l / ((min(self.width, self.height) as f32) / 4.0 * self.zoom)
     }
+
+    pub fn pointer_to_logical_xy(self, vx: f32, vy: f32) -> (f32, f32) {
+        // Logical points are in a -1 to 1 x, y plane
+        let center_vx = (self.width as f32) / 2.0 + self.offset_x as f32;
+        let center_vy = (self.height as f32) / 2.0 + self.offset_y as f32;
+        let l_over_v = 4.0 * self.zoom / (min(self.width, self.height) as f32);
+
+        ((vx - self.dom_element_offset_x - center_vx) * l_over_v, (vy - self.dom_element_offset_y - center_vy) * l_over_v)
+    }
 }
 
 #[derive(PartialEq)]

@@ -65,7 +65,11 @@ pub fn graph(props: &GraphProps) -> Html{
     let on_pointer_down = {
         let pointer_down = pointer_down.clone();
         let last_pos = last_pos.clone();
+        let interrupt_scrolling = interrupt_scrolling.clone();
         Callback::from(move |e: PointerEvent| {
+            if *interrupt_scrolling {
+                return;
+            }
             // Set the pointer status to down
             pointer_down.set(true);
             // Set the last_position as the mouse's current position
@@ -89,7 +93,7 @@ pub fn graph(props: &GraphProps) -> Html{
         let canvas_position = canvas_position.clone();
         let interrupt_scrolling = interrupt_scrolling.clone();
 
-        Callback::from(move |e: web_sys::PointerEvent| {
+        Callback::from(move |e: PointerEvent| {
             // If the pointer isn't down or the scrolling is interrupted, we aren't clicking and dragging the canvas
             if !*pointer_down || *interrupt_scrolling {
                 return;
