@@ -58,8 +58,8 @@ impl Edge {
         }
     }
 
-    pub fn bezier_control_point(&self) -> Point {
-        let pixel_displacement = self.bezier_arc_px * 2.0;
+    pub fn bezier_control_point(&self,canvas_pos: CanvasPositioning) -> Point {
+        let pixel_displacement = canvas_pos.visual_to_logical_scalar(self.bezier_arc_px * 2.0);
         let x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * pixel_displacement;
         let y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * pixel_displacement;
         
@@ -85,6 +85,8 @@ impl Edge {
         // Convert from logical to visual pixels
         let (start_x, start_y) = canvas_pos.logical_to_visual_xy(self.start.x, self.start.y);
         let (end_x, end_y) = canvas_pos.logical_to_visual_xy(self.end.x, self.end.y);
+        let bez = self.bezier_control_point(canvas_pos);
+        let (bez_x, bez_y) = canvas_pos.logical_to_visual_xy(bez.x, bez.y);
 
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
 
@@ -127,8 +129,8 @@ impl Edge {
                             format!("{} {}", end_x, end_y),
                             // Quadradic belzier curve
                             format!("{} {}",
-                                self.bezier_control_point().x.to_string(),
-                                self.bezier_control_point().y.to_string()
+                                bez_x.to_string(),
+                                bez_y.to_string()
                             ),
                             format!("{} {}", start_x, start_y),
                             
