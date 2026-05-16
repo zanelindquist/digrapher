@@ -1,3 +1,4 @@
+use std::cmp::min;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use std::{collections::HashSet};
@@ -62,6 +63,16 @@ impl CanvasPositioning {
     }
     pub fn from(self, other: &CanvasPositioning) -> CanvasPositioning {
         CanvasPositioning::create(self.offset_x, self.offset_y, self.width, self.height, self.zoom)
+    }
+    // Takes in logial x, y and returns visual x, y
+    pub fn logical_to_visual_xy(self, lx: f32, ly: f32) -> (f32, f32) {
+        // Involves shifting and scaling
+        // Logical points are in a -1 to 1 x, y plane
+        let center_vx = (self.width as f32) / 2.0 + self.offset_x as f32;
+        let center_vy = (self.height as f32) / 2.0 + self.offset_y as f32;
+        let v_over_l = (min(self.width, self.height) as f32) / 4.0 * self.zoom;
+
+        (center_vx + lx * v_over_l, center_vy + ly * v_over_l)
     }
 }
 

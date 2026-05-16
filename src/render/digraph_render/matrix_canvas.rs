@@ -24,7 +24,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
     sorted_points.sort();
 
-    let points: PointVector = position_points(sorted_points, props.position);
+    let points: PointVector = position_points(sorted_points);
     let edges: EdgeVector = position_edges(props.relation.values.clone(), points.clone());
     let styles = props.styles;
 

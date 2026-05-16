@@ -26,7 +26,9 @@ pub fn graph(props: &GraphProps) -> Html{
 
     let pointer_down = use_state(|| false);
     let last_pos = use_state(|| (0,0));
+    let interrupt_scrolling = use_state(|| false);
 
+    // On layout set the dimentions of the canvas
     use_effect({
         let node_ref = node_ref.clone();
         let size = size.clone();
@@ -52,37 +54,51 @@ pub fn graph(props: &GraphProps) -> Html{
     });
 
     // Support moving and zooming
+    // When the pointer is clicked down
     let on_pointer_down = {
         let pointer_down = pointer_down.clone();
         let last_pos = last_pos.clone();
         Callback::from(move |e: PointerEvent| {
+            // Set the pointer status to down
             pointer_down.set(true);
+            // Set the last_position as the mouse's current position
             last_pos.set((e.client_x(), e.client_y()));
         })
     };
 
+    // When the pointer is lifed up
     let on_pointer_up = {
         let pointer_down = pointer_down.clone();
         Callback::from(move |_| {
+            // Set the pointer to up
             pointer_down.set(false);
         })
     };
 
+    // When the pointer moves around, we want to change the canvas_pos's x and y
     let on_pointer_move = {
         let pointer_down = pointer_down.clone();
         let last_pos = last_pos.clone();
         let canvas_position = canvas_position.clone();
+        let interrupt_scrolling = interrupt_scrolling.clone();
 
         Callback::from(move |e: web_sys::PointerEvent| {
-            if !*pointer_down {
+            // If the pointer isn't down or the scrolling is interrupted, we aren't clicking and dragging the canvas
+            if !*pointer_down  {
                 return;
             }
+            // Calculate the new canvas offset based on its current position and the mouse's position since the last move
             let new_offset_x = canvas_position.offset_x + e.x() - last_pos.0;
             let new_offset_y = canvas_position.offset_y + e.y() - last_pos.1;
 
+            // Record the position of the mouse
             last_pos.set((e.x(), e.y()));
 
-            canvas_position.set(CanvasPositioning::create(new_offset_x, new_offset_y, canvas_position.width, canvas_position.height, canvas_position.zoom))
+            // Update the canvas's position
+            let mut new_canvas_pos = (*canvas_position).clone();
+            new_canvas_pos.offset_x = new_offset_x;
+            new_canvas_pos.offset_y = new_offset_y;
+            canvas_position.set(new_canvas_pos);
         })
     };
 
@@ -97,7 +113,7 @@ pub fn graph(props: &GraphProps) -> Html{
                 new_zoom
             ));
         })
-};
+    };
 
     let toggle = html! {
         <Toggle
@@ -138,6 +154,7 @@ pub fn graph(props: &GraphProps) -> Html{
                                 position={(*canvas_position).clone()}
                                 relation={relation.clone()}
                                 object_selection={props.object_selection.clone()}
+                                interrupt_graph_scrolling={interrupt_scrolling}
                             />
                         },
                         GraphModes::MATRIX => html! {

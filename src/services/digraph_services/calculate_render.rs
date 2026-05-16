@@ -6,19 +6,16 @@ use crate::services::digraph_services::types::CanvasPositioning;
 use crate::render::objects::point::{Point};
 use crate::render::objects::edge::{Edge};
 
-
-pub fn position_points(points: SortedCharPoints, position: CanvasPositioning) -> PointVector {
+// Outputs points with logical coordinates in -1 to 1 x, y plane
+pub fn position_points(points: SortedCharPoints) -> PointVector {
     let n = points.len();
     let mut point_vec = PointVector::new();
-    let r = (min(position.width, position.height) as f32) / 4.0 * position.zoom;
-    let center_x = (position.width as f32) / 2.0 + position.offset_x as f32;
-    let center_y = (position.height as f32) / 2.0 + position.offset_y as f32;
 
     for (i, p) in points.iter().enumerate() {
         // Draw counterclockwise
         let theta = -(i as f32) * (2.0 * PI / n as f32);
-        let x = center_x + r * theta.cos();
-        let y = center_y + r * theta.sin();
+        let x = theta.cos();
+        let y = theta.sin();
         let new_point = Point::new(x, y, theta, p.clone(), PointRenderSymbol::CIRCLE, i as i32);
         point_vec.push(new_point);
     }

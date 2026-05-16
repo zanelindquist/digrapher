@@ -4,7 +4,7 @@ use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 
 use super::point::Point;
-use crate::{services::digraph_services::types::{PointRenderSymbol, RelationProperty}, render::styles::RenderStyles};
+use crate::{render::styles::RenderStyles, services::digraph_services::types::{CanvasPositioning, PointRenderSymbol, RelationProperty}};
 
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -73,7 +73,7 @@ impl Edge {
     }
     
     pub fn length(self) -> f32 {
-        self.start.distance_to(self.end)
+        self.start.distance_to(self.end.x, self.end.y)
     }
     
     // Calculate angle for arrow head
@@ -81,7 +81,11 @@ impl Edge {
         (self.end.y - self.start.y).atan2(self.end.x - self.start.x)
     }
 
-    pub fn draw(self, styles: RenderStyles, is_selected: bool) -> Html {
+    pub fn draw(self, styles: RenderStyles, canvas_pos: CanvasPositioning, is_selected: bool) -> Html {
+        // Convert from logical to visual pixels
+        let (start_x, start_y) = canvas_pos.logical_to_visual_xy(self.start.x, self.start.y);
+        let (end_x, end_y) = canvas_pos.logical_to_visual_xy(self.end.x, self.end.y);
+
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
 
         match self.relation_type {
@@ -94,24 +98,24 @@ impl Edge {
                             A {}
                             Z",
                             // Move to
-                            format!("{} {}", self.end.x, self.end.y),
+                            format!("{} {}", end_x, end_y),
                             format!("{} {}",
-                                self.start.x + (self.start.bearing - PI / 4.0).cos() * self.loop_radius,
-                                self.start.y + (self.start.bearing - PI / 4.0).sin() * self.loop_radius,
+                                start_x + (self.start.bearing - PI / 4.0).cos() * self.loop_radius,
+                                start_y + (self.start.bearing - PI / 4.0).sin() * self.loop_radius,
                             ),
                             format!("{} {}, 0, 1, 1, {} {}",
                                 self.loop_radius,
                                 self.loop_radius, 
                                 // Start arc point
-                                self.start.x + (self.start.bearing + PI / 4.0).cos() * self.loop_radius,
-                                self.start.y + (self.start.bearing + PI / 4.0).sin() * self.loop_radius,
+                                start_x + (self.start.bearing + PI / 4.0).cos() * self.loop_radius,
+                                start_y + (self.start.bearing + PI / 4.0).sin() * self.loop_radius,
                             )
                         )}
                         fill="transparent"
                         stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
-                    {self.midpoint().draw(styles, is_selected)}
+                    {self.midpoint().draw(styles, canvas_pos, is_selected)}
                 </>
             },
             RelationProperty::SYMMETRIC => html! {
@@ -120,13 +124,13 @@ impl Edge {
                     <path
                         d={format!("M {} Q {} {}", 
                             // Move to point
-                            format!("{} {}", self.end.x, self.end.y),
+                            format!("{} {}", end_x, end_y),
                             // Quadradic belzier curve
                             format!("{} {}",
                                 self.bezier_control_point().x.to_string(),
                                 self.bezier_control_point().y.to_string()
                             ),
-                            format!("{} {}", self.start.x, self.start.y),
+                            format!("{} {}", start_x, start_y),
                             
                         )}
                         fill={"transparent"}
@@ -134,22 +138,22 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles, is_selected)}
+                    {self.midpoint().draw(styles, canvas_pos, is_selected)}
                 </>
             },
             // Antisymmetrics
             _=> html! {
                 <>
                     <line
-                        x1={self.start.x.to_string()}
-                        y1={self.start.y.to_string()}
-                        x2={self.end.x.to_string()}
-                        y2={self.end.y.to_string()}
+                        x1={start_x.to_string()}
+                        y1={start_y.to_string()}
+                        x2={end_x.to_string()}
+                        y2={end_y.to_string()}
                         stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles, is_selected)}
+                    {self.midpoint().draw(styles, canvas_pos, is_selected)}
                 </>
             }
         }
