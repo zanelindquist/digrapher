@@ -34,6 +34,22 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let selected_point: UseStateHandle<Option<Point>> = use_state(|| None);
     let last_pos = use_state(|| (0,0));
 
+    // Update points and edges when the relation changes
+    {
+        let points = points.clone();
+        let edges = edges.clone();
+        let relation = props.relation.clone();
+        let values = props.relation.values.clone();
+        let rel_pts = props.relation.points.clone();
+        use_effect_with(relation, move |_| {
+            let mut sp: Vec<String> = rel_pts.clone().into_iter().collect();
+            sp.sort();
+            let new_points = position_points(sp);
+            points.set(new_points.clone());
+            edges.set(create_edges(values, new_points))
+        });
+    }
+
     // Functions
 
     let on_pointer_down = {
