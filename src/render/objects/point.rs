@@ -1,5 +1,6 @@
 use std::f32::consts::PI;
 
+use gloo_console::log;
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
@@ -27,8 +28,15 @@ impl Point {
         ((x - self.x).powi(2) + (y - self.y).powi(2)).sqrt()
     }
 
-    pub fn in_proximity(self, x: f32, y: f32, radius: f32) -> bool {
-        self.distance_to(x, y) < radius
+    // Takes in visual data to make a comparison
+    pub fn pointer_by(self, pointer_vx: f32, pointer_vy: f32, v_radius: f32, canvas_pos: CanvasPositioning) -> bool {
+        // Translate visual to logical
+        // Pointer x and y are absolute with relation to the screen, so we need to get the pixel value in relation to the canvas
+        let (lx, ly) = canvas_pos.visual_to_logical_xy(pointer_vx - canvas_pos.dom_element_offset_x, pointer_vy - canvas_pos.dom_element_offset_y);
+        let l_radius = canvas_pos.visual_to_logical_scalar(v_radius);
+
+        // Translate the the radius to logical units
+        self.distance_to(lx, ly) < l_radius
     }
 
     pub fn draw(self, styles: RenderStyles, canvas_pos: CanvasPositioning, is_selected: bool) -> Html {

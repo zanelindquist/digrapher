@@ -1,3 +1,4 @@
+use gloo_console::log;
 use yew::prelude::*;
 
 use crate::services::digraph_services::calculate_render::{position_edges, position_points};
@@ -38,6 +39,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let on_pointer_down = {
         let selected_point = selected_point.clone();
         let last_pos = last_pos.clone();
+        let canvas_pos = props.position.clone();
         let points = points.clone();
         let radius = styles.point.radius.clone();
         let interrupt = props.interrupt_graph_scrolling.clone();
@@ -47,9 +49,10 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
             // Map through each point and see if the pointer is on it
             for point in points.iter() {
                 // If the mouse is clicking on a point
-                if point.clone().in_proximity(x as f32, y as f32, radius) {
+                if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
                     // Interrup the graph's scrolling
                     interrupt.set(true);
+                    log!("INTERRUPT");
                     // Set the point as our selected point
                     selected_point.set(Some(point.clone()));
                     // Set the last_position as the mouse's current position

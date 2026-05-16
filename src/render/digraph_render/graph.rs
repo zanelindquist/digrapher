@@ -39,7 +39,14 @@ pub fn graph(props: &GraphProps) -> Html{
                 let width = element.offset_width();
                 let height = element.offset_height();
 
+                let rect = element.get_bounding_client_rect();
+                let real_x = rect.x() as f32;
+                let real_y = rect.y() as f32;
+
                 let mut new_pos = (*canvas_pos).clone();
+                // Set the canvas dom element's screen pixel coordinates
+                new_pos.dom_element_offset_x = real_x;
+                new_pos.dom_element_offset_y = real_y;
 
                 if new_pos.width != width || new_pos.height != height {
                     new_pos.width = width;
@@ -84,7 +91,7 @@ pub fn graph(props: &GraphProps) -> Html{
 
         Callback::from(move |e: web_sys::PointerEvent| {
             // If the pointer isn't down or the scrolling is interrupted, we aren't clicking and dragging the canvas
-            if !*pointer_down  {
+            if !*pointer_down || *interrupt_scrolling {
                 return;
             }
             // Calculate the new canvas offset based on its current position and the mouse's position since the last move
@@ -95,10 +102,10 @@ pub fn graph(props: &GraphProps) -> Html{
             last_pos.set((e.x(), e.y()));
 
             // Update the canvas's position
-            let mut new_canvas_pos = (*canvas_position).clone();
-            new_canvas_pos.offset_x = new_offset_x;
-            new_canvas_pos.offset_y = new_offset_y;
-            canvas_position.set(new_canvas_pos);
+            let mut updated_canvas_pos = (*canvas_position).clone();
+            updated_canvas_pos.offset_x = new_offset_x;
+            updated_canvas_pos.offset_y = new_offset_y;
+            canvas_position.set(updated_canvas_pos);
         })
     };
 
@@ -109,9 +116,10 @@ pub fn graph(props: &GraphProps) -> Html{
             let delta_y = e.delta_y();
             let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
 
-            canvas_position.set(CanvasPositioning::create(canvas_position.offset_x, canvas_position.offset_y, canvas_position.width, canvas_position.height,
-                new_zoom
-            ));
+            let mut updated_canvas = (*canvas_position).clone();
+            updated_canvas.zoom = new_zoom;
+
+            canvas_position.set(updated_canvas);
         })
     };
 

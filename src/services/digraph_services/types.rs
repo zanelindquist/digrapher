@@ -41,6 +41,8 @@ pub struct CanvasPositioning {
     pub width: i32,
     pub height: i32,
     pub zoom: f32,
+    pub dom_element_offset_x: f32,
+    pub dom_element_offset_y: f32,
 }
 impl CanvasPositioning {
     pub fn new() -> Self {
@@ -50,19 +52,23 @@ impl CanvasPositioning {
             width: 300,
             height: 300,
             zoom: 1.0,
+            dom_element_offset_x: 0.0,
+            dom_element_offset_y: 0.0
         }
     }
-    pub fn create(offset_x: i32, offset_y: i32, width: i32, height: i32, zoom: f32) -> Self {
+    pub fn create(offset_x: i32, offset_y: i32, width: i32, height: i32, zoom: f32, dom_element_offset_x: f32, dom_element_offset_y: f32) -> Self {
         Self {
             offset_x,
             offset_y,
             width,
             height,
             zoom,
+            dom_element_offset_x,
+            dom_element_offset_y
         }
     }
     pub fn from(self, other: &CanvasPositioning) -> CanvasPositioning {
-        CanvasPositioning::create(self.offset_x, self.offset_y, self.width, self.height, self.zoom)
+        CanvasPositioning::create(self.offset_x, self.offset_y, self.width, self.height, self.zoom, self.dom_element_offset_x, self.dom_element_offset_y)
     }
     // Takes in logial x, y and returns visual x, y
     pub fn logical_to_visual_xy(self, lx: f32, ly: f32) -> (f32, f32) {
@@ -73,6 +79,21 @@ impl CanvasPositioning {
         let v_over_l = (min(self.width, self.height) as f32) / 4.0 * self.zoom;
 
         (center_vx + lx * v_over_l, center_vy + ly * v_over_l)
+    }
+    pub fn logical_to_visual_scalar(self, l: f32) -> f32 {
+        l * (min(self.width, self.height) as f32) / 4.0 * self.zoom
+    }
+
+    pub fn visual_to_logical_xy(self, vx: f32, vy: f32) -> (f32, f32) {
+        // Logical points are in a -1 to 1 x, y plane
+        let center_vx = (self.width as f32) / 2.0 + self.offset_x as f32;
+        let center_vy = (self.height as f32) / 2.0 + self.offset_y as f32;
+        let l_over_v = 4.0 * self.zoom / (min(self.width, self.height) as f32);
+
+        ((vx - center_vx) * l_over_v, (vy - center_vy) * l_over_v)
+    }
+    pub fn visual_to_logical_scalar(self, l: f32) -> f32 {
+        l / ((min(self.width, self.height) as f32) / 4.0 * self.zoom)
     }
 }
 
