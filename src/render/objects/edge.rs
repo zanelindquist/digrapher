@@ -58,10 +58,10 @@ impl Edge {
         }
     }
 
-    pub fn bezier_control_point(&self,canvas_pos: CanvasPositioning) -> Point {
-        let pixel_displacement = canvas_pos.visual_to_logical_scalar(self.bezier_arc_px * 2.0);
-        let x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * pixel_displacement;
-        let y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * pixel_displacement;
+    pub fn bezier_control_point(&self,canvas_pos: &CanvasPositioning) -> Point {
+        let arc_displacement = canvas_pos.visual_to_logical_scalar(self.bezier_arc_px * 2.0);
+        let x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * arc_displacement;
+        let y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * arc_displacement;
         
         Point {
             x, y,
@@ -81,11 +81,11 @@ impl Edge {
         (self.end.y - self.start.y).atan2(self.end.x - self.start.x)
     }
 
-    pub fn draw(self, styles: RenderStyles, canvas_pos: CanvasPositioning, is_selected: bool) -> Html {
+    pub fn draw(self, styles: &RenderStyles, canvas_pos: &CanvasPositioning, is_selected: bool) -> Html {
         // Convert from logical to visual pixels
         let (start_x, start_y) = canvas_pos.logical_to_visual_xy(self.start.x, self.start.y);
         let (end_x, end_y) = canvas_pos.logical_to_visual_xy(self.end.x, self.end.y);
-        let bez = self.bezier_control_point(canvas_pos);
+        let bez = self.bezier_control_point(&canvas_pos);
         let (bez_x, bez_y) = canvas_pos.logical_to_visual_xy(bez.x, bez.y);
 
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};

@@ -113,16 +113,17 @@ pub fn graph(props: &GraphProps) -> Html{
         })
     };
 
+    // Zoom in and out
     let on_wheel = {
         let canvas_position = canvas_position.clone();
-        
         Callback::from(move |e: web_sys::WheelEvent| {
             let delta_y = e.delta_y();
+            // Clamp and scale zooming
             let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
 
+            // Update the canvas
             let mut updated_canvas = (*canvas_position).clone();
             updated_canvas.zoom = new_zoom;
-
             canvas_position.set(updated_canvas);
         })
     };

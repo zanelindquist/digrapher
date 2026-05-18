@@ -39,7 +39,7 @@ impl Point {
         self.distance_to(lx, ly) < l_radius
     }
 
-    pub fn draw(self, styles: RenderStyles, canvas_pos: CanvasPositioning, is_selected: bool) -> Html {
+    pub fn draw(self, styles: &RenderStyles, canvas_pos: &CanvasPositioning, is_selected: bool) -> Html {
         // 
         let (x, y) = canvas_pos.logical_to_visual_xy(self.x, self.y);
 

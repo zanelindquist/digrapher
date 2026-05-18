@@ -1,4 +1,3 @@
-use gloo_console::log;
 use yew::prelude::*;
 
 use crate::services::digraph_services::types::{EdgeVector, MatrixData, ObjectSelection, PointVector, DrawObjectSelection};
@@ -28,7 +27,7 @@ impl Matrix {
         vec![vec![false; cols as usize]; rows as usize]
     }
     
-    pub fn draw(self, style: MatrixStyle, center: Point, object_selection: UseStateHandle<ObjectSelection>) -> Html {
+    pub fn draw(self, style: &MatrixStyle, center: &Point, object_selection: UseStateHandle<ObjectSelection>) -> Html {
         let cell_size = style.cell_size; // spacing between cells
         let total_w = self.cols * cell_size;
         let total_h = self.rows * cell_size;
@@ -85,11 +84,16 @@ impl Matrix {
                             // See if this is the selected relation
                             let is_selected = matches!(
                                 &object_selection.selection,
-                                // If the selected object is an edge
                                 Some(DrawObjectSelection::Edge(edge))
-                                    // And the i and j correspond to the indexes of the labels in our self object
-                                    if labels.iter().position(|l| *l == *(edge).0).unwrap() == i
-                                        && labels.iter().position(|l| *l == *(edge).1).unwrap() == j
+                                    if labels
+                                        .iter()
+                                        .position(|l| *l == edge.0)
+                                        .is_some_and(|edge_i| edge_i == i)
+                                    &&
+                                    labels
+                                        .iter()
+                                        .position(|l| *l == edge.1)
+                                        .is_some_and(|edge_j| edge_j == j)
                             );
 
                             let text = if *val { "1" } else { "0" };

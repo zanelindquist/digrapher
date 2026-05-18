@@ -26,27 +26,26 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     sorted_points.sort();
 
     // The actual points live here
-    let points: UseStateHandle<PointVector> = use_state(|| position_points(sorted_points.clone()));
-    let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(props.relation.values.clone(), (*points).clone()));
+    let points: UseStateHandle<PointVector> = use_state(|| position_points(&sorted_points));
+    let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.relation.values, &(*points)));
     let styles = props.styles;
 
     // Point selecton and moving
     let selected_point: UseStateHandle<Option<Point>> = use_state(|| None);
-    let last_pos = use_state(|| (0,0));
 
     // Update points and edges when the relation changes
     {
         let points = points.clone();
         let edges = edges.clone();
         let relation = props.relation.clone();
-        let values = props.relation.values.clone();
-        let rel_pts = props.relation.points.clone();
+        let values = relation.values.clone();
+        let rel_pts = relation.points.clone();
         use_effect_with(relation, move |_| {
             let mut sp: Vec<String> = rel_pts.clone().into_iter().collect();
             sp.sort();
-            let new_points = position_points(sp);
+            let new_points = position_points(&sp);
+            edges.set(create_edges(&values, &new_points));
             points.set(new_points.clone());
-            edges.set(create_edges(values, new_points))
         });
     }
 
@@ -54,11 +53,11 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
     let on_pointer_down = {
         let selected_point = selected_point.clone();
-        let last_pos = last_pos.clone();
         let canvas_pos = props.position.clone();
         let points = points.clone();
         let radius = styles.point.radius.clone();
         let interrupt = props.interrupt_graph_scrolling.clone();
+        let object_selection = props.object_selection.clone();
         Callback::from(move |e: PointerEvent| {
             let x = e.client_x();
             let y = e.client_y();
@@ -70,8 +69,8 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                     interrupt.set(true);
                     // Set the point as our selected point
                     selected_point.set(Some(point.clone()));
-                    // Set the last_position as the mouse's current position
-                    last_pos.set((x, y));
+                    // Set the info selection 
+                    object_selection.set(ObjectSelection { selection: Some(DrawObjectSelection::Point(point.label.clone())) });
                 }
             }
         })
@@ -94,6 +93,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let edges = edges.clone();
         let values = props.relation.values.clone();
         Callback::from(move |e: PointerEvent| {
+            // If no point is selected, return
             let Some(mut modified_point) = (*selected_point).clone() else {
                 return;
             };
@@ -101,8 +101,6 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
             // Get visual px difference in moving the mouse
             let offset_vx = e.client_x();// - (*last_pos).0;
             let offset_vy = e.client_y();// - (*last_pos).1;
-
-            last_pos.set((e.client_x(), e.client_y()));
 
             // Get logical coords
             let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
@@ -117,13 +115,12 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 .filter(|pt| pt.index != modified_point.index)
                 .cloned()
                 .collect();
-
             new_points.push(modified_point);
 
-            // Update state
-            points.set(new_points.clone());
             // Update the edges
-            edges.set(create_edges(values.clone(), new_points));
+            edges.set(create_edges(&values, &new_points));
+            // Update the points
+            points.set(new_points.clone());
         })
     };
 
@@ -150,7 +147,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                             if edge.start.label == label.0 && edge.end.label == label.1
                     );
                     // Draw the edge on the digraph
-                    edge.clone().draw(styles, props.position, is_selected)
+                    edge.clone().draw(&styles, &props.position, is_selected)
                 })}
                 { for (*points).iter().map(|point| {
                     // Pass is_selected to the draw function based on:
@@ -162,7 +159,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                             if point.label == *pt
                     );
                     // Draw the point on the digraph
-                    point.clone().draw(styles, props.position, is_selected)
+                    point.clone().draw(&styles, &props.position, is_selected)
                 })}
             </svg>
         </div>

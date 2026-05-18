@@ -24,8 +24,8 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
     sorted_points.sort();
 
-    let points: PointVector = position_points(sorted_points);
-    let edges: EdgeVector = create_edges(props.relation.values.clone(), points.clone());
+    let points: PointVector = position_points(&sorted_points);
+    let edges: EdgeVector = create_edges(&props.relation.values, &points);
     let styles = props.styles;
 
     let matrix: Matrix = Matrix::from_edges(points, edges);
@@ -40,7 +40,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                {matrix.draw(styles.matrix, center_point, props.object_selection.clone())}
+                {matrix.draw(&styles.matrix, &center_point, props.object_selection.clone())}
             </svg>
         </div>
     }

@@ -21,7 +21,6 @@ pub fn digraph_page() -> Html {
     let on_input = {
         let input_value = input_value.clone();
         let digested_values = digested_values.clone();
-
         Callback::from(move |v: String| {
             // Set the input value
             input_value.set(v.clone());
