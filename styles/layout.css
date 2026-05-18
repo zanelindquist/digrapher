@@ -377,7 +377,17 @@
 .canvas {
     flex-grow: 1;
     cursor: grab;
+    -webkit-user-select: none;
+    user-select: none;
 }
-.canvas .grab {
+.canvas__svg,
+.canvas__svg text,
+.matrix,
+.matrix__svg,
+.matrix__svg text {
+    -webkit-user-select: none;
+    user-select: none;
+}
+.canvas.grab {
     cursor: grabbing;
 }
