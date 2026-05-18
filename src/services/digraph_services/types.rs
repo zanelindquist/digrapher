@@ -127,6 +127,12 @@ impl ObjectSelection {
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub struct PointInteraction {
+    pub is_selected: bool,
+    pub is_hovered: bool,
+    pub is_info: bool
+}
 
 // RELATIONS
 

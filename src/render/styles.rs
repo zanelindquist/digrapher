@@ -4,7 +4,8 @@ pub struct PointStyle {
     pub fill: &'static str,
     pub stroke: &'static str,
     pub stroke_width: f32,
-    pub highlighted_stroke: &'static str
+    pub highlighted_stroke: &'static str,
+    pub hovered_stroke: &'static str
 }
 impl Default for PointStyle {
     fn default() -> Self {
@@ -13,7 +14,8 @@ impl Default for PointStyle {
             fill: "var(--primary)",
             stroke: "var(--outline)",
             stroke_width: 2.0,
-            highlighted_stroke: "var(--inversePrimary)"
+            highlighted_stroke: "var(--inversePrimary)",
+            hovered_stroke: "var(--error)"
         }
     }
 }

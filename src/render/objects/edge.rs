@@ -4,7 +4,7 @@ use yew::prelude::*;
 use serde::{Serialize, Deserialize};
 
 use super::point::Point;
-use crate::{render::styles::RenderStyles, services::digraph_services::types::{CanvasPositioning, PointRenderSymbol, RelationProperty}};
+use crate::{render::styles::RenderStyles, services::digraph_services::types::{CanvasPositioning, PointInteraction, PointRenderSymbol, RelationProperty}};
 
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -90,6 +90,12 @@ impl Edge {
 
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
 
+        let no_select_midpoint = PointInteraction {
+            is_selected: true,
+            is_hovered: false,
+            is_info: false
+        };
+
         match self.relation_type {
             RelationProperty::REFLEXIVE => html!{
                 <>
@@ -117,7 +123,7 @@ impl Edge {
                         stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
-                    {self.midpoint().draw(styles, canvas_pos, is_selected)}
+                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             },
             RelationProperty::SYMMETRIC => html! {
@@ -140,7 +146,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles, canvas_pos, is_selected)}
+                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             },
             // Antisymmetrics
@@ -155,7 +161,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles, canvas_pos, is_selected)}
+                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             }
         }

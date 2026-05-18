@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 
 use crate::services::digraph_services::calculate_render::{create_edges, position_points};
-use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointVector, Relation};
+use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, Relation};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
 
@@ -32,6 +32,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
     // Point selecton and moving
     let selected_point: UseStateHandle<Option<Point>> = use_state(|| None);
+    let hovered_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
 
     // Update points and edges when the relation changes
     {
@@ -88,11 +89,33 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     // Update the selected point's location 
     let on_pointer_move = {
         let selected_point = selected_point.clone();
+        let hovered_point = hovered_point.clone();
+        let radius = styles.point.radius.clone();
         let canvas_pos = props.position.clone();
         let points = points.clone();
         let edges = edges.clone();
         let values = props.relation.values.clone();
         Callback::from(move |e: PointerEvent| {
+            // HOVERING ON A POINT
+            let x = e.client_x();
+            let y = e.client_y();
+            let mut is_hovering_point = false;
+            // Map through each point and see if the pointer is on it
+            for point in points.iter() {
+                // If we are hovering on a point
+                if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
+                    hovered_point.set(Some(point.label.clone()));
+                    is_hovering_point = true;
+                    break;
+                }
+            }
+            // If we aren't next to a point
+            if !is_hovering_point {
+                hovered_point.set(None);
+            }
+
+            // MOVING A POINT
+
             // If no point is selected, return
             let Some(mut modified_point) = (*selected_point).clone() else {
                 return;
@@ -158,8 +181,15 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                             // AND the point's string label is equal to this point
                             if point.label == *pt
                     );
+
+                    let point_interaction = PointInteraction {
+                        is_selected,
+                        is_hovered: hovered_point.as_ref().is_some_and(|p| *p == point.label),
+                        is_info: false
+                    };
+
                     // Draw the point on the digraph
-                    point.clone().draw(&styles, &props.position, is_selected)
+                    point.clone().draw(&styles, &props.position, &point_interaction)
                 })}
             </svg>
         </div>
