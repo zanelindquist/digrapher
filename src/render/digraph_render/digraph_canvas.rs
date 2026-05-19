@@ -1,7 +1,7 @@
 use gloo_console::log;
 use yew::prelude::*;
 
-use crate::services::digraph_services::calculate_render::{create_edges, position_points};
+use crate::services::digraph_services::point_layout::{create_edges, position_points};
 use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, Relation};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
