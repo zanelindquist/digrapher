@@ -9,26 +9,58 @@
 ## Considerations
 Many types of graphs, such as trees, are considered undirected graphs. Currently, this part of the project is for directed graphs, so when analyzing traditionally undirected structures, direction *will* be taken into account. Therefore, for best results, **each graph should be antisymmetric and antireflexive**.
 
+## Pipeline
+| Mutation | Output data type | purpose |
+| -------- | ---------------- | ------- |
+| Input | text | Start |
+| `digest_values()` | `Relation` | Turn the raw input into a relation |
+| `process_relation()` | `GraphTheoryRelationManager` | Identify the structure of a relationship and create the node structure |
+| `GTM.position_points()` | N/A | Use positioning algorithm to position the points based on the type of graph |
+| `GTM.get_points()` | `PointVector` | Get the points to pass to the visual renderer for drawing |
+| `<DigraphCanvas/>` | `Html` | Display the processed points |
+
+## Modifications to Existing Program
+- Put the point processing logic inside of `<Graph/>` and just pass the points to `<DigraphCanvas/>`
+
 ## Key Utilities
 
 ### Data Types
 - Supported types of special layouts based on the type of relation
     ```rust
-    pub enum GRAPH_THEORY_TYPES {COMPOUND, TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
-    pub enum NODE_TYPE {ROOT, NORMAL, END, CIRCLE_ROOT}
+    pub enum GraphTheoryTypes {COMPOUND, TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+    pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
     pub type NodeId: i64
 
 - Serves as an interface to correctly position one or more GraphTheoryRelation. Serves as a bridge between logical and visual to correctly position points.
     ```rust
     pub struct GraphTheoryRelationManager {
-        pub relations: Vec<GraphTheoryRelation>
+        pub relations: Vec<GraphTheoryRelation>,
+        pub cached_points: Option<Vec<Points>>
+    }
+    impl {
+        pub fn get_points(self&) -> PointVector {
+            if Some(points) = cached_points {
+                return points
+            };
+            let mut points: Vec<Points> = vec![];
+            for relation in self.relations {
+                points.append(relation.nodes.map(|n| n.point));
+            }
+            points
+        }
+        pub fn clear_points_cache(self&) {
+            self.cached_points.clear();
+        }
+        // Mutate and save these points to the points cache
+        pub fn position_points(self&) {
+
+        }
     }
 
 - Bundles all of the logical and visual components surrounding rendering a graph
     ```rust
     pub struct GraphTheoryRelation {
-        pub relation_type: GRAPH_THEORY_TYPES,
-        pub relation: Relation,
+        pub relation_type: GraphTheoryTypes,
         pub nodes: Vec<Node>
     }
     impl {
@@ -38,11 +70,11 @@ Many types of graphs, such as trees, are considered undirected graphs. Currently
         pub fn get_nodes_of_type_cached()
     }
 
-- Tracks structured information related to each individual node
+- Tracks structured information related to each individual node. Node is the logical wrapper around the more visual `Point` struct
     ```rust
     pub struct Node {
         pub id: i64,
-        pub node_type: NODE_TYPE,
+        pub node_type: NodeType,
         pub point: Point,
         pub parent: Option<NodeId>,
         pub children: Vec<NodeId>,
@@ -64,6 +96,7 @@ Many types of graphs, such as trees, are considered undirected graphs. Currently
 
 ### Functions
 - `is_cyclic(graph: &GraphTheoryRelation) -> bool` determines if a graph is cyclic
+- `is_chain(graph: &GraphTheoryRelation) -> bool` determines if each node only has one parent and one child (except for the `ROOT` and `END`)
 - `is_connected(graph: &GraphTheoryRelation) -> bool` determines if a graph is connected
 - `partition_disconnected_relation(graph: &GraphTheoryRelation) -> Vec<GraphTheoryRelation>` breaks up a `COMPOUND` graph into its subparts
 
