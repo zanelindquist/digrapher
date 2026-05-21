@@ -2,8 +2,9 @@ use gloo_console::log;
 use yew::prelude::*;
 use crate::components::digraph_tools::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
+use crate::services::digraph_services::classify_relation::process_reltaion;
 use crate::services::digraph_services::digest_values::{digest_values};
-use crate::services::digraph_services::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError};
+use crate::services::digraph_services::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError, ProcessedRelationResult};
 use crate::render::digraph_render::graph::{Graph};
 
 
@@ -16,16 +17,23 @@ pub fn digraph_page() -> Html {
 
     // Calculated state variables
     let digested_values: UseStateHandle<DigestedValuesResult> = use_state(|| Err(ParseError::new("No input"))); // Parse user's input
+    let processed_relation: UseStateHandle<ProcessedRelationResult> = use_state(|| Err(ParseError::new("No input"))); // Parse user's input
 
     // When a user changes their input value
     let on_input = {
         let input_value = input_value.clone();
         let digested_values = digested_values.clone();
+        let processed_relation = processed_relation.clone();
+
         Callback::from(move |v: String| {
             // Set the input value
             input_value.set(v.clone());
+            let result = digest_values(v);
+            digested_values.set(result.clone());
             // Update the digested values for our pipeline
-            digested_values.set(digest_values(v));
+            if let Ok(dv) = result {
+                processed_relation.set(process_reltaion(dv));
+            }
         })
     };
 
@@ -61,7 +69,7 @@ pub fn digraph_page() -> Html {
                 />
                 // Render the graph
                 <Graph
-                    digested_values={digested_values.clone()}
+                    processed_relation={processed_relation.clone()}
                     mode_change_callback={on_mode_change}
                     graph_mode={graph_mode.clone()}
                     object_selection={selection_object}

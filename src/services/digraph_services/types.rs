@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use std::{collections::HashSet};
 
-use crate::render::{objects::{edge::Edge, point::Point}};
+use crate::{render::objects::{edge::Edge, point::Point}, services::digraph_services::classify_relation::GraphTheoryRelationManager};
 
 // TYPES
 pub type PointLabel = String;
@@ -15,6 +15,9 @@ pub type PointVector = Vec<Point>;
 pub type EdgeVector = Vec<Edge>;
 pub type MatrixData = Vec<Vec<bool>>;
 pub type StoredRelations = Vec<StoredRelation>;
+pub type NodeId = i64;
+pub type DigestedValuesResult = Result<Relation, ParseError>;
+pub type ProcessedRelationResult = Result<GraphTheoryRelationManager, ParseError>;
 
 // ENUMS
 
@@ -25,6 +28,11 @@ pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
+
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum GraphTheoryTypes {COMPOUND, TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
 
 #[derive(PartialEq)]
 pub enum DrawObjectSelection {
@@ -193,5 +201,4 @@ impl ParseError {
     }
 }
 
-pub type DigestedValuesResult = Result<Relation, ParseError>;
 

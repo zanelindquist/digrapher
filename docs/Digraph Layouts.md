@@ -38,7 +38,7 @@ Many types of graphs, such as trees, are considered undirected graphs. Currently
         pub cached_points: Option<Vec<Points>>
     }
     impl {
-        pub fn get_points(self&) -> PointVector {
+        pub fn get_points(&self) -> PointVector {
             if Some(points) = cached_points {
                 return points
             };
@@ -48,11 +48,11 @@ Many types of graphs, such as trees, are considered undirected graphs. Currently
             }
             points
         }
-        pub fn clear_points_cache(self&) {
+        pub fn clear_points_cache(&self) {
             self.cached_points.clear();
         }
         // Mutate and save these points to the points cache
-        pub fn position_points(self&) {
+        pub fn position_points(&self) {
 
         }
     }
@@ -64,7 +64,7 @@ Many types of graphs, such as trees, are considered undirected graphs. Currently
         pub nodes: Vec<Node>
     }
     impl {
-        pub fn get_from_id(self&, i: NodeId) -> &Node {
+        pub fn get_from_id(&self, i: NodeId) -> &Node {
             return &self.nodes.get(i);
         }
         pub fn get_nodes_of_type_cached()

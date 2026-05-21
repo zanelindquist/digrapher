@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection};
+use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection, ProcessedRelationResult};
 use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
@@ -10,7 +10,7 @@ use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
-    pub digested_values: UseStateHandle<DigestedValuesResult>,
+    pub processed_relation: UseStateHandle<ProcessedRelationResult>,
     pub mode_change_callback: Callback<i32>,
     pub graph_mode: UseStateHandle<GraphModes>,
     pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
@@ -147,8 +147,8 @@ pub fn graph(props: &GraphProps) -> Html{
         )}</code>
     };
 
-    match &*props.digested_values {
-        Ok(relation) => html! {
+    match &*props.processed_relation {
+        Ok(graph_manager) => html! {
             <div
                 ref={node_ref}
                 class="graph"
@@ -165,7 +165,7 @@ pub fn graph(props: &GraphProps) -> Html{
                             <DigraphCanvas
                                 class={if *pointer_down { "grab"} else {""}}
                                 position={(*canvas_position).clone()}
-                                relation={relation.clone()}
+                                relation={graph_manager.relation.clone()}
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
                             />
@@ -173,7 +173,7 @@ pub fn graph(props: &GraphProps) -> Html{
                         GraphModes::MATRIX => html! {
                             <MatrixCanvas
                                 position={(*canvas_position).clone()}
-                                relation={relation.clone()}
+                                relation={graph_manager.relation.clone()}
                                 object_selection={props.object_selection.clone()}
                             />
                         },
