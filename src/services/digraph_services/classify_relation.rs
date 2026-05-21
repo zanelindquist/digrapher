@@ -161,23 +161,21 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
     // At this point, nodes are built, and we just need to diagnose the relationship
     
     // First we need to see if the relation is compound
-
-    let mut relation_type = GraphTheoryTypes::NETWORK;
-
-
-    let graph = GraphTheoryRelation {
-        relation_type,
-        nodes
-    };
+    let mut subgraphs = split_into_components(&nodes);
+    // Then for each individual connected part
+    for mut relation in &mut subgraphs {
+        // See if it is cyclic, because that will tell us a lot
+        relation.relation_type =  classify_relation(relation, &nodes);
+    }
 
     Ok(GraphTheoryRelationManager {
         relation,
         cached_points: None,
-        subgraphs: vec![graph]
+        subgraphs: subgraphs
     })
 }
 
-pub fn is_cyclic(node_id: &NodeId, nodes: &HashMap<NodeId, Node>, visited: &mut HashSet<NodeId>, in_stack: &mut HashSet<NodeId>) -> bool {
+pub fn is_cyclic(node_id: &NodeId, nodes: &Vec<Node>, visited: &mut HashSet<NodeId>, in_stack: &mut HashSet<NodeId>) -> bool {
     // If we're currently exploring this node again → cycle
     if in_stack.contains(node_id) {
         return true;
@@ -191,7 +189,7 @@ pub fn is_cyclic(node_id: &NodeId, nodes: &HashMap<NodeId, Node>, visited: &mut 
     visited.insert(node_id.clone());
     in_stack.insert(node_id.clone());
 
-    let node = match nodes.get(node_id) {
+    let node = match nodes.get(*node_id as usize) {
         Some(n) => n,
         None => return false,
     };
@@ -244,4 +242,53 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
     }
 
     components
+}
+
+fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> GraphTheoryTypes {
+    let mut visited = HashSet::new();
+    let mut in_stack = HashSet::new();
+    if is_cyclic(&(0 as NodeId), &nodes, &mut visited, &mut in_stack) {
+        if is_circular(relation, nodes) {
+            return GraphTheoryTypes::CIRCULAR;
+        }
+
+        if is_clique(relation, nodes) {
+            return GraphTheoryTypes::CLIQUE;
+        }
+
+        if is_layered_network(relation, nodes) {
+            return GraphTheoryTypes::LAYERED_NETWORK;
+        }
+
+    } else {
+        if is_chain(relation, nodes) {
+            return GraphTheoryTypes::CHAIN;
+        }
+
+        // Connected and acyclic are the criteria
+        return GraphTheoryTypes::TREE;
+    }
+    
+    GraphTheoryTypes::NETWORK
+}
+
+
+
+// CLASSIFICATION FUNCTIONS
+
+fn is_circular(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+    false
+}
+fn is_clique(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+    false
+}
+fn is_layered_network(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+    false
+}
+
+fn is_tree(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+    false
+}
+fn is_chain(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+    false
 }

@@ -30,7 +30,7 @@ pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
-pub enum GraphTheoryTypes {COMPOUND, TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
 
