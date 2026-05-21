@@ -62,17 +62,24 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         Callback::from(move |e: PointerEvent| {
             let x = e.client_x();
             let y = e.client_y();
+            let mut clicked_point = false;
             // Map through each point and see if the pointer is on it
             for point in points.iter() {
                 // If the mouse is clicking on a point
                 if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
+                    clicked_point = true;
                     // Interrup the graph's scrolling
                     interrupt.set(true);
                     // Set the point as our selected point
                     selected_point.set(Some(point.clone()));
                     // Set the info selection 
                     object_selection.set(ObjectSelection { selection: Some(DrawObjectSelection::Point(point.label.clone())) });
+                    break;
                 }
+            }
+
+            if !clicked_point {
+                object_selection.set(ObjectSelection::default());
             }
         })
     };
