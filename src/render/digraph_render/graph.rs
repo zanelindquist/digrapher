@@ -1,12 +1,26 @@
-use gloo_console::log;
+use web_sys::HtmlElement;
 use yew::prelude::*;
-use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection};
-use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
+use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
+use crate::services::digraph_services::calculate_render::{
+    create_edges, position_points, position_points_preserving_existing,
+};
+use crate::services::digraph_services::types::{
+    CanvasPositioning, DigestedValuesResult, EdgeVector, GraphModes, ObjectSelection, PointVector,
+    Relation,
+};
 
+fn sorted_relation_points(relation: &Relation) -> Vec<String> {
+    let mut sorted_points: Vec<String> = relation.points.clone().into_iter().collect();
+    sorted_points.sort();
+    sorted_points
+}
+
+fn position_points_for_relation(relation: &Relation) -> PointVector {
+    position_points(&sorted_relation_points(relation))
+}
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
@@ -17,16 +31,60 @@ pub struct GraphProps {
 }
 
 #[function_component(Graph)]
-pub fn graph(props: &GraphProps) -> Html{
+pub fn graph(props: &GraphProps) -> Html {
     let node_ref = use_node_ref();
     let size = use_state(|| (1000, 1000));
 
     // Define our view settings
     let canvas_position = use_state(|| CanvasPositioning::new());
+    let initial_relation = (*props.digested_values).clone().ok();
+    let graph_points: UseStateHandle<PointVector> = {
+        let initial_relation = initial_relation.clone();
+        use_state(move || {
+            initial_relation
+                .as_ref()
+                .map(position_points_for_relation)
+                .unwrap_or_default()
+        })
+    };
+    let graph_edges: UseStateHandle<EdgeVector> = {
+        let initial_relation = initial_relation.clone();
+        let initial_points = (*graph_points).clone();
+        use_state(move || {
+            initial_relation
+                .as_ref()
+                .map(|relation| create_edges(&relation.values, &initial_points))
+                .unwrap_or_default()
+        })
+    };
 
     let pointer_down = use_state(|| false);
-    let last_pos = use_state(|| (0,0));
+    let last_pos = use_state(|| (0, 0));
     let interrupt_scrolling = use_state(|| false);
+
+    {
+        let graph_points = graph_points.clone();
+        let graph_edges = graph_edges.clone();
+        let digested_values = (*props.digested_values).clone();
+        use_effect_with(digested_values, move |digested_values| {
+            match digested_values {
+                Ok(relation) => {
+                    let sorted_points = sorted_relation_points(relation);
+                    let existing_points = (*graph_points).clone();
+                    let next_points =
+                        position_points_preserving_existing(&sorted_points, &existing_points);
+
+                    graph_edges.set(create_edges(&relation.values, &next_points));
+                    graph_points.set(next_points);
+                }
+                Err(_) => {
+                    graph_edges.set(EdgeVector::new());
+                    graph_points.set(PointVector::new());
+                }
+            }
+            || ()
+        });
+    }
 
     // On layout set the dimentions of the canvas
     use_effect({
@@ -119,7 +177,7 @@ pub fn graph(props: &GraphProps) -> Html{
         Callback::from(move |e: web_sys::WheelEvent| {
             let delta_y = e.delta_y();
             // Clamp and scale zooming
-            let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
+            let new_zoom = (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
 
             // Update the canvas
             let mut updated_canvas = (*canvas_position).clone();
@@ -166,6 +224,8 @@ pub fn graph(props: &GraphProps) -> Html{
                                 class={if *pointer_down { "grab"} else {""}}
                                 position={(*canvas_position).clone()}
                                 relation={relation.clone()}
+                                points={graph_points.clone()}
+                                edges={graph_edges.clone()}
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
                             />
@@ -190,6 +250,6 @@ pub fn graph(props: &GraphProps) -> Html{
                 {toggle}
                 <code class="graph__error">{ format!("Parsing error: {}", e.message)}</code>
             </div>
-        }
+        },
     }
 }
