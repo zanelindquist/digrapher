@@ -10,7 +10,7 @@
 Many types of graphs, such as trees, are considered undirected graphs. Currently, this part of the project is for directed graphs, so when analyzing traditionally undirected structures, direction *will* be taken into account. Therefore, for best results, **each graph should be antisymmetric and antireflexive**.
 
 ## Pipeline
-| Mutation | Output data type | purpose |
+| Mutation | Output data type | Purpose |
 | -------- | ---------------- | ------- |
 | Input | text | Start |
 | `digest_values()` | `Relation` | Turn the raw input into a relation |

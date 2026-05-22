@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 
 use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
-use crate::services::digraph_services::point_layout::{create_edges, position_points};
+use crate::services::digraph_services::point_layout::{create_edges, create_points};
 use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, ProcessedRelationResult, Relation};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
@@ -27,7 +27,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     sorted_points.sort();
 
     // The actual points live here
-    let points: UseStateHandle<PointVector> = use_state(|| position_points(&sorted_points));
+    let points: UseStateHandle<PointVector> = use_state(|| create_points(&sorted_points));
     let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.processed_relation.relation.values, &(*points)));
     let styles = props.styles;
 
@@ -39,13 +39,14 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     {
         let points = points.clone();
         let edges = edges.clone();
+        let processed_relation = props.processed_relation.clone();
         let relation = props.processed_relation.relation.clone();
         let values = relation.values.clone();
         let rel_pts = relation.points.clone();
         use_effect_with(relation, move |_| {
             let mut sp: Vec<String> = rel_pts.clone().into_iter().collect();
             sp.sort();
-            let new_points = position_points(&sp);
+            let new_points = create_points(&sp);
             edges.set(create_edges(&values, &new_points));
             points.set(new_points.clone());
         });

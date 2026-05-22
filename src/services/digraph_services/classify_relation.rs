@@ -1,25 +1,44 @@
-use std::collections::{HashMap, HashSet};
+use std::{collections::{HashMap, HashSet}, f32::consts::PI};
 
 use gloo_console::log;
 
-use crate::{render::objects::point::Point, services::digraph_services::types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}};
+use crate::{render::objects::point::Point, services::digraph_services::{types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
 #[derive(Clone, PartialEq)]
 pub struct GraphTheoryRelation {
     pub relation_type: GraphTheoryTypes,
-    pub nodes: Vec<Node>
+    pub nodes: Vec<Node>,
+    pub points: Vec<Point>
 }
 impl GraphTheoryRelation {
-    pub fn get_from_id(self, id: NodeId) -> Option<Node> {
-        if let Some(node) = self.nodes.iter().find(|n| n.id == id) {
-            return Some((*node).clone())
+    pub fn position_points(&mut self) {
+        match self.relation_type {
+            GraphTheoryTypes::CIRCULAR => {
+                self.position_points_circle();
+            },
+            _ => {}
         }
-        None
     }
-    pub fn get_nodes_of_type_cached() {
 
+    // POINT POSITIONING
+
+
+    // Outputs points with logical coordinates in -1 to 1 x, y plane
+    fn position_points_circle(&mut self) {
+        let n = self.points.len();
+
+        log!(n);
+
+        for (i, p) in self.points.iter_mut().enumerate() {
+            // Draw counterclockwise
+            let theta = -(i as f32) * (2.0 * PI / n as f32);
+            let x = theta.cos();
+            let y = theta.sin();
+            p.x = x;
+            p.y = y;
+        }
     }
 }
 
@@ -27,29 +46,16 @@ impl GraphTheoryRelation {
 pub struct GraphTheoryRelationManager {
     pub subgraphs: Vec<GraphTheoryRelation>,
     pub relation: Relation,
-    pub cached_points: Option<Vec<Point>>
 }
 impl GraphTheoryRelationManager {
     pub fn get_points(&self) -> PointVector {
-        if let Some(points) = &self.cached_points {
-            return points.clone()
-        };
-        let mut points: Vec<Point> = vec![];
-        for relation in &self.subgraphs {
-            for node in relation.nodes.iter() {
-                points.push((*node).point.clone())
-            }
-        }
-        points
-    }
-    pub fn clear_points_cache(self) {
-        if let Some(mut cache) = self.cached_points {
-            cache.clear();
-        }
+        self.subgraphs.iter().flat_map(|s| s.points.iter().cloned()).collect()
     }
     // Mutate and save these points to the points cache
-    pub fn position_points(&self) {
-
+    pub fn position_points(&mut self) {
+        for mut graph in &mut self.subgraphs {
+            graph.position_points();
+        }
     }
 }
 
@@ -58,56 +64,9 @@ pub struct Node {
     pub id: i64,
     pub label: String,
     pub node_type: NodeType,
-    pub point: Point,
     pub parents: Vec<NodeId>,
     pub children: Vec<NodeId>,
     pub depth: i32,
-    pub dfs_info: Option<DepthFirstSearchInfo>
-}
-impl Node {
-    pub fn add_child(mut self, id: NodeId) {
-        self.children.push(id);
-    }
-    pub fn iterate_children<F>(&self, nodes: &Vec<Node>, callback: &F)
-    where
-        F: Fn(NodeId),
-     {
-        for child_id in &self.children {
-            callback(*child_id);
-            self.iterate_children(nodes, callback);
-        }
-    }
-}
-
-#[derive(Clone, Copy, PartialEq)]
-pub struct DepthFirstSearchInfo {
-    pub visited: bool, // For depth-first searching
-    pub cycle_found: bool
-}
-impl DepthFirstSearchInfo {
-    pub fn default() -> Self {
-        Self {
-            visited: false,
-            cycle_found: false
-        }
-    }
-}
-
-#[derive(Clone, PartialEq)]
-pub struct CachedNodes {
-    nodes: Option<Vec<NodeId>>
-}
-impl CachedNodes {
-    pub fn clear_cache(self) {
-        if let Some(mut cache) = self.nodes {
-            cache.clear();
-        }
-    }
-    pub fn add_cache(self, id: NodeId) {
-        if let Some(mut cache) = self.nodes {
-            cache.push(id);
-        }
-    }
 }
 
 
@@ -129,18 +88,9 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
             id: i as i64,
             label: label.clone(),
             node_type: NodeType::NORMAL,
-            point: Point {
-                x: 0.0,
-                y: 0.0,
-                bearing: 0.0,
-                label: label.clone(),
-                symbol: PointRenderSymbol::CIRCLE,
-                index: i as i32
-            },
             parents: vec![],
             children: vec![],
             depth: 0,
-            dfs_info: Some(DepthFirstSearchInfo::default())
         });
     }
 
@@ -179,13 +129,15 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
         relation.relation_type =  classify_relation(relation, &relation.nodes);
     }
 
-    Ok(GraphTheoryRelationManager {
+    let mut gm = GraphTheoryRelationManager {
         relation,
-        cached_points: None,
         subgraphs: subgraphs
-    })
-}
+    };
 
+    gm.position_points();
+
+    Ok(gm)
+}
 
 pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
     let mut visited: HashSet<NodeId> = HashSet::new();
@@ -230,6 +182,7 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
         components.push(GraphTheoryRelation {
             relation_type: GraphTheoryTypes::NETWORK,
             nodes: component_nodes,
+            points: vec![]
         });
     }
 
