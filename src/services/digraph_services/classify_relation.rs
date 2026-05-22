@@ -1,5 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
+use gloo_console::log;
+
 use crate::{render::objects::point::Point, services::digraph_services::types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}};
 
 
@@ -184,34 +186,6 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
     })
 }
 
-pub fn is_cyclic(node_id: &NodeId, nodes: &Vec<Node>, visited: &mut HashSet<NodeId>, in_stack: &mut HashSet<NodeId>) -> bool {
-    // If we're currently exploring this node again → cycle
-    if in_stack.contains(node_id) {
-        return true;
-    }
-
-    // If already fully processed, no need to re-check
-    if visited.contains(node_id) {
-        return false;
-    }
-
-    visited.insert(node_id.clone());
-    in_stack.insert(node_id.clone());
-
-    let node = match nodes.get(*node_id as usize) {
-        Some(n) => n,
-        None => return false,
-    };
-
-    for child_id in &node.children {
-        if is_cyclic(child_id, nodes, visited, in_stack) {
-            return true;
-        }
-    }
-
-    in_stack.remove(node_id);
-    false
-}
 
 pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
     let mut visited: HashSet<NodeId> = HashSet::new();
@@ -263,28 +237,35 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
 }
 
 fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> GraphTheoryTypes {
-    let mut visited = HashSet::new();
-    let mut in_stack = HashSet::new();
-    if is_cyclic(&(0 as NodeId), &nodes, &mut visited, &mut in_stack) {
+    log!(
+        "{}",
+        nodes
+            .iter()
+            .map(|n| n.label.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    if is_cyclic(&nodes) {
         if is_circular(nodes) {
             return GraphTheoryTypes::CIRCULAR;
         }
 
-        if is_clique(relation, nodes) {
+        if is_clique(nodes) {
             return GraphTheoryTypes::CLIQUE;
         }
 
-        if is_layered_network(relation, nodes) {
+        if is_layered_network(nodes) {
             return GraphTheoryTypes::LAYERED_NETWORK;
         }
 
     } else {
-        if is_chain(relation, nodes) {
+        if is_chain(nodes) {
             return GraphTheoryTypes::CHAIN;
         }
 
-        // Connected and acyclic are the criteria for a tree period, so this is the default
-        return GraphTheoryTypes::TREE;
+        if is_tree(nodes) {
+            return GraphTheoryTypes::TREE;
+        }
     }
     
     GraphTheoryTypes::NETWORK
@@ -293,6 +274,51 @@ fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> Graph
 
 
 // CLASSIFICATION FUNCTIONS
+
+pub fn is_cyclic(nodes: &Vec<Node>) -> bool {
+    fn dfs(node_id: NodeId, nodes: &Vec<Node>, visited: &mut HashSet<NodeId>, in_stack: &mut HashSet<NodeId>) -> bool {
+        // Found a back-edge
+        if in_stack.contains(&node_id) {
+            return true;
+        }
+
+        // Already fully explored
+        if visited.contains(&node_id) {
+            return false;
+        }
+
+        visited.insert(node_id);
+        in_stack.insert(node_id);
+
+        let Some(node) = nodes.iter().find(|n| n.id == node_id) else {
+            return false;
+        };
+
+        for child_id in &node.children {
+            if dfs(*child_id, nodes, visited, in_stack) {
+                return true;
+            }
+        }
+
+        in_stack.remove(&node_id);
+
+        false
+    }
+
+    let mut visited = HashSet::new();
+    let mut in_stack = HashSet::new();
+
+    // Must check every component
+    for node in nodes {
+        if !visited.contains(&node.id) {
+            if dfs(node.id, nodes, &mut visited, &mut in_stack) {
+                return true;
+            }
+        }
+    }
+
+    false
+}
 
 fn is_circular(nodes: &Vec<Node>) -> bool {
     for node in nodes {
@@ -303,7 +329,7 @@ fn is_circular(nodes: &Vec<Node>) -> bool {
     }
     true
 }
-fn is_clique(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+fn is_clique(nodes: &Vec<Node>) -> bool {
     // Every point has a relation with every other point
     // This means that each point has n - 1 children and n - 1 parents
     for node in nodes {
@@ -313,13 +339,25 @@ fn is_clique(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
     }
     true
 }
-fn is_layered_network(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+fn is_layered_network(nodes: &Vec<Node>) -> bool {
     false
 }
-fn is_chain(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
+fn is_chain(nodes: &Vec<Node>) -> bool {
     // If its a chain, every element except for the start and end have 1 parent and one child
     for node in nodes {
         if node.node_type == NodeType::NORMAL && (node.parents.len() != 1 || node.children.len() != 1) {
+            return false
+        } else if node.node_type == NodeType::END && (node.parents.len() != 1) {
+            return  false
+        } else if node.node_type == NodeType::ROOT && (node.children.len() != 1) {
+            return false
+        }
+    }
+    true
+}
+fn is_tree(nodes: &Vec<Node>) -> bool {
+    for node in nodes {
+        if (node.node_type == NodeType::NORMAL || node.node_type == NodeType::END) && (node.parents.len() != 1) {
             return false
         }
     }
