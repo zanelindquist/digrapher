@@ -1,4 +1,5 @@
 use std::cmp::min;
+use std::fmt;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use std::{collections::HashSet};
@@ -31,6 +32,20 @@ pub enum RelationExplorerModes{EDGES, POINTS}
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+impl fmt::Display for GraphTheoryTypes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = match self {
+            GraphTheoryTypes::TREE => "tree",
+            GraphTheoryTypes::CIRCULAR => "circular",
+            GraphTheoryTypes::CLIQUE => "clique",
+            GraphTheoryTypes::NETWORK => "network",
+            GraphTheoryTypes::LAYERED_NETWORK => "layered_network",
+            GraphTheoryTypes::CHAIN => "chain"
+        };
+
+        write!(f, "{}", msg)
+    }
+}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
 

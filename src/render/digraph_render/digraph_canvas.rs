@@ -1,8 +1,9 @@
 use gloo_console::log;
 use yew::prelude::*;
 
+use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
 use crate::services::digraph_services::point_layout::{create_edges, position_points};
-use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, Relation};
+use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, ProcessedRelationResult, Relation};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
 
@@ -10,7 +11,7 @@ use crate::render::objects::point::Point;
 #[derive(Properties, PartialEq)]
 pub struct DigraphCanvasProps {
     pub position: CanvasPositioning,
-    pub relation: Relation,
+    pub processed_relation: GraphTheoryRelationManager,
     #[prop_or_default]
     pub styles: RenderStyles,
     #[prop_or_default]
@@ -22,12 +23,12 @@ pub struct DigraphCanvasProps {
 #[function_component(DigraphCanvas)]
 pub fn canvas(props: &DigraphCanvasProps) -> Html {
     // Sort the text of the points first so we have a same order every time
-    let mut sorted_points: Vec<String> = props.relation.points.clone().into_iter().collect();
+    let mut sorted_points: Vec<String> = props.processed_relation.relation.points.clone().into_iter().collect();
     sorted_points.sort();
 
     // The actual points live here
     let points: UseStateHandle<PointVector> = use_state(|| position_points(&sorted_points));
-    let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.relation.values, &(*points)));
+    let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.processed_relation.relation.values, &(*points)));
     let styles = props.styles;
 
     // Point selecton and moving
@@ -38,7 +39,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     {
         let points = points.clone();
         let edges = edges.clone();
-        let relation = props.relation.clone();
+        let relation = props.processed_relation.relation.clone();
         let values = relation.values.clone();
         let rel_pts = relation.points.clone();
         use_effect_with(relation, move |_| {
@@ -94,7 +95,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let canvas_pos = props.position.clone();
         let points = points.clone();
         let edges = edges.clone();
-        let values = props.relation.values.clone();
+        let values = props.processed_relation.relation.values.clone();
         Callback::from(move |e: PointerEvent| {
             // HOVERING ON A POINT
             let x = e.client_x();

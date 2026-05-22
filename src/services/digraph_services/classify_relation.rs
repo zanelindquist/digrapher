@@ -66,6 +66,15 @@ impl Node {
     pub fn add_child(mut self, id: NodeId) {
         self.children.push(id);
     }
+    pub fn iterate_children<F>(&self, nodes: &Vec<Node>, callback: &F)
+    where
+        F: Fn(NodeId),
+     {
+        for child_id in &self.children {
+            callback(*child_id);
+            self.iterate_children(nodes, callback);
+        }
+    }
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -165,7 +174,7 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
     // Then for each individual connected part
     for mut relation in &mut subgraphs {
         // See if it is cyclic, because that will tell us a lot
-        relation.relation_type =  classify_relation(relation, &nodes);
+        relation.relation_type =  classify_relation(relation, &relation.nodes);
     }
 
     Ok(GraphTheoryRelationManager {
@@ -208,14 +217,15 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
     let mut visited: HashSet<NodeId> = HashSet::new();
     let mut components = Vec::new();
 
+    // For every node
     for start_idx in 0..nodes.len() {
         let start_id = start_idx as NodeId;
 
+        // Already assigned to a component
         if visited.contains(&start_id) {
             continue;
         }
 
-        // BFS/DFS for this component
         let mut stack = vec![start_id];
         let mut component_nodes = Vec::new();
 
@@ -228,9 +238,17 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
 
             component_nodes.push(node.clone());
 
+            // Traverse children
             for child_id in &node.children {
                 if !visited.contains(child_id) {
                     stack.push(*child_id);
+                }
+            }
+
+            // Traverse parents
+            for parent_id in &node.parents {
+                if !visited.contains(parent_id) {
+                    stack.push(*parent_id);
                 }
             }
         }
@@ -248,7 +266,7 @@ fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> Graph
     let mut visited = HashSet::new();
     let mut in_stack = HashSet::new();
     if is_cyclic(&(0 as NodeId), &nodes, &mut visited, &mut in_stack) {
-        if is_circular(relation, nodes) {
+        if is_circular(nodes) {
             return GraphTheoryTypes::CIRCULAR;
         }
 
@@ -265,7 +283,7 @@ fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> Graph
             return GraphTheoryTypes::CHAIN;
         }
 
-        // Connected and acyclic are the criteria
+        // Connected and acyclic are the criteria for a tree period, so this is the default
         return GraphTheoryTypes::TREE;
     }
     
@@ -276,19 +294,34 @@ fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> Graph
 
 // CLASSIFICATION FUNCTIONS
 
-fn is_circular(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
-    false
+fn is_circular(nodes: &Vec<Node>) -> bool {
+    for node in nodes {
+        // Reflexive relations are already excluded
+        if node.parents.len() != 1 || node.children.len() != 1 {
+            return false
+        }
+    }
+    true
 }
 fn is_clique(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
-    false
+    // Every point has a relation with every other point
+    // This means that each point has n - 1 children and n - 1 parents
+    for node in nodes {
+        if node.parents.len() != nodes.len() - 1 || node.children.len() != nodes.len() - 1 {
+            return false
+        }
+    }
+    true
 }
 fn is_layered_network(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
     false
 }
-
-fn is_tree(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
-    false
-}
 fn is_chain(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> bool {
-    false
+    // If its a chain, every element except for the start and end have 1 parent and one child
+    for node in nodes {
+        if node.node_type == NodeType::NORMAL && (node.parents.len() != 1 || node.children.len() != 1) {
+            return false
+        }
+    }
+    true
 }

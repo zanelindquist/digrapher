@@ -139,11 +139,18 @@ pub fn graph(props: &GraphProps) -> Html{
     };
     let graph_info = html! {
         <code class="graph__info">{format!(
-            "{}x{} {:.1},{:.1} zoom: {:.2} {}",
+            "{}x{} {:.1},{:.1} zoom: {:.2} {}:{}",
             canvas_position.width, canvas_position.height,
             canvas_position.offset_x as f32, canvas_position.offset_y as f32,
             canvas_position.zoom,
-            if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"}
+            if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"},
+            props.processed_relation.as_ref().map(|rel| {
+                rel.subgraphs
+                    .iter()
+                    .map(|sub| sub.relation_type.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            }).unwrap_or_else(|_| "none".to_string())
         )}</code>
     };
 
@@ -165,7 +172,7 @@ pub fn graph(props: &GraphProps) -> Html{
                             <DigraphCanvas
                                 class={if *pointer_down { "grab"} else {""}}
                                 position={(*canvas_position).clone()}
-                                relation={graph_manager.relation.clone()}
+                                processed_relation={graph_manager.clone()}
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
                             />

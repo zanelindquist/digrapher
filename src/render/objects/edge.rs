@@ -21,10 +21,11 @@ impl Edge {
         Self { start, end, relation_type, bezier_arc_px: 40.0, loop_radius: 40.0 }
     }
     
-    pub fn midpoint(&self) -> Point {
+    pub fn midpoint(&self, canvas_pos: &CanvasPositioning) -> Point {
         // Midpoint of for a symetric line
-        let sym_x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * self.bezier_arc_px;
-        let sym_y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * self.bezier_arc_px;
+        let arc_displacement = canvas_pos.visual_to_logical_scalar(self.bezier_arc_px);
+        let sym_x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * arc_displacement;
+        let sym_y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * arc_displacement;
 
         // Midpoint for a reflexive line
         let ref_x = self.start.x + (self.start.bearing).cos() * (self.loop_radius * (1.0 + SQRT_2));
@@ -123,11 +124,10 @@ impl Edge {
                         stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
-                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
+                    {self.midpoint(canvas_pos).draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             },
             RelationProperty::SYMMETRIC => html! {
-
                 <>
                     <path
                         d={format!("M {} Q {} {}", 
@@ -146,7 +146,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
+                    {self.midpoint(canvas_pos).draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             },
             // Antisymmetrics
@@ -161,7 +161,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
+                    {self.midpoint(canvas_pos).draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             }
         }
