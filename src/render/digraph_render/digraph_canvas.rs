@@ -27,7 +27,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     sorted_points.sort();
 
     // The actual points live here
-    let points: UseStateHandle<PointVector> = use_state(|| create_points(&sorted_points));
+    let points: UseStateHandle<PointVector> = use_state(|| props.processed_relation.get_points());
     let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.processed_relation.relation.values, &(*points)));
     let styles = props.styles;
 
@@ -36,6 +36,21 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let hovered_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
 
     // Update points and edges when the relation changes
+    // {
+    //     let points = points.clone();
+    //     let edges = edges.clone();
+    //     let processed_relation = props.processed_relation.clone();
+    //     let relation = props.processed_relation.relation.clone();
+    //     let values = relation.values.clone();
+    //     let rel_pts = relation.points.clone();
+    //     use_effect_with(relation, move |_| {
+    //         let mut sp: Vec<String> = rel_pts.clone().into_iter().collect();
+    //         sp.sort();
+    //         let new_points = create_points(&sp);
+    //         edges.set(create_edges(&values, &new_points));
+    //         points.set(new_points.clone());
+    //     });
+    // }
     {
         let points = points.clone();
         let edges = edges.clone();
@@ -44,9 +59,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let values = relation.values.clone();
         let rel_pts = relation.points.clone();
         use_effect_with(relation, move |_| {
-            let mut sp: Vec<String> = rel_pts.clone().into_iter().collect();
-            sp.sort();
-            let new_points = create_points(&sp);
+            let new_points = processed_relation.get_points();
             edges.set(create_edges(&values, &new_points));
             points.set(new_points.clone());
         });

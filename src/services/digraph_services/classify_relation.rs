@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, f32::consts::PI};
 
 use gloo_console::log;
 
-use crate::{render::objects::point::Point, services::digraph_services::{types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}}};
+use crate::{render::objects::point::Point, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -18,7 +18,9 @@ impl GraphTheoryRelation {
             GraphTheoryTypes::CIRCULAR => {
                 self.position_points_circle();
             },
-            _ => {}
+            _ => {
+                self.position_points_circle();
+            }
         }
     }
 
@@ -182,7 +184,7 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
         components.push(GraphTheoryRelation {
             relation_type: GraphTheoryTypes::NETWORK,
             nodes: component_nodes,
-            points: vec![]
+            points: create_points(&nodes.iter().map(|n| n.label.clone()).collect::<Vec<String>>())
         });
     }
 
@@ -190,14 +192,6 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
 }
 
 fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> GraphTheoryTypes {
-    log!(
-        "{}",
-        nodes
-            .iter()
-            .map(|n| n.label.to_string())
-            .collect::<Vec<_>>()
-            .join(", ")
-    );
     if is_cyclic(&nodes) {
         if is_circular(nodes) {
             return GraphTheoryTypes::CIRCULAR;
