@@ -1,8 +1,6 @@
 use std::{collections::{HashMap, HashSet}, f32::consts::PI};
 
-use gloo_console::log;
-
-use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}}};
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -11,7 +9,9 @@ pub struct GraphTheoryRelation {
     pub relation_type: GraphTheoryTypes,
     pub nodes: Vec<Node>,
     pub points: Vec<Point>,
-    pub positioning_settings: GraphTheoryLayoutSettings
+    pub positioning_settings: GraphTheoryLayoutSettings,
+    pub width_l: f32,
+    pub height_l: f32
 }
 impl GraphTheoryRelation {
     pub fn position_points(&mut self) {
@@ -38,6 +38,12 @@ impl GraphTheoryRelation {
     fn position_points_circle(&mut self) {
         let n = self.points.len();
 
+        if n == 0 {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
+            return;
+        }
+
         for (i, p) in self.points.iter_mut().enumerate() {
             // Draw counterclockwise
             let theta = -(i as f32) * (2.0 * PI / n as f32);
@@ -46,12 +52,16 @@ impl GraphTheoryRelation {
             p.x = x;
             p.y = y;
         }
+
+        self.update_layout_size();
     }
 
     fn position_points_chain(&mut self) {
         let n = self.nodes.len();
 
         if n == 0 {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
             return;
         }
 
@@ -62,11 +72,14 @@ impl GraphTheoryRelation {
                 p.y = 0.0;
                 p.bearing = 0.0;
             }
+            self.update_layout_size();
             return;
         }
 
         // Start of chain = node with no parents
         let Some(start_node) = self.nodes.iter().find(|node| node.node_type == NodeType::ROOT) else {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
             return;
         };
 
@@ -92,6 +105,8 @@ impl GraphTheoryRelation {
 
         let chain_len = ordered_labels.len();
         if chain_len < 2 {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
             return;
         }
 
@@ -106,14 +121,20 @@ impl GraphTheoryRelation {
                 point.bearing = 0.0;
             }
         }
+
+        self.update_layout_size();
     }
 
     fn position_points_tree(&mut self) {
         if self.nodes.is_empty() {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
             return;
         }
 
         let Some(root) = self.nodes.iter().find(|node| node.node_type == NodeType::ROOT) else {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
             return;
         };
 
@@ -193,6 +214,24 @@ impl GraphTheoryRelation {
                 }
             }
         }
+
+        self.update_layout_size();
+    }
+
+    fn update_layout_size(&mut self) {
+        if self.points.is_empty() {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
+            return;
+        }
+
+        let min_x = self.points.iter().map(|p| p.x).fold(f32::INFINITY, f32::min);
+        let max_x = self.points.iter().map(|p| p.x).fold(f32::NEG_INFINITY, f32::max);
+        let min_y = self.points.iter().map(|p| p.y).fold(f32::INFINITY, f32::min);
+        let max_y = self.points.iter().map(|p| p.y).fold(f32::NEG_INFINITY, f32::max);
+
+        self.width_l = (max_x - min_x).max(0.0);
+        self.height_l = (max_y - min_y).max(0.0);
     }
 }
 
@@ -203,11 +242,28 @@ pub struct GraphTheoryRelationManager {
 }
 impl GraphTheoryRelationManager {
     pub fn get_points(&self) -> PointVector {
-        self.subgraphs.iter().flat_map(|s| s.points.iter().cloned()).collect()
+        let horizontal_gap = 0.5;
+        let subgraph_widths: Vec<f32> = self.subgraphs.iter().map(|g| g.width_l.max(0.1)).collect();
+        let total_width: f32 = subgraph_widths.iter().sum::<f32>() + horizontal_gap * (subgraph_widths.len().saturating_sub(1) as f32);
+        let mut x_cursor = -total_width / 2.0;
+
+        let mut points = Vec::new();
+        for (graph, width) in self.subgraphs.iter().zip(subgraph_widths.iter()) {
+            let center_x = x_cursor + width / 2.0;
+            x_cursor += width + horizontal_gap;
+
+            for point in graph.points.iter() {
+                let mut shifted = point.clone();
+                shifted.x += center_x;
+                points.push(shifted);
+            }
+        }
+
+        points
     }
     // Mutate and save these points to the points cache
     pub fn position_points(&mut self) {
-        for mut graph in &mut self.subgraphs {
+        for graph in &mut self.subgraphs {
             graph.position_points();
         }
     }
@@ -278,7 +334,7 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
     // First we need to see if the relation is compound
     let mut subgraphs = split_into_components(&nodes);
     // Then for each individual connected part
-    for mut relation in &mut subgraphs {
+    for relation in &mut subgraphs {
         // See if it is cyclic, because that will tell us a lot
         relation.relation_type =  classify_relation(relation, &relation.nodes);
     }
@@ -340,14 +396,16 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
             relation_type: GraphTheoryTypes::NETWORK,
             nodes: component_nodes,
             points: create_points(&component_labels),
-            positioning_settings: GraphTheoryLayoutSettings::default()
+            positioning_settings: GraphTheoryLayoutSettings::default(),
+            width_l: 1.0,
+            height_l: 1.0
         });
     }
 
     components
 }
 
-fn classify_relation(relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> GraphTheoryTypes {
+fn classify_relation(_relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> GraphTheoryTypes {
     if is_cyclic(&nodes) {
         if is_circular(nodes) {
             return GraphTheoryTypes::CIRCULAR;
@@ -442,7 +500,7 @@ fn is_clique(nodes: &Vec<Node>) -> bool {
     }
     true
 }
-fn is_layered_network(nodes: &Vec<Node>) -> bool {
+fn is_layered_network(_nodes: &Vec<Node>) -> bool {
     false
 }
 fn is_chain(nodes: &Vec<Node>) -> bool {
