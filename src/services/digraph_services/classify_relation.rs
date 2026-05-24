@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, f32::consts::PI};
 
 use gloo_console::log;
 
-use crate::{render::objects::point::Point, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}}};
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointRenderSymbol, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -10,13 +10,20 @@ use crate::{render::objects::point::Point, services::digraph_services::{point_la
 pub struct GraphTheoryRelation {
     pub relation_type: GraphTheoryTypes,
     pub nodes: Vec<Node>,
-    pub points: Vec<Point>
+    pub points: Vec<Point>,
+    pub positioning_settings: GraphTheoryLayoutSettings
 }
 impl GraphTheoryRelation {
     pub fn position_points(&mut self) {
         match self.relation_type {
             GraphTheoryTypes::CIRCULAR => {
                 self.position_points_circle();
+            },
+            GraphTheoryTypes::CHAIN => {
+                self.position_points_chain();
+            },
+            GraphTheoryTypes::TREE => {
+                self.position_points_tree();
             },
             _ => {
                 self.position_points_circle();
@@ -31,8 +38,6 @@ impl GraphTheoryRelation {
     fn position_points_circle(&mut self) {
         let n = self.points.len();
 
-        log!(n);
-
         for (i, p) in self.points.iter_mut().enumerate() {
             // Draw counterclockwise
             let theta = -(i as f32) * (2.0 * PI / n as f32);
@@ -41,6 +46,71 @@ impl GraphTheoryRelation {
             p.x = x;
             p.y = y;
         }
+    }
+
+    fn position_points_chain(&mut self) {
+        let n = self.nodes.len();
+
+        if n == 0 {
+            return;
+        }
+
+        // Single node
+        if n == 1 {
+            if let Some(p) = self.points.first_mut() {
+                p.x = 0.0;
+                p.y = 0.0;
+                p.bearing = 0.0;
+            }
+            return;
+        }
+
+        // Start of chain = node with no parents
+        let Some(start_node) = self.nodes.iter().find(|node| node.node_type == NodeType::ROOT) else {
+            return;
+        };
+
+        // Walk the chain in order
+        let mut ordered_labels = Vec::with_capacity(n);
+        let mut current = start_node;
+
+        loop {
+            ordered_labels.push(current.label.clone());
+
+            // Chain should only have one child
+            if current.children.len() != 1 {
+                break;
+            }
+
+            let child_id = current.children[0];
+            let Some(next) = self.nodes.iter().find(|node| node.id == child_id) else {
+                break;
+            };
+
+            current = next;
+        }
+
+        let chain_len = ordered_labels.len();
+        if chain_len < 2 {
+            return;
+        }
+
+        // Position each point based on ordered chain traversal
+        for (i, label) in ordered_labels.iter().enumerate() {
+            if let Some(point) = self.points.iter_mut().find(|p| p.label == *label) {
+                point.x = 0.0;
+
+                // Top → bottom
+                point.y = - 1.0 + (i as f32 * self.positioning_settings.chain_settings.point_seperation_l);
+
+                point.bearing = 0.0;
+            }
+        }
+    }
+
+    fn position_points_tree(&mut self) {
+        // Position the tree in logical units
+
     }
 }
 
@@ -181,10 +251,14 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
             }
         }
 
+        let mut component_labels: Vec<String> = component_nodes.iter().map(|n| n.label.clone()).collect();
+        component_labels.sort();
+
         components.push(GraphTheoryRelation {
             relation_type: GraphTheoryTypes::NETWORK,
             nodes: component_nodes,
-            points: create_points(&nodes.iter().map(|n| n.label.clone()).collect::<Vec<String>>())
+            points: create_points(&component_labels),
+            positioning_settings: GraphTheoryLayoutSettings::default()
         });
     }
 

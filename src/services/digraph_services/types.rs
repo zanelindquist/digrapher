@@ -126,6 +126,7 @@ impl CanvasPositioning {
     }
 }
 
+
 #[derive(PartialEq)]
 pub struct ObjectSelection {
     pub selection: Option<DrawObjectSelection>
@@ -156,6 +157,8 @@ pub struct PointInteraction {
     pub is_hovered: bool,
     pub is_info: bool
 }
+
+
 
 // RELATIONS
 

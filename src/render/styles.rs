@@ -97,3 +97,40 @@ impl Default for RenderStyles {
         }
     }
 }
+
+#[derive(Clone, Copy, PartialEq)]
+pub struct GraphTheoryLayoutSettings {
+    pub tree_settings: GraphTheoryTreeLayoutSettings,
+    pub chain_settings: GraphTheoryChainLayoutSettings
+}
+impl Default for GraphTheoryLayoutSettings {
+    fn default() -> Self {
+        Self {
+            tree_settings: GraphTheoryTreeLayoutSettings::default(),
+            chain_settings: GraphTheoryChainLayoutSettings::default()
+        }
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub struct GraphTheoryTreeLayoutSettings {
+    pub point_seperation_l: f32,
+}
+impl Default for GraphTheoryTreeLayoutSettings {
+    fn default() -> Self {
+        Self {
+            point_seperation_l: 0.25
+        }
+    }
+}
+#[derive(Clone, Copy, PartialEq)]
+pub struct GraphTheoryChainLayoutSettings {
+    pub point_seperation_l: f32,
+}
+impl Default for GraphTheoryChainLayoutSettings {
+    fn default() -> Self {
+        Self {
+            point_seperation_l: 0.5
+        }
+    }
+}
