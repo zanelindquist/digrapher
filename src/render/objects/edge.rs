@@ -12,20 +12,19 @@ pub struct Edge {
     pub start: Point,
     pub end: Point,
     pub relation_type: RelationProperty,
-    pub bezier_arc_px: f32,
+    pub bezier_arc_lx: f32,
     pub loop_radius: f32
 }
 
 impl Edge {
     pub fn new(start: Point, end: Point, relation_type: RelationProperty) -> Self {
-        Self { start, end, relation_type, bezier_arc_px: 40.0, loop_radius: 40.0 }
+        Self { start, end, relation_type, bezier_arc_lx: 0.40, loop_radius: 40.0 }
     }
     
-    pub fn midpoint(&self, canvas_pos: &CanvasPositioning) -> Point {
+    pub fn midpoint(&self) -> Point {
         // Midpoint of for a symetric line
-        let arc_displacement = canvas_pos.visual_to_logical_scalar(self.bezier_arc_px);
-        let sym_x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * arc_displacement;
-        let sym_y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * arc_displacement;
+        let sym_x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * self.bezier_arc_lx / 2.0;
+        let sym_y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * self.bezier_arc_lx / 2.0;
 
         // Midpoint for a reflexive line
         let ref_x = self.start.x + (self.start.bearing).cos() * (self.loop_radius * (1.0 + SQRT_2));
@@ -59,8 +58,8 @@ impl Edge {
         }
     }
 
-    pub fn bezier_control_point(&self,canvas_pos: &CanvasPositioning) -> Point {
-        let arc_displacement = canvas_pos.visual_to_logical_scalar(self.bezier_arc_px * 2.0);
+    pub fn bezier_control_point(&self) -> Point {
+        let arc_displacement = self.bezier_arc_lx;
         let x = (self.start.x + self.end.x) / 2.0 + (self.angle() + PI / 2.0).cos() * arc_displacement;
         let y = (self.start.y + self.end.y) / 2.0 + (self.angle() + PI / 2.0).sin() * arc_displacement;
         
@@ -86,7 +85,7 @@ impl Edge {
         // Convert from logical to visual pixels
         let (start_x, start_y) = canvas_pos.logical_to_visual_xy(self.start.x, self.start.y);
         let (end_x, end_y) = canvas_pos.logical_to_visual_xy(self.end.x, self.end.y);
-        let bez = self.bezier_control_point(&canvas_pos);
+        let bez = self.bezier_control_point();
         let (bez_x, bez_y) = canvas_pos.logical_to_visual_xy(bez.x, bez.y);
 
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
@@ -124,7 +123,7 @@ impl Edge {
                         stroke={stroke_color}
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
-                    {self.midpoint(canvas_pos).draw(styles, canvas_pos, &no_select_midpoint)}
+                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             },
             RelationProperty::SYMMETRIC => html! {
@@ -146,7 +145,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint(canvas_pos).draw(styles, canvas_pos, &no_select_midpoint)}
+                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             },
             // Antisymmetrics
@@ -161,7 +160,7 @@ impl Edge {
                         stroke-width={styles.edge.stroke_width.to_string()}
                     />
                     // Render the midpoint
-                    {self.midpoint(canvas_pos).draw(styles, canvas_pos, &no_select_midpoint)}
+                    {self.midpoint().draw(styles, canvas_pos, &no_select_midpoint)}
                 </>
             }
         }

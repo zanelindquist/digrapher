@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, f32::consts::PI};
+use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI};
 
 use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointVector, Relation}}};
 
@@ -18,6 +18,9 @@ impl GraphTheoryRelation {
         match self.relation_type {
             GraphTheoryTypes::CIRCULAR => {
                 self.position_points_circle();
+            },
+            GraphTheoryTypes::LAYERED_NETWORK => {
+                self.position_points_layered();
             },
             GraphTheoryTypes::CHAIN => {
                 self.position_points_chain();
@@ -218,6 +221,116 @@ impl GraphTheoryRelation {
         self.update_layout_size();
     }
 
+    fn position_points_layered(&mut self) {
+        if self.nodes.is_empty() {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
+            return;
+        }
+
+        // Build parent counts and adjacency
+        let mut in_degree: HashMap<NodeId, usize> = HashMap::new();
+        let mut children_map: HashMap<NodeId, Vec<NodeId>> = HashMap::new();
+        for node in &self.nodes {
+            in_degree.insert(node.id, node.parents.len());
+            children_map.insert(node.id, node.children.clone());
+        }
+
+        // Kahn's algorithm to assign layers (level = max parent level + 1)
+        let mut level_map: HashMap<NodeId, i32> = HashMap::new();
+        let mut queue: Vec<NodeId> = self.nodes.iter().filter(|n| n.parents.is_empty()).map(|n| n.id).collect();
+
+        for &r in &queue {
+            level_map.insert(r, 0);
+        }
+
+        let mut idx = 0;
+        while idx < queue.len() {
+            let u = queue[idx];
+            idx += 1;
+            let u_level = *level_map.get(&u).unwrap_or(&0);
+            if let Some(children) = children_map.get(&u) {
+                for &v in children {
+                    let entry = level_map.entry(v).or_insert(i32::MIN);
+                    if *entry < u_level + 1 {
+                        *entry = u_level + 1;
+                    }
+                    // decrement in-degree and push when all parents processed
+                    if let Some(d) = in_degree.get_mut(&v) {
+                        *d = d.saturating_sub(1);
+                        if *d == 0 {
+                            queue.push(v);
+                        }
+                    }
+                }
+            }
+        }
+
+        // If not all nodes were assigned (cycles or disconnected), fall back
+        if level_map.len() != self.nodes.len() {
+            // Fallback to circle layout
+            self.position_points_circle();
+            return;
+        }
+
+        let max_level = *level_map.values().max().unwrap_or(&0);
+        let num_layers = (max_level + 1) as usize;
+        if num_layers == 0 {
+            self.position_points_circle();
+            return;
+        }
+
+        // group nodes by level
+        let mut layers: Vec<Vec<NodeId>> = vec![Vec::new(); num_layers];
+        for (&id, &lvl) in level_map.iter() {
+            let i = lvl as usize;
+            layers[i].push(id);
+        }
+
+        // For each layer, assign y positions (vertical distribution) and x by layer index
+        for (layer_idx, layer_nodes) in layers.iter().enumerate() {
+            let x = if num_layers == 1 { 0.0 } else { -1.0 + layer_idx as f32 * (2.0 / (num_layers - 1) as f32) };
+            let count = layer_nodes.len();
+            if count == 0 { continue; }
+
+            // Taper first and last layers: vertically centered and slightly closer together
+            let is_taper_layer = layer_idx == 0 || layer_idx + 1 == num_layers;
+            let taper_factor: f32 = 0.6; // 60% of full vertical span for tapered layers
+
+            if count == 1 {
+                let nid = layer_nodes[0];
+                for point in self.points.iter_mut() {
+                    if let Some(node) = self.nodes.iter().find(|n| n.id == nid) {
+                        if point.label == node.label {
+                            point.x = x;
+                            point.y = 0.0;
+                            point.bearing = 0.0;
+                        }
+                    }
+                }
+            } else {
+                let span = if is_taper_layer { 2.0 * taper_factor } else { 2.0 };
+                let start_y = -span / 2.0;
+                let spacing = span / (count - 1) as f32;
+
+                for (i, nid) in layer_nodes.iter().enumerate() {
+                    let y = start_y + i as f32 * spacing;
+                    if let Some(node) = self.nodes.iter().find(|n| n.id == *nid) {
+                        for point in self.points.iter_mut() {
+                            if point.label == node.label {
+                                point.x = x;
+                                point.y = y;
+                                point.bearing = 0.0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        self.update_layout_size();
+    }
+
     fn update_layout_size(&mut self) {
         if self.points.is_empty() {
             self.width_l = 0.0;
@@ -242,7 +355,7 @@ pub struct GraphTheoryRelationManager {
 }
 impl GraphTheoryRelationManager {
     pub fn get_points(&self) -> PointVector {
-        let horizontal_gap = 0.5;
+        let horizontal_gap = 1.0;
         let subgraph_widths: Vec<f32> = self.subgraphs.iter().map(|g| g.width_l.max(0.1)).collect();
         let total_width: f32 = subgraph_widths.iter().sum::<f32>() + horizontal_gap * (subgraph_widths.len().saturating_sub(1) as f32);
         let mut x_cursor = -total_width / 2.0;
@@ -415,10 +528,6 @@ fn classify_relation(_relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> Grap
             return GraphTheoryTypes::CLIQUE;
         }
 
-        if is_layered_network(nodes) {
-            return GraphTheoryTypes::LAYERED_NETWORK;
-        }
-
     } else {
         if is_chain(nodes) {
             return GraphTheoryTypes::CHAIN;
@@ -426,6 +535,10 @@ fn classify_relation(_relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> Grap
 
         if is_tree(nodes) {
             return GraphTheoryTypes::TREE;
+        }
+
+        if is_layered_network(nodes) {
+            return GraphTheoryTypes::LAYERED_NETWORK;
         }
     }
     
@@ -500,8 +613,74 @@ fn is_clique(nodes: &Vec<Node>) -> bool {
     }
     true
 }
-fn is_layered_network(_nodes: &Vec<Node>) -> bool {
-    false
+fn is_layered_network(nodes: &Vec<Node>) -> bool {
+    if nodes.is_empty() {
+        return false;
+    }
+
+    // Must be acyclic to be a layered feed-forward network
+    if is_cyclic(nodes) {
+        return false;
+    }
+
+    // Roots = nodes with no parents
+    let roots: Vec<&Node> = nodes.iter().filter(|n| n.parents.is_empty()).collect();
+    if roots.is_empty() {
+        return false;
+    }
+
+    // BFS from roots and assign integer layer indices
+    let mut level_map: HashMap<NodeId, i32> = HashMap::new();
+    let mut q: VecDeque<NodeId> = VecDeque::new();
+    for r in roots {
+        level_map.insert(r.id, 0);
+        q.push_back(r.id);
+    }
+
+    while let Some(id) = q.pop_front() {
+        let level = *level_map.get(&id).unwrap();
+        let node = match nodes.iter().find(|n| n.id == id) {
+            Some(n) => n,
+            None => return false,
+        };
+
+        for child in &node.children {
+            let expected = level + 1;
+            if let Some(existing) = level_map.get(child) {
+                // child already assigned — must match expected layer
+                if *existing != expected {
+                    return false;
+                }
+            } else {
+                level_map.insert(*child, expected);
+                q.push_back(*child);
+            }
+        }
+    }
+
+    // All nodes should be assigned a layer (connected feed-forward structure)
+    if level_map.len() != nodes.len() {
+        return false;
+    }
+
+    // Need at least three layers: start, intermediate, end
+    let max_level = level_map.values().cloned().max().unwrap_or(0);
+    if max_level < 2 {
+        return false;
+    }
+
+    // Verify every edge goes strictly from level L to L+1
+    for node in nodes {
+        let node_level = match level_map.get(&node.id) { Some(l) => *l, None => return false };
+        for child in &node.children {
+            match level_map.get(child) {
+                Some(cl) if *cl == node_level + 1 => (),
+                _ => return false,
+            }
+        }
+    }
+
+    true
 }
 fn is_chain(nodes: &Vec<Node>) -> bool {
     // If its a chain, every element except for the start and end have 1 parent and one child
