@@ -109,8 +109,90 @@ impl GraphTheoryRelation {
     }
 
     fn position_points_tree(&mut self) {
-        // Position the tree in logical units
+        if self.nodes.is_empty() {
+            return;
+        }
 
+        let Some(root) = self.nodes.iter().find(|node| node.node_type == NodeType::ROOT) else {
+            return;
+        };
+
+        let children_map: HashMap<NodeId, Vec<NodeId>> = self.nodes
+            .iter()
+            .map(|node| (node.id, node.children.clone()))
+            .collect();
+
+        let mut leaf_order: Vec<NodeId> = Vec::new();
+
+        fn collect_leaves(node_id: NodeId, children_map: &HashMap<NodeId, Vec<NodeId>>, leaf_order: &mut Vec<NodeId>) {
+            if let Some(children) = children_map.get(&node_id) {
+                if !children.is_empty() {
+                    for child_id in children {
+                        collect_leaves(*child_id, children_map, leaf_order);
+                    }
+                    return;
+                }
+            }
+            leaf_order.push(node_id);
+        }
+
+        collect_leaves(root.id, &children_map, &mut leaf_order);
+
+        let leaf_count = leaf_order.len().max(1);
+        let mut x_positions: HashMap<NodeId, f32> = HashMap::new();
+
+        if leaf_count == 1 {
+            x_positions.insert(leaf_order[0], 0.0);
+        } else {
+            let spacing = 2.0 / (leaf_count - 1) as f32;
+            for (i, leaf_id) in leaf_order.iter().enumerate() {
+                x_positions.insert(*leaf_id, -1.0 + i as f32 * spacing);
+            }
+        }
+
+        let layer_height = self.positioning_settings.tree_settings.layer_height_l.max(0.1);
+        let mut y_positions: HashMap<NodeId, f32> = HashMap::new();
+
+        fn assign_positions(
+            node_id: NodeId,
+            depth: i32,
+            children_map: &HashMap<NodeId, Vec<NodeId>>,
+            x_positions: &mut HashMap<NodeId, f32>,
+            y_positions: &mut HashMap<NodeId, f32>,
+            layer_height: f32,
+        ) -> f32 {
+            let children = children_map.get(&node_id).map(|children| children.as_slice()).unwrap_or(&[]);
+            let x = if children.is_empty() {
+                *x_positions.get(&node_id).unwrap_or(&0.0)
+            } else {
+                let sum: f32 = children
+                    .iter()
+                    .map(|child_id| assign_positions(*child_id, depth + 1, children_map, x_positions, y_positions, layer_height))
+                    .sum();
+                sum / children.len() as f32
+            };
+
+            x_positions.insert(node_id, x);
+            y_positions.insert(node_id, -1.0 + depth as f32 * layer_height);
+            x
+        }
+
+        assign_positions(root.id, 0, &children_map, &mut x_positions, &mut y_positions, layer_height);
+
+        let label_to_id: HashMap<String, NodeId> = self.nodes
+            .iter()
+            .map(|node| (node.label.clone(), node.id))
+            .collect();
+
+        for point in self.points.iter_mut() {
+            if let Some(node_id) = label_to_id.get(&point.label) {
+                if let (Some(x), Some(y)) = (x_positions.get(node_id), y_positions.get(node_id)) {
+                    point.x = *x;
+                    point.y = *y;
+                    point.bearing = 0.0;
+                }
+            }
+        }
     }
 }
 

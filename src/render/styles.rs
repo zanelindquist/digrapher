@@ -114,12 +114,12 @@ impl Default for GraphTheoryLayoutSettings {
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct GraphTheoryTreeLayoutSettings {
-    pub point_seperation_l: f32,
+    pub layer_height_l: f32,
 }
 impl Default for GraphTheoryTreeLayoutSettings {
     fn default() -> Self {
         Self {
-            point_seperation_l: 0.25
+            layer_height_l: 0.5
         }
     }
 }
