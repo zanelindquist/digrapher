@@ -196,7 +196,7 @@ pub fn graph(props: &GraphProps) -> Html{
         Err(e) => html! {
             <div class="graph--error">
                 {toggle}
-                <img class="graph__no-input" src={format!("/assets/digraph_assets/no_input.png")}/>
+                <img class="graph__no-input" src={format!("/assets/digraph_assets/no_input_variant.png")}/>
                 <code class="graph__error--heading">{ "No Input" }</code>     
                 <code class="graph__error">{ "Enter a relation or select a graph to get started." }</code>                
             </div>
