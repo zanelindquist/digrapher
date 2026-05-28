@@ -17,13 +17,14 @@ pub struct DigraphCanvasProps {
     #[prop_or_default]
     pub class: Classes,
     pub object_selection: UseStateHandle<ObjectSelection>,
-    pub interrupt_graph_scrolling: UseStateHandle<bool>
+    pub interrupt_graph_scrolling: UseStateHandle<bool>,
+    pub points: UseStateHandle<PointVector>
 }
 
 #[function_component(DigraphCanvas)]
 pub fn canvas(props: &DigraphCanvasProps) -> Html {
     // The actual points live here
-    let points: UseStateHandle<PointVector> = use_state(|| props.processed_relation.get_points());
+    let points = props.points.clone();
     let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.processed_relation.relation.values, &(*points)));
     let styles = props.styles;
 
@@ -31,17 +32,14 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let selected_point: UseStateHandle<Option<Point>> = use_state(|| None);
     let hovered_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
 
-    // Update points and edges when the relation changes
+    // Update edges when the points changes
     {
         let points = points.clone();
         let edges = edges.clone();
-        let processed_relation = props.processed_relation.clone();
         let relation = props.processed_relation.relation.clone();
         let values = relation.values.clone();
-        use_effect_with(relation, move |_| {
-            let new_points = processed_relation.get_points();
-            edges.set(create_edges(&values, &new_points));
-            points.set(new_points.clone());
+        use_effect_with(points.clone(), move |_| {
+            edges.set(create_edges(&values, &points));
         });
     }
 

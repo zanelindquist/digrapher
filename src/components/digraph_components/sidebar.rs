@@ -4,6 +4,7 @@ use gloo_timers::callback::Timeout;
 
 use crate::components::digraph_components::analytics::Analytics;
 use crate::components::digraph_components::browse::RelationBrowse;
+use crate::components::digraph_components::edit::RelationEdit;
 use crate::components::digraph_components::explorer::Explorer;
 use crate::components::digraph_components::library::RelationLibrary;
 use crate::components::misc::button::Button;
@@ -40,7 +41,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         let input_display_mode = input_display_mode.clone();
         Callback::from(move |_: MouseEvent| {
             // Circular scroll the display mode
-            input_display_mode.set((*input_display_mode + 1) % 3);
+            input_display_mode.set((*input_display_mode + 1) % 4);
         })
     };
     // Whent the suers presses save relation
@@ -96,9 +97,10 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         >
                         // Show the button for the next mode to switch to
                         {match *input_display_mode {
-                            2 => {"Create"},
+                            3 => {"Create"},
                             0 => {"Library"},
                             1 => {"Browse"},
+                            2 => {"Edit"}
                             _ => {""}
                         }}
                         </Button>
@@ -121,6 +123,11 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             />},
                         2 => html! {
                             <RelationBrowse
+                                onselect={load_saved_relation}
+                            />
+                        },
+                        3 => html! {
+                            <RelationEdit
                                 onselect={load_saved_relation}
                             />
                         },

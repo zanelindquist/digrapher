@@ -26,9 +26,16 @@ pub fn create_edges(values: &RawEdgePairs, points: &PointVector) -> EdgeVector {
     let mut edges = EdgeVector::new();
 
     for (_, pair) in values.iter().enumerate() {
-        // Every pair will produce an edge
-        let point1 = points.iter().find(|p| p.label == pair.0 ).unwrap();
-        let point2 = points.iter().find(|p| p.label == pair.1 ).unwrap();
+        // Try to find both points, skip this pair if either is not found
+        let point1 = match points.iter().find(|p| p.label == pair.0) {
+            Some(p) => p,
+            None => continue,
+        };
+        let point2 = match points.iter().find(|p| p.label == pair.1) {
+            Some(p) => p,
+            None => continue,
+        };
+
         let relation_type = if pair.0 == pair.1 {
             RelationProperty::REFLEXIVE
         } else if values.iter().find(|v| v.0 == pair.1 && v.1 == pair.0).is_some() {

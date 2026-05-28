@@ -377,29 +377,33 @@ pub struct GraphTheoryRelationManager {
 }
 impl GraphTheoryRelationManager {
     pub fn get_points(&self) -> PointVector {
+        let mut points = Vec::new();
+        for graph in &self.subgraphs {
+            for point in graph.points.iter() {
+                points.push(point.clone());
+            }
+        }
+        points
+    }
+    // Position points relatively within each subgraph, then absolutely across all subgraphs
+    pub fn position_points(&mut self) {
+        for graph in &mut self.subgraphs {
+            graph.position_points();
+        }
+
+        // Apply absolute positioning to all points based on subgraph layout
         let horizontal_gap = 1.0;
         let subgraph_widths: Vec<f32> = self.subgraphs.iter().map(|g| g.width_l.max(0.1)).collect();
         let total_width: f32 = subgraph_widths.iter().sum::<f32>() + horizontal_gap * (subgraph_widths.len().saturating_sub(1) as f32);
         let mut x_cursor = -total_width / 2.0;
 
-        let mut points = Vec::new();
-        for (graph, width) in self.subgraphs.iter().zip(subgraph_widths.iter()) {
+        for (graph, width) in self.subgraphs.iter_mut().zip(subgraph_widths.iter()) {
             let center_x = x_cursor + width / 2.0;
             x_cursor += width + horizontal_gap;
 
-            for point in graph.points.iter() {
-                let mut shifted = point.clone();
-                shifted.x += center_x;
-                points.push(shifted);
+            for point in graph.points.iter_mut() {
+                point.x += center_x;
             }
-        }
-
-        points
-    }
-    // Mutate and save these points to the points cache
-    pub fn position_points(&mut self) {
-        for graph in &mut self.subgraphs {
-            graph.position_points();
         }
     }
 }

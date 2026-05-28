@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection, ProcessedRelationResult};
+use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection, PointVector, ProcessedRelationResult};
 use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
@@ -27,6 +27,14 @@ pub fn graph(props: &GraphProps) -> Html{
     let pointer_down = use_state(|| false);
     let last_pos = use_state(|| (0,0));
     let interrupt_scrolling = use_state(|| false);
+
+    // Make these points stateful to pass to the DigraphCanvas
+    let points: UseStateHandle<PointVector> = use_state(|| {
+        match &*props.processed_relation {
+            Ok(relation) => relation.get_points(),
+            Err(_) => vec![],
+        }
+    });
 
     // On layout set the dimentions of the canvas
     use_effect({
@@ -59,6 +67,19 @@ pub fn graph(props: &GraphProps) -> Html{
             || ()
         }
     });
+
+    {
+        let points = points.clone();
+        let processed_relation = props.processed_relation.clone();
+        use_effect_with(processed_relation.clone(), move |_| {
+            points.set(
+                match &*processed_relation {
+                    Ok(relation) => relation.get_points(),
+                    Err(_) => vec![],
+                }
+            );
+        });
+    }
 
     // Support moving and zooming
     // When the pointer is clicked down
@@ -129,6 +150,9 @@ pub fn graph(props: &GraphProps) -> Html{
         })
     };
 
+
+    // Components
+
     let toggle = html! {
         <Toggle
             class="graph__toggle"
@@ -176,6 +200,7 @@ pub fn graph(props: &GraphProps) -> Html{
                                 processed_relation={graph_manager.clone()}
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
+                                points={points}
                             />
                         },
                         GraphModes::MATRIX => html! {
