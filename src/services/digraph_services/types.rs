@@ -1,9 +1,10 @@
 use std::cmp::min;
+use std::fmt;
 use serde::{Deserialize, Serialize};
 use yew::prelude::*;
 use std::{collections::HashSet};
 
-use crate::render::{objects::{edge::Edge, point::Point}};
+use crate::{render::objects::{edge::Edge, point::Point}, services::digraph_services::classify_relation::GraphTheoryRelationManager};
 
 // TYPES
 pub type PointLabel = String;
@@ -15,6 +16,9 @@ pub type PointVector = Vec<Point>;
 pub type EdgeVector = Vec<Edge>;
 pub type MatrixData = Vec<Vec<bool>>;
 pub type StoredRelations = Vec<StoredRelation>;
+pub type NodeId = i64;
+pub type DigestedValuesResult = Result<Relation, ParseError>;
+pub type ProcessedRelationResult = Result<GraphTheoryRelationManager, ParseError>;
 
 // ENUMS
 
@@ -25,6 +29,25 @@ pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
+
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+impl fmt::Display for GraphTheoryTypes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = match self {
+            GraphTheoryTypes::TREE => "tree",
+            GraphTheoryTypes::CIRCULAR => "circular",
+            GraphTheoryTypes::CLIQUE => "clique",
+            GraphTheoryTypes::NETWORK => "network",
+            GraphTheoryTypes::LAYERED_NETWORK => "layered_network",
+            GraphTheoryTypes::CHAIN => "chain"
+        };
+
+        write!(f, "{}", msg)
+    }
+}
+#[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
+pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
 
 #[derive(PartialEq)]
 pub enum DrawObjectSelection {
@@ -103,6 +126,7 @@ impl CanvasPositioning {
     }
 }
 
+
 #[derive(PartialEq)]
 pub struct ObjectSelection {
     pub selection: Option<DrawObjectSelection>
@@ -133,6 +157,8 @@ pub struct PointInteraction {
     pub is_hovered: bool,
     pub is_info: bool
 }
+
+
 
 // RELATIONS
 
@@ -180,6 +206,8 @@ impl Default for StoredRelation {
     }
 }
 
+
+
 // ERRORS
 #[derive(Debug, PartialEq, Clone)]
 pub struct ParseError {
@@ -193,5 +221,4 @@ impl ParseError {
     }
 }
 
-pub type DigestedValuesResult = Result<Relation, ParseError>;
 

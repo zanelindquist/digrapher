@@ -4,8 +4,9 @@ use crate::services::digraph_services::types::{EdgeVector, PointRenderSymbol, Po
 use crate::render::objects::point::{Point};
 use crate::render::objects::edge::{Edge};
 
+
 // Outputs points with logical coordinates in -1 to 1 x, y plane
-pub fn position_points(points: &SortedCharPoints) -> PointVector {
+pub fn create_points(points: &SortedCharPoints) -> PointVector {
     let n = points.len();
     let mut point_vec = PointVector::new();
 
@@ -20,7 +21,6 @@ pub fn position_points(points: &SortedCharPoints) -> PointVector {
 
     point_vec
 }
-
 // Transforms the raw text edge parings (a, b) into edges that correspond to real points
 pub fn create_edges(values: &RawEdgePairs, points: &PointVector) -> EdgeVector {
     let mut edges = EdgeVector::new();

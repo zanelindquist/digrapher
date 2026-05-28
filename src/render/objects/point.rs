@@ -40,8 +40,8 @@ impl Point {
     }
 
     pub fn draw(self, styles: &RenderStyles, canvas_pos: &CanvasPositioning, point_interaction: &PointInteraction) -> Html {
-        // 
         let (x, y) = canvas_pos.logical_to_visual_xy(self.x, self.y);
+        // Label's distance from the point
 
         let triangle_points: Vec<(f32, f32)> = vec![
             (x + self.bearing.cos() * styles.point.radius, y + self.bearing.sin() * styles.point.radius),
@@ -81,11 +81,13 @@ impl Point {
                         // stroke-width={styles.point.stroke_width.to_string()}
                     />
                     <text
-                        x={(x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
-                        y={(y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
+                        x={(x + self.bearing.cos() * (styles.font.size + styles.point.label_displacement)).to_string()}
+                        y={(y + self.bearing.sin() * (styles.font.size + styles.point.label_displacement)).to_string()}
                         font-family={styles.font.family}
                         font-size={styles.font.size.to_string()}
                         fill={fill_color.clone()}
+                        stroke={styles.font.stroke}
+                        stroke-width={styles.font.stroke_width.to_string()}
                     >
                         { self.label.to_string() }
                     </text>
@@ -104,11 +106,13 @@ impl Point {
                         style={cursor_style}
                     />
                     <text
-                        x={(x + self.bearing.cos() * (styles.font.size + 10.0)).to_string()}
-                        y={(y + self.bearing.sin() * (styles.font.size + 10.0)).to_string()}
+                        x={(x + self.bearing.cos() * (styles.font.size + styles.point.label_displacement)).to_string()}
+                        y={(y + self.bearing.sin() * (styles.font.size + styles.point.label_displacement)).to_string()}
                         font-family={styles.font.family}
                         font-size={styles.font.size.to_string()}
                         fill={fill_color.clone()}
+                        stroke={styles.font.stroke}
+                        stroke-width={styles.font.stroke_width.to_string()}
                     >
                         { self.label.to_string() }
                     </text>

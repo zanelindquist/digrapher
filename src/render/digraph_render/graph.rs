@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection};
+use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection, ProcessedRelationResult};
 use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
@@ -10,7 +10,7 @@ use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
 
 #[derive(Properties, PartialEq)]
 pub struct GraphProps {
-    pub digested_values: UseStateHandle<DigestedValuesResult>,
+    pub processed_relation: UseStateHandle<ProcessedRelationResult>,
     pub mode_change_callback: Callback<i32>,
     pub graph_mode: UseStateHandle<GraphModes>,
     pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
@@ -117,7 +117,8 @@ pub fn graph(props: &GraphProps) -> Html{
     let on_wheel = {
         let canvas_position = canvas_position.clone();
         Callback::from(move |e: web_sys::WheelEvent| {
-            let delta_y = e.delta_y();
+            // Make scrolling up zoom in
+            let delta_y = -e.delta_y();
             // Clamp and scale zooming
             let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
 
@@ -139,16 +140,23 @@ pub fn graph(props: &GraphProps) -> Html{
     };
     let graph_info = html! {
         <code class="graph__info">{format!(
-            "{}x{} {:.1},{:.1} zoom: {:.2} {}",
+            "{}x{} {:.1},{:.1} zoom: {:.2} {}:{}",
             canvas_position.width, canvas_position.height,
             canvas_position.offset_x as f32, canvas_position.offset_y as f32,
             canvas_position.zoom,
-            if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"}
+            if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"},
+            props.processed_relation.as_ref().map(|rel| {
+                rel.subgraphs
+                    .iter()
+                    .map(|sub| sub.relation_type.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            }).unwrap_or_else(|_| "none".to_string())
         )}</code>
     };
 
-    match &*props.digested_values {
-        Ok(relation) => html! {
+    match &*props.processed_relation {
+        Ok(graph_manager) => html! {
             <div
                 ref={node_ref}
                 class="graph"
@@ -165,7 +173,7 @@ pub fn graph(props: &GraphProps) -> Html{
                             <DigraphCanvas
                                 class={if *pointer_down { "grab"} else {""}}
                                 position={(*canvas_position).clone()}
-                                relation={relation.clone()}
+                                processed_relation={graph_manager.clone()}
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
                             />
@@ -173,7 +181,7 @@ pub fn graph(props: &GraphProps) -> Html{
                         GraphModes::MATRIX => html! {
                             <MatrixCanvas
                                 position={(*canvas_position).clone()}
-                                relation={relation.clone()}
+                                relation={graph_manager.relation.clone()}
                                 object_selection={props.object_selection.clone()}
                             />
                         },
