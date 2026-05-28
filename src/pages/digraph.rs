@@ -1,6 +1,6 @@
 use gloo_console::log;
 use yew::prelude::*;
-use crate::components::digraph_tools::sidebar::Sidebar;
+use crate::components::digraph_components::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
 use crate::services::digraph_services::classify_relation::process_reltaion;
 use crate::services::digraph_services::digest_values::{digest_values};

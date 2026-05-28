@@ -2,10 +2,10 @@ use std::ops::Deref;
 use yew::prelude::*;
 use gloo_timers::callback::Timeout;
 
-use crate::components::digraph_tools::analytics::Analytics;
-use crate::components::digraph_tools::browse::RelationBrowse;
-use crate::components::digraph_tools::explorer::Explorer;
-use crate::components::digraph_tools::library::RelationLibrary;
+use crate::components::digraph_components::analytics::Analytics;
+use crate::components::digraph_components::browse::RelationBrowse;
+use crate::components::digraph_components::explorer::Explorer;
+use crate::components::digraph_components::library::RelationLibrary;
 use crate::components::misc::button::Button;
 use crate::components::misc::icon::Icon;
 use crate::services::digraph_services::types::{DigestedValuesResult, ObjectSelection, StoredRelation};
