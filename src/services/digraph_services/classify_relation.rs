@@ -10,15 +10,14 @@ pub struct GraphTheoryRelation {
     pub nodes: Vec<Node>,
     pub points: Vec<Point>,
     pub positioning_settings: GraphTheoryLayoutSettings,
+    // This relation's layout dimentions in logical units
     pub width_l: f32,
     pub height_l: f32
 }
 impl GraphTheoryRelation {
+    // Position this relation's points based on the 
     pub fn position_points(&mut self) {
         match self.relation_type {
-            GraphTheoryTypes::CIRCULAR => {
-                self.position_points_circle();
-            },
             GraphTheoryTypes::LAYERED_NETWORK => {
                 self.position_points_layered();
             },
@@ -28,7 +27,14 @@ impl GraphTheoryRelation {
             GraphTheoryTypes::TREE => {
                 self.position_points_tree();
             },
-            _ => {
+            // ALl of these still use the circular positioning, which is fine for circular and clique, but TODO, optimize the network layout
+            GraphTheoryTypes::CIRCULAR => {
+                self.position_points_circle();
+            },
+            GraphTheoryTypes::CLIQUE => {
+                self.position_points_circle();
+            },
+            GraphTheoryTypes::NETWORK => {
                 self.position_points_circle();
             }
         }
@@ -41,6 +47,7 @@ impl GraphTheoryRelation {
     fn position_points_circle(&mut self) {
         let n = self.points.len();
 
+        // If there are no points, then we don't have anything to do
         if n == 0 {
             self.width_l = 0.0;
             self.height_l = 0.0;
@@ -49,6 +56,7 @@ impl GraphTheoryRelation {
 
         for (i, p) in self.points.iter_mut().enumerate() {
             // Draw counterclockwise
+            // Put the points on the circle with the logical unit radius 1.0
             let theta = -(i as f32) * (2.0 * PI / n as f32);
             let x = theta.cos();
             let y = theta.sin();
@@ -56,19 +64,21 @@ impl GraphTheoryRelation {
             p.y = y;
         }
 
+        // Update the layout size at the end
         self.update_layout_size();
     }
 
     fn position_points_chain(&mut self) {
         let n = self.nodes.len();
 
+        // If there are no points, then we don't have anything to do
         if n == 0 {
             self.width_l = 0.0;
             self.height_l = 0.0;
             return;
         }
 
-        // Single node
+        // If there is only one point, then put it in the middle and update the layout size
         if n == 1 {
             if let Some(p) = self.points.first_mut() {
                 p.x = 0.0;
@@ -79,7 +89,7 @@ impl GraphTheoryRelation {
             return;
         }
 
-        // Start of chain = node with no parents
+        // Find the root node, but if we can't find it then do nothing
         let Some(start_node) = self.nodes.iter().find(|node| node.node_type == NodeType::ROOT) else {
             self.width_l = 0.0;
             self.height_l = 0.0;
@@ -90,6 +100,7 @@ impl GraphTheoryRelation {
         let mut ordered_labels = Vec::with_capacity(n);
         let mut current = start_node;
 
+        // Create the ordered chain of nodes
         loop {
             ordered_labels.push(current.label.clone());
 
@@ -106,21 +117,15 @@ impl GraphTheoryRelation {
             current = next;
         }
 
-        let chain_len = ordered_labels.len();
-        if chain_len < 2 {
-            self.width_l = 0.0;
-            self.height_l = 0.0;
-            return;
-        }
-
         // Position each point based on ordered chain traversal
         for (i, label) in ordered_labels.iter().enumerate() {
             if let Some(point) = self.points.iter_mut().find(|p| p.label == *label) {
                 point.x = 0.0;
 
-                // Top → bottom
+                // Top to bottom
                 point.y = - 1.0 + (i as f32 * self.positioning_settings.chain_settings.point_seperation_l);
 
+                // So that labels are always displayed to the right of the point
                 point.bearing = 0.0;
             }
         }
@@ -129,18 +134,21 @@ impl GraphTheoryRelation {
     }
 
     fn position_points_tree(&mut self) {
+        // If the tree is empty, don't do anything
         if self.nodes.is_empty() {
             self.width_l = 0.0;
             self.height_l = 0.0;
             return;
         }
 
+        // If we don't have a root, don't do anything
         let Some(root) = self.nodes.iter().find(|node| node.node_type == NodeType::ROOT) else {
             self.width_l = 0.0;
             self.height_l = 0.0;
             return;
         };
 
+        // Create a map of the children that each node has
         let children_map: HashMap<NodeId, Vec<NodeId>> = self.nodes
             .iter()
             .map(|node| (node.id, node.children.clone()))
@@ -148,6 +156,7 @@ impl GraphTheoryRelation {
 
         let mut leaf_order: Vec<NodeId> = Vec::new();
 
+        // Collects the nodes that don't have children
         fn collect_leaves(node_id: NodeId, children_map: &HashMap<NodeId, Vec<NodeId>>, leaf_order: &mut Vec<NodeId>) {
             if let Some(children) = children_map.get(&node_id) {
                 if !children.is_empty() {
@@ -160,22 +169,26 @@ impl GraphTheoryRelation {
             leaf_order.push(node_id);
         }
 
+        // Collect all childless nodes
         collect_leaves(root.id, &children_map, &mut leaf_order);
 
         let leaf_count = leaf_order.len().max(1);
-        let mut x_positions: HashMap<NodeId, f32> = HashMap::new();
+        // These make it so that the tree's triangles don't get horizontally squished
+        let layer_height = self.positioning_settings.tree_settings.layer_height_l.max(0.1);
+        let horizontal_point_spacing = layer_height * 2.0 / (3.0 as f32).sqrt();
+        let leftmost_x = leaf_count as f32 * horizontal_point_spacing / 2.0 * -1.0;
 
+        let mut x_positions: HashMap<NodeId, f32> = HashMap::new();
+        let mut y_positions: HashMap<NodeId, f32> = HashMap::new();
+
+        // If there is only one node, put it in the center
         if leaf_count == 1 {
             x_positions.insert(leaf_order[0], 0.0);
         } else {
-            let spacing = 2.0 / (leaf_count - 1) as f32;
             for (i, leaf_id) in leaf_order.iter().enumerate() {
-                x_positions.insert(*leaf_id, -1.0 + i as f32 * spacing);
+                x_positions.insert(*leaf_id, leftmost_x + i as f32 * horizontal_point_spacing);
             }
         }
-
-        let layer_height = self.positioning_settings.tree_settings.layer_height_l.max(0.1);
-        let mut y_positions: HashMap<NodeId, f32> = HashMap::new();
 
         fn assign_positions(
             node_id: NodeId,
@@ -185,10 +198,16 @@ impl GraphTheoryRelation {
             y_positions: &mut HashMap<NodeId, f32>,
             layer_height: f32,
         ) -> f32 {
+            // Get this node's children
             let children = children_map.get(&node_id).map(|children| children.as_slice()).unwrap_or(&[]);
+            
+            // If this is an end node, then get its predetermined position we decided earlier
             let x = if children.is_empty() {
                 *x_positions.get(&node_id).unwrap_or(&0.0)
-            } else {
+            }
+            // Else, iterate downward to see how many final nodes originiate from this node and take the average, which will give us a centerpoint
+            // so essentially, x positions are built from the bottom up, because the end nodes we have already positioned tell the parent nodes where to stand
+            else {
                 let sum: f32 = children
                     .iter()
                     .map(|child_id| assign_positions(*child_id, depth + 1, children_map, x_positions, y_positions, layer_height))
@@ -197,31 +216,38 @@ impl GraphTheoryRelation {
             };
 
             x_positions.insert(node_id, x);
+            // Assign the depth of this point
             y_positions.insert(node_id, -1.0 + depth as f32 * layer_height);
             x
         }
 
+        // Assign positions for all of the points
         assign_positions(root.id, 0, &children_map, &mut x_positions, &mut y_positions, layer_height);
 
+        // Create a way to look up a point by the label since the points aren't linked to the node's id
         let label_to_id: HashMap<String, NodeId> = self.nodes
             .iter()
             .map(|node| (node.label.clone(), node.id))
             .collect();
 
+        // Finally, position each point based on it's node's position
         for point in self.points.iter_mut() {
             if let Some(node_id) = label_to_id.get(&point.label) {
                 if let (Some(x), Some(y)) = (x_positions.get(node_id), y_positions.get(node_id)) {
                     point.x = *x;
                     point.y = *y;
+                    // Causes label to render to the right of the point
                     point.bearing = 0.0;
                 }
             }
         }
 
+        // Update the layout size at the end
         self.update_layout_size();
     }
 
     fn position_points_layered(&mut self) {
+        // If we have no nodes, do nothing
         if self.nodes.is_empty() {
             self.width_l = 0.0;
             self.height_l = 0.0;
@@ -238,8 +264,10 @@ impl GraphTheoryRelation {
 
         // Kahn's algorithm to assign layers (level = max parent level + 1)
         let mut level_map: HashMap<NodeId, i32> = HashMap::new();
-        let mut queue: Vec<NodeId> = self.nodes.iter().filter(|n| n.parents.is_empty()).map(|n| n.id).collect();
+        // Start with roots in the queue
+        let mut queue: Vec<NodeId> = self.nodes.iter().filter(|n| n.node_type == NodeType::ROOT).map(|n| n.id).collect();
 
+        // Map the roots to layer 0
         for &r in &queue {
             level_map.insert(r, 0);
         }
@@ -266,13 +294,6 @@ impl GraphTheoryRelation {
             }
         }
 
-        // If not all nodes were assigned (cycles or disconnected), fall back
-        if level_map.len() != self.nodes.len() {
-            // Fallback to circle layout
-            self.position_points_circle();
-            return;
-        }
-
         let max_level = *level_map.values().max().unwrap_or(&0);
         let num_layers = (max_level + 1) as usize;
         if num_layers == 0 {
@@ -295,7 +316,7 @@ impl GraphTheoryRelation {
 
             // Taper first and last layers: vertically centered and slightly closer together
             let is_taper_layer = layer_idx == 0 || layer_idx + 1 == num_layers;
-            let taper_factor: f32 = 0.6; // 60% of full vertical span for tapered layers
+            let taper_factor: f32 = self.positioning_settings.layered_settings.bookend_taper_scale_l;
 
             if count == 1 {
                 let nid = layer_nodes[0];
@@ -328,6 +349,7 @@ impl GraphTheoryRelation {
             }
         }
 
+        // Update the layout size at the end
         self.update_layout_size();
     }
 
@@ -505,6 +527,7 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
         let mut component_labels: Vec<String> = component_nodes.iter().map(|n| n.label.clone()).collect();
         component_labels.sort();
 
+        // Return a generic graph theory relation object
         components.push(GraphTheoryRelation {
             relation_type: GraphTheoryTypes::NETWORK,
             nodes: component_nodes,

@@ -117,6 +117,7 @@ pub fn graph(props: &GraphProps) -> Html{
     let on_wheel = {
         let canvas_position = canvas_position.clone();
         Callback::from(move |e: web_sys::WheelEvent| {
+            // Make scrolling up zoom in
             let delta_y = -e.delta_y();
             // Clamp and scale zooming
             let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);

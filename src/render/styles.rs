@@ -107,13 +107,15 @@ impl Default for RenderStyles {
 #[derive(Clone, Copy, PartialEq)]
 pub struct GraphTheoryLayoutSettings {
     pub tree_settings: GraphTheoryTreeLayoutSettings,
-    pub chain_settings: GraphTheoryChainLayoutSettings
+    pub chain_settings: GraphTheoryChainLayoutSettings,
+    pub layered_settings: GraphTheoryLayeredLayoutSettings
 }
 impl Default for GraphTheoryLayoutSettings {
     fn default() -> Self {
         Self {
             tree_settings: GraphTheoryTreeLayoutSettings::default(),
-            chain_settings: GraphTheoryChainLayoutSettings::default()
+            chain_settings: GraphTheoryChainLayoutSettings::default(),
+            layered_settings: GraphTheoryLayeredLayoutSettings::default()
         }
     }
 }
@@ -137,6 +139,17 @@ impl Default for GraphTheoryChainLayoutSettings {
     fn default() -> Self {
         Self {
             point_seperation_l: 0.5
+        }
+    }
+}
+#[derive(Clone, Copy, PartialEq)]
+pub struct GraphTheoryLayeredLayoutSettings {
+    pub bookend_taper_scale_l: f32,
+}
+impl Default for GraphTheoryLayeredLayoutSettings {
+    fn default() -> Self {
+        Self {
+            bookend_taper_scale_l: 0.65
         }
     }
 }
