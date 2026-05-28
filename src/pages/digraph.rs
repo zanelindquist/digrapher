@@ -31,8 +31,16 @@ pub fn digraph_page() -> Html {
             let result = digest_values(v);
             digested_values.set(result.clone());
             // Update the digested values for our pipeline
-            if let Ok(dv) = result {
-                processed_relation.set(process_reltaion(dv));
+            match result {
+                Ok(dv) => {
+                    processed_relation.set(process_reltaion(dv));
+                },
+                // Only set the error if there is no input, because we only care about that one
+                Err(e) => {
+                    if e.message == "No input" {
+                        processed_relation.set(Err(e));
+                    }
+                }
             }
         })
     };

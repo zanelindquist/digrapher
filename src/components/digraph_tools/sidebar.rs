@@ -154,8 +154,10 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             Ok(relation) => html!{
                                 <Analytics relation={relation.clone()}/>
                             },
-                            Err(_)  => html! {
-                                <p class="sidebar__subtitle">{"Waiting for valid relation"}</p>
+                            Err(e)  => html! {
+                                <div class="sidebar__preview">
+                                    <code>{ format!("Parsing error: {}", e.message)}</code>                
+                                </div>
                             }
                         }
                     }

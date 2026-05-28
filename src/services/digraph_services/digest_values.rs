@@ -7,16 +7,7 @@ use crate::services::digraph_services::types::{DigestedValuesResult, ParseError,
 
 pub fn digest_values(values: String) -> DigestedValuesResult {
     if values.is_empty() {
-        return Ok(Relation {
-            values: HashSet::new(),
-            points: HashSet::new(),
-            properties: RelationProperties {
-                antisymmetric: true,
-                symmetric: true,
-                reflexive: false,
-                transitive: true
-            }
-        });
+        return Err(ParseError::new("No input"))
     }
 
     // Validate outer braces
