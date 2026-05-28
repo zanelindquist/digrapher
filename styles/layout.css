@@ -359,6 +359,15 @@
     justify-content: space-between;
     height: 100%;
 }
+.graph--error {
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
 .graph__error {
     margin: 20px;
     font-size: 16px;
@@ -372,6 +381,11 @@
 .graph__toggle {
     right: 10px;
     top: 10px;
+}
+.graph__no-input {
+    width: 100%;
+    max-width: 400px;
+    align-self: center;
 }
 
 .canvas {
