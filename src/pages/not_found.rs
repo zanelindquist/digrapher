@@ -19,6 +19,7 @@ pub fn not_found_page() -> Html {
             <div class="not-found dynamic-padding">
                 <h1 class="not-found__heading">{ "404 Not found" }</h1>
                 <code class="not-found__description">{ "The page you were looking for could not be located." }</code>
+                <img class="not-found__image" src={format!("/assets/misc/404_panda.png")}/>
             </div>
             <Footer/>
         </TopbarLayout>
