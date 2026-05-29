@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
 use crate::services::digraph_services::point_layout::create_edges;
-use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, GraphEditCallbacks, ObjectSelection, PointInteraction, PointLabel, PointVector};
+use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, GraphEditCallbacks, GraphTooltips, ObjectSelection, PointInteraction, PointLabel, PointVector};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
 
@@ -19,6 +19,7 @@ pub struct DigraphCanvasProps {
     pub interrupt_graph_scrolling: UseStateHandle<bool>,
     pub points: UseStateHandle<PointVector>,
     pub graph_edit_callbacks: GraphEditCallbacks
+    , pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>
 }
 
 #[function_component(DigraphCanvas)]

@@ -1,9 +1,9 @@
 use yew::prelude::*;
 use crate::components::digraph_components::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
-use crate::services::digraph_services::classify_relation::process_reltaion;
+use crate::services::digraph_services::classify_relation::{GraphTheoryRelationManager, process_reltaion};
 use crate::services::digraph_services::digest_values::{digest_values};
-use crate::services::digraph_services::types::{DigestedValuesResult, GraphEditCallbacks, GraphModes, ObjectSelection, ParseError, ProcessedRelationResult};
+use crate::services::digraph_services::types::{DigestedValuesResult, GraphEditCallbacks, GraphModes, GraphTooltips, ObjectSelection, ParseError, ProcessedRelationResult};
 use crate::render::digraph_render::graph::{Graph};
 use crate::render::objects::point::Point;
 use crate::services::digraph_services::types::PointRenderSymbol;
@@ -15,6 +15,7 @@ pub fn digraph_page() -> Html {
     let input_value = use_state(String::new); // Used for controling user's input
     let graph_mode = use_state(|| GraphModes::DIGRAPH); // Tells us if we are rendering a digraph, matrix, or other
     let selection_object = use_state(|| ObjectSelection::default()); // Used for interactively selecting and highlighting elements
+    let graph_editing_mode: UseStateHandle<Option<GraphTooltips>> = use_state(|| None);
 
     // Calculated state variables
     let digested_values: UseStateHandle<DigestedValuesResult> = use_state(|| Err(ParseError::new("No input"))); // Parse user's input
@@ -25,6 +26,7 @@ pub fn digraph_page() -> Html {
         let input_value = input_value.clone();
         let digested_values = digested_values.clone();
         let processed_relation = processed_relation.clone();
+        let graph_editing_mode = graph_editing_mode.clone();
 
         Callback::from(move |v: String| {
             // Set the input value
@@ -38,6 +40,11 @@ pub fn digraph_page() -> Html {
                 },
                 // Only set the error if there is no input, because we only care about that one
                 Err(e) => {
+                    // If we are on the graph editing tab, we don't want to show the error message
+                    if let Some(_) = *graph_editing_mode {
+                        // Instead, we want to set the relation as an empty one
+                        processed_relation.set(Ok(GraphTheoryRelationManager::empty()))
+                    }
                     if e.message == "No input" {
                         processed_relation.set(Err(e));
                     }
@@ -112,13 +119,14 @@ pub fn digraph_page() -> Html {
     html! {
         <TopbarLayout>
             <div class="app">
-                // Inject our variables
                 // Render the sidebar
                 <Sidebar
+                    processed_relation={processed_relation.clone()}
                     value={(*input_value).clone()}
                     on_input={on_input}
                     digested_values={digested_values.clone()}
                     object_selection={selection_object.clone()}
+                    graph_editing_mode={graph_editing_mode.clone()}
                 />
                 // Render the graph
                 <Graph
@@ -127,6 +135,7 @@ pub fn digraph_page() -> Html {
                     graph_mode={graph_mode.clone()}
                     object_selection={selection_object}
                     graph_edit_callbacks={graph_edit_callbacks}
+                    graph_editing_mode={graph_editing_mode.clone()}
                 />
             </div>
         </TopbarLayout>

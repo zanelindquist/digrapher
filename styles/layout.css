@@ -324,7 +324,9 @@
 }
 
 .edit {
-
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 .edit__description {
 

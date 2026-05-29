@@ -4,28 +4,37 @@ use crate::{components::misc::tooltip::Tooltip, services::digraph_services::type
 
 #[derive(PartialEq, Properties)]
 pub struct RelationEditProps {
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>,
 
 }
 
 #[function_component(RelationEdit)]
 pub fn relation_edit(props: &RelationEditProps) -> Html {
-    let selected_tooltip = use_state(|| GraphTooltips::NEW_POINT);
+    let selected_tooltip = props.graph_editing_mode.clone();
+    let current = (*selected_tooltip).clone().unwrap_or(GraphTooltips::MOVE);
 
-    let tooltip_types: Vec<(&str, &str)> = vec![("New point", "point"), ("Connect edge", "edge"), ("Edit Title", "pencil"), ("Delete element", "backspace")];
+    let tooltip_types: Vec<(&str, &str)> = vec![("Move", "move"), ("New point", "point"), ("Connect edge", "edge"), ("Edit Title", "pencil"), ("Delete element", "backspace")];
 
     let onclick: Callback<i32> = {
         let selected = selected_tooltip.clone();
         Callback::from(move |id: i32| {
-            selected.set(GraphTooltips::from_i32(id));
+            selected.set(Some(GraphTooltips::from_i32(id)));
         })
     };
 
+
     html! {
         <div class="edit">
-            <div class="edit__description">
-                <p>
-                </p>
-            </div>
+            <code class="edit__description">
+                {match tooltip_types.get(current.to_i32() as usize){
+                    Some((description, _)) => {
+                        description.to_string()
+                    },
+                    _ => {
+                        String::from("No description")
+                    }
+                }}
+            </code>
             <div class="edit__tooltips">
                 {for tooltip_types.iter().enumerate().map(|(index, (name, icon))| {
                     html! {
@@ -33,7 +42,7 @@ pub fn relation_edit(props: &RelationEditProps) -> Html {
                             id={index as i32}
                             onclick={onclick.clone()}
                             title={*name}
-                            selected={(*selected_tooltip).to_i32() == index as i32}
+                            selected={current.to_i32() == index as i32}
                             icon={icon.to_string()}
                             size={24}
                         />

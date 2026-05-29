@@ -29,23 +29,26 @@ pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
-pub enum GraphTooltips{NEW_POINT, CONNECT_EDGE, EDIT_LABEL, DELETE_POINT}
+#[derive(Clone, Copy, PartialEq)]
+pub enum GraphTooltips{MOVE, NEW_POINT, CONNECT_EDGE, EDIT_LABEL, DELETE_POINT}
 impl GraphTooltips {
     pub fn from_i32(value: i32) -> Self {
         match value {
-            0 => GraphTooltips::NEW_POINT,
-            1 => GraphTooltips::CONNECT_EDGE,
-            2 => GraphTooltips::EDIT_LABEL,
-            3 => GraphTooltips::DELETE_POINT,
+            0 => GraphTooltips::MOVE,
+            1 => GraphTooltips::NEW_POINT,
+            2 => GraphTooltips::CONNECT_EDGE,
+            3 => GraphTooltips::EDIT_LABEL,
+            4 => GraphTooltips::DELETE_POINT,
             _ => GraphTooltips::NEW_POINT, // fallback
         }
     }
     pub fn to_i32(&self) -> i32 {
         match self {
-            GraphTooltips::NEW_POINT => 0,
-            GraphTooltips::CONNECT_EDGE => 1,
-            GraphTooltips::EDIT_LABEL => 2,
-            GraphTooltips::DELETE_POINT => 3,
+            GraphTooltips::MOVE => 0,
+            GraphTooltips::NEW_POINT => 1,
+            GraphTooltips::CONNECT_EDGE => 2,
+            GraphTooltips::EDIT_LABEL => 3,
+            GraphTooltips::DELETE_POINT => 4,
         }
     }
 }
@@ -207,6 +210,15 @@ pub struct Relation {
     pub values: RawEdgePairs,
     pub points: RawCharPoints,
     pub properties: RelationProperties
+}
+impl Relation {
+    pub fn empty() -> Self {
+        Self {
+            values: HashSet::new(),
+            points: HashSet::new(),
+            properties: RelationProperties::default()
+        }
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]

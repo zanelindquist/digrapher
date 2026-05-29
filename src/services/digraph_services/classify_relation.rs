@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI};
+use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI, vec};
 
 use gloo_console::log;
 
@@ -381,6 +381,16 @@ pub struct GraphTheoryRelationManager {
     pub relation: Relation,
 }
 impl GraphTheoryRelationManager {
+    pub fn empty() -> Self {
+        Self {
+            subgraphs: vec![],
+            relation: Relation::empty()
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.subgraphs.is_empty()
+    }
+
     pub fn create_point(&mut self, point: Point) -> Result<Point, PointManagementError> {
         // Ensure disconnected graph exists, create one if not
         if !self.subgraphs.iter().any(|s| s.relation_type == GraphTheoryTypes::DISCONNECTED) {

@@ -9,7 +9,8 @@ use crate::components::digraph_components::explorer::Explorer;
 use crate::components::digraph_components::library::RelationLibrary;
 use crate::components::misc::button::Button;
 use crate::components::misc::icon::Icon;
-use crate::services::digraph_services::types::{DigestedValuesResult, ObjectSelection, StoredRelation};
+use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
+use crate::services::digraph_services::types::{DigestedValuesResult, GraphTooltips, ObjectSelection, ParseError, ProcessedRelationResult, StoredRelation};
 use crate::services::digraph_services::relation_storage::{store_new_relation};
 
 
@@ -18,8 +19,11 @@ pub struct SidebarProps {
     pub value: String,
     pub on_input: Callback<String>,
     pub digested_values: UseStateHandle<DigestedValuesResult>,
-    pub object_selection: UseStateHandle<ObjectSelection>
+    pub object_selection: UseStateHandle<ObjectSelection>,
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>,
+    pub processed_relation: UseStateHandle<ProcessedRelationResult>,
 }
+
 
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
@@ -39,9 +43,30 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     // When the button to switch between selection modes is pressed
     let on_toggle_library: Callback<MouseEvent> = {
         let input_display_mode = input_display_mode.clone();
+        let graph_editing_mode = props.graph_editing_mode.clone();
+        let pr = props.processed_relation.clone();
         Callback::from(move |_: MouseEvent| {
             // Circular scroll the display mode
-            input_display_mode.set((*input_display_mode + 1) % 4);
+            let next = (*input_display_mode + 1) % 4;
+            // If it's going to the the editing, let's set the graph editing mode to move
+            // We also want to set it to an empty canvas for creating stuff if there is no relation right now
+            if next == 3 {
+                graph_editing_mode.set(Some(GraphTooltips::MOVE));
+                // If the current processed relation is an error (e.x. it may be empty) then we want to set it as an empty manager to welcome drawing
+                if let Err(e) = &*pr {
+                    if e.message == "No input" {
+                        pr.set(Ok(GraphTheoryRelationManager::empty()));
+                    }
+                }
+            } else {
+                if let Ok(gtrm) = &*pr {
+                    if gtrm.is_empty() {
+                        pr.set(Err(ParseError::new("No input")))
+                    }
+                }
+                graph_editing_mode.set(None);
+            }
+            input_display_mode.set(next);
         })
     };
     // Whent the suers presses save relation
@@ -128,6 +153,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         },
                         3 => html! {
                             <RelationEdit
+                                graph_editing_mode={props.graph_editing_mode.clone()}
                             />
                         },
                         _ => html! {}

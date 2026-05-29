@@ -1,8 +1,7 @@
-use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, GraphEditCallbacks, GraphModes, ObjectSelection, PointVector, ProcessedRelationResult};
+use crate::services::digraph_services::types::{CanvasPositioning, GraphEditCallbacks, GraphModes, GraphTooltips, ObjectSelection, PointVector, ProcessedRelationResult};
 use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
@@ -14,7 +13,8 @@ pub struct GraphProps {
     pub mode_change_callback: Callback<i32>,
     pub graph_mode: UseStateHandle<GraphModes>,
     pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
-    pub graph_edit_callbacks: GraphEditCallbacks
+    pub graph_edit_callbacks: GraphEditCallbacks,
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>
 }
 
 #[function_component(Graph)]
@@ -203,6 +203,7 @@ pub fn graph(props: &GraphProps) -> Html{
                                 interrupt_graph_scrolling={interrupt_scrolling}
                                 points={points}
                                 graph_edit_callbacks={props.graph_edit_callbacks.clone()}
+                                graph_editing_mode={props.graph_editing_mode.clone()}
                             />
                         },
                         GraphModes::MATRIX => html! {
