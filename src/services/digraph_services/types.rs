@@ -73,7 +73,7 @@ impl fmt::Display for GraphTheoryTypes {
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum DrawObjectSelection {
     Point(PointLabel),
     Edge(EdgePair),
@@ -152,26 +152,30 @@ impl CanvasPositioning {
 }
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct ObjectSelection {
-    pub selection: Option<DrawObjectSelection>
+    pub inspect_selection: Option<DrawObjectSelection>,
+    pub edge_connection_selection_point: Option<PointLabel>
 }
 impl ObjectSelection {
     // Intake a raw tuple string pairing and set it as the selected object type
     pub fn from_edge(paring: EdgePair) -> Self {
         Self{
-            selection: Option::from(DrawObjectSelection::Edge(paring))
+            inspect_selection: Option::from(DrawObjectSelection::Edge(paring)),
+            edge_connection_selection_point: None
         }
     }
     // Intake a raw string and set it as the selected object type
     pub fn from_point(point: PointLabel) -> Self {
         Self{
-            selection: Option::from(DrawObjectSelection::Point(point))
+            inspect_selection: Option::from(DrawObjectSelection::Point(point)),
+            edge_connection_selection_point: None
         }
     }
     pub fn default() -> Self {
         Self {
-            selection: None
+            inspect_selection: None,
+            edge_connection_selection_point: None
         }
     }
 }
@@ -244,7 +248,8 @@ impl Default for StoredRelation {
 pub struct GraphEditCallbacks {
     pub on_edit_point: Callback<(PointLabel, f32, f32)>,
     pub on_point_create: Callback<(PointLabel, f32, f32)>,
-    pub on_point_delete: Callback<PointLabel>
+    pub on_point_delete: Callback<PointLabel>,
+    pub on_edge_connection: Callback<(PointLabel, PointLabel)>
 }
 
 // ERRORS

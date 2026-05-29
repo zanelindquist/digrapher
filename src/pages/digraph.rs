@@ -74,8 +74,10 @@ pub fn digraph_page() -> Html {
                 let current = (*processed_relation).clone();
                 match current {
                     Ok(mut gm) => {
-                        let _ = gm.edit_point(label.clone(), lx, ly);
-                        processed_relation.set(Ok(gm));
+                        if let Ok(new_gm) = gm.edit_point(label.clone(), lx, ly) {
+                            processed_relation.set(Ok(new_gm));
+                        }
+                        // HANDLE POINT SELECTION ERROR
                     },
                     Err(_) => {}
                 }
@@ -89,8 +91,10 @@ pub fn digraph_page() -> Html {
                 match current {
                     Ok(mut gm) => {
                         let p = Point::new(lx, ly, 0.0, label.clone(), PointRenderSymbol::CIRCLE, 0);
-                        let _ = gm.create_point(p);
-                        processed_relation.set(Ok(gm));
+                        if let Ok(new_gm) = gm.create_point(p) {
+                            processed_relation.set(Ok(new_gm));
+                        }
+                        // HANDLE POINT SELECTION ERROR
                     },
                     Err(_) => {}
                 }
@@ -102,8 +106,25 @@ pub fn digraph_page() -> Html {
                 let current = (*processed_relation).clone();
                 match current {
                     Ok(mut gm) => {
-                        let _ = gm.delete_point(label.clone());
-                        processed_relation.set(Ok(gm));
+                        if let Ok(new_gm) = gm.delete_point(label.clone()) {
+                            processed_relation.set(Ok(new_gm));
+                        }
+                        // HANDLE POINT SELECTION ERROR
+                    },
+                    Err(_) => {}
+                }
+            })
+        },
+        on_edge_connection: {
+            let processed_relation = processed_relation.clone();
+            // Expects logical units
+            Callback::from(move |(from_label, to_label): (String, String)| {
+                let current = (*processed_relation).clone();
+                match current {
+                    Ok(mut gm) => {
+                        if let Ok(new_gm) = gm.connect_edge(from_label, to_label) {
+                            processed_relation.set(Ok(new_gm));
+                        }
                     },
                     Err(_) => {}
                 }

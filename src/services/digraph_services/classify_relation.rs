@@ -391,7 +391,12 @@ impl GraphTheoryRelationManager {
         self.subgraphs.is_empty()
     }
 
-    pub fn create_point(&mut self, point: Point) -> Result<Point, PointManagementError> {
+    // RELATION MODIFICATION
+
+    pub fn create_point(&mut self, point: Point) -> Result<Self, PointManagementError> {
+        // Add the point to our relation
+        self.relation.points.insert(point.label.clone());
+
         // Ensure disconnected graph exists, create one if not
         if !self.subgraphs.iter().any(|s| s.relation_type == GraphTheoryTypes::DISCONNECTED) {
             let dc_layer = GraphTheoryRelation {
@@ -408,25 +413,47 @@ impl GraphTheoryRelationManager {
         // Find and add point to the disconnected graph
         if let Some(dc) = self.subgraphs.iter_mut().find(|s| s.relation_type == GraphTheoryTypes::DISCONNECTED) {
             dc.points.push(point.clone());
-            Ok(point)
+            Ok((*self).clone())
         } else {
             Err(PointManagementError::new("Point creation failed"))
         }
     }
     // This should only alter cosmetics of position and label
-    pub fn edit_point(&mut self, label: String, lx: f32, ly: f32) -> Result<Point, PointManagementError> {
+    pub fn edit_point(&mut self, label: String, lx: f32, ly: f32) -> Result<Self, PointManagementError> {
         for graph in &mut self.subgraphs {
             for point in graph.points.iter_mut() {
                 if point.label == label {
                     point.x = lx;
                     point.y = ly;
 
-                    return Ok(point.clone())
+                    return Ok((*self).clone()
+)
                 }
             }
         }
 
         Err(PointManagementError::new("Point not found"))
+    }
+
+    pub fn delete_point(&mut self, label: String) -> Result<Self, PointManagementError> {
+        for graph in &mut self.subgraphs {
+            let initial_len = graph.points.len();
+            graph.points.retain(|p| p.label != label);
+            if graph.points.len() != initial_len {
+                return Ok((*self).clone())
+            }
+        }
+        Err(PointManagementError::new("Point not found"))
+    }
+
+    pub fn connect_edge(&mut self, from_label: String, to_label: String) -> Result<Self, PointManagementError> {
+        log!(format!("Added edge {} {}", from_label, to_label));
+        // Add the new edge to the relation
+        self.relation.values.insert((from_label, to_label));
+
+
+        // Now we need to re-evaluate the manager's logic
+        self.reevaluate_strucure()
     }
 
     // Collect all of the points from subgraphs
@@ -438,16 +465,6 @@ impl GraphTheoryRelationManager {
             }
         }
         points
-    }
-    pub fn delete_point(&mut self, label: String) -> Result<(), PointManagementError> {
-        for graph in &mut self.subgraphs {
-            let initial_len = graph.points.len();
-            graph.points.retain(|p| p.label != label);
-            if graph.points.len() != initial_len {
-                return Ok(());
-            }
-        }
-        Err(PointManagementError::new("Point not found"))
     }
     // Position points relatively within each subgraph, then absolutely across all subgraphs
     pub fn position_points(&mut self) {
@@ -469,6 +486,89 @@ impl GraphTheoryRelationManager {
                 point.x += center_x;
             }
         }
+    }
+
+    pub fn reevaluate_strucure(&mut self) -> Result<Self, PointManagementError> {
+        // Collect all of our points because we want to keep their states
+        let mut points = self.get_points();
+
+        // Rebuild our subgraphs by
+        // rebuilding node strucutre
+        // reevaluating strucutre
+        // linking existing points to their correct relation
+
+        // MOST OF THIS CODE IS FROM THE PROCESS_RELATION FUNCTION, WE WE MAY WANT TO REFACTOR IT INTO ONE COMBINED FUNCTION
+
+        // Create stable node ordering
+        let mut sorted_points: Vec<String> = self.relation.points.clone().into_iter().collect();
+        sorted_points.sort();
+
+        // Build nodes
+        let mut nodes: Vec<Node> = vec![];
+        let mut label_to_id: HashMap<String, usize> = HashMap::new();
+
+        // Create the each point as a node with deault values
+        for (i, label) in sorted_points.iter().enumerate() {
+            label_to_id.insert(label.clone(), i);
+
+            nodes.push(Node {
+                id: i as i64,
+                label: label.clone(),
+                node_type: NodeType::NORMAL,
+                parents: vec![],
+                children: vec![],
+                depth: 0,
+            });
+        }
+
+        // Populate graph edges into node structure
+        for (a, b) in &self.relation.values {
+            if let Some(parent_id) = label_to_id.get(a) {
+            if  let Some(child_id) = label_to_id.get(b) {
+                // Reflexive edge
+                if parent_id == child_id {
+                    continue;
+                }
+                // Add child
+                nodes[*parent_id].children.push(*child_id as i64);
+                // Assign parent
+                nodes[*child_id].parents.push(*parent_id as i64);
+            }}
+        }
+
+        // Identify roots
+        for node in &mut nodes {
+            if node.parents.is_empty() {
+                node.node_type = NodeType::ROOT;
+            }
+            if node.children.is_empty() {
+                node.node_type = NodeType::END;
+            }
+        }
+        
+        // First we need to see if the relation is compound
+        let mut subgraphs = split_into_components(&nodes);
+        // Now we just have to link our existing points to the points produced in the new subgraphs
+        for relation in &mut subgraphs {
+            // Set the relation type
+            relation.relation_type =  classify_relation(relation, &relation.nodes);
+            // Link existing points
+            for point in &mut relation.points {
+                if let Some(index) = points.iter().position(|p| p.label == point.label) {
+                    // Remove the existing point so that the search algorithm is more efficient later on
+                    let existing_point = points.remove(index);
+
+                    // Preserve positioning
+                    point.x = existing_point.x;
+                    point.y = existing_point.y;
+                } else {
+                    return Err(PointManagementError::new("Failed to link points"));
+                }
+            }
+        }
+
+
+        Ok((*self).clone())
     }
 }
 
