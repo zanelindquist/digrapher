@@ -405,8 +405,6 @@ impl GraphTheoryRelationManager {
     }
     // This should only alter cosmetics of position and label
     pub fn edit_point(&mut self, label: String, lx: f32, ly: f32) -> Result<Point, PointManagementError> {
-        log!("Editing point");
-
         for graph in &mut self.subgraphs {
             for point in graph.points.iter_mut() {
                 if point.label == label {

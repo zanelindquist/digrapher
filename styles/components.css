@@ -265,3 +265,12 @@
 .style-toggle {
     cursor: pointer;
 }
+
+.tooltip {
+    padding: 8px;
+    border-radius: 8px;
+    background-color: var(--primaryContainer);
+}
+.tooltip--selected {
+    background-color: var(--secondaryContainer);
+}

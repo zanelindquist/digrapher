@@ -128,7 +128,6 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         },
                         3 => html! {
                             <RelationEdit
-                                onselect={load_saved_relation}
                             />
                         },
                         _ => html! {}

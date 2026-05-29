@@ -29,6 +29,26 @@ pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
+pub enum GraphTooltips{NEW_POINT, CONNECT_EDGE, EDIT_LABEL, DELETE_POINT}
+impl GraphTooltips {
+    pub fn from_i32(value: i32) -> Self {
+        match value {
+            0 => GraphTooltips::NEW_POINT,
+            1 => GraphTooltips::CONNECT_EDGE,
+            2 => GraphTooltips::EDIT_LABEL,
+            3 => GraphTooltips::DELETE_POINT,
+            _ => GraphTooltips::NEW_POINT, // fallback
+        }
+    }
+    pub fn to_i32(&self) -> i32 {
+        match self {
+            GraphTooltips::NEW_POINT => 0,
+            GraphTooltips::CONNECT_EDGE => 1,
+            GraphTooltips::EDIT_LABEL => 2,
+            GraphTooltips::DELETE_POINT => 3,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN, DISCONNECTED}

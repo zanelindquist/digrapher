@@ -323,6 +323,18 @@
     border-top: 1px solid var(--outlineVariant);
 }
 
+.edit {
+
+}
+.edit__description {
+
+}
+.edit__tooltips {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
 .explorer {
     position: relative;
     display: flex;
