@@ -31,7 +31,7 @@ pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
-pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN, DISCONNECTED}
 impl fmt::Display for GraphTheoryTypes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match self {
@@ -40,7 +40,8 @@ impl fmt::Display for GraphTheoryTypes {
             GraphTheoryTypes::CLIQUE => "clique",
             GraphTheoryTypes::NETWORK => "network",
             GraphTheoryTypes::LAYERED_NETWORK => "layered_network",
-            GraphTheoryTypes::CHAIN => "chain"
+            GraphTheoryTypes::CHAIN => "chain",
+            GraphTheoryTypes::DISCONNECTED => "disconnected"
         };
 
         write!(f, "{}", msg)
@@ -56,6 +57,7 @@ pub enum DrawObjectSelection {
 }
 
 // INFRASTRUCTURE
+
 const SCALING_CONSTANT: f32 = 4.0;
 #[derive(Clone, Copy, PartialEq)]
 pub struct CanvasPositioning {
@@ -206,7 +208,12 @@ impl Default for StoredRelation {
     }
 }
 
-
+#[derive(Properties, PartialEq, Clone)]
+pub struct GraphEditCallbacks {
+    pub on_edit_point: Callback<(PointLabel, f32, f32)>,
+    pub on_point_create: Callback<(PointLabel, f32, f32)>,
+    pub on_point_delete: Callback<PointLabel>
+}
 
 // ERRORS
 #[derive(Debug, PartialEq, Clone)]
@@ -214,6 +221,18 @@ pub struct ParseError {
     pub message: String,
 }
 impl ParseError {
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct PointManagementError {
+    pub message: String,
+}
+impl PointManagementError {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_string(),

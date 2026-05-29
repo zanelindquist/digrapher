@@ -2,7 +2,7 @@ use gloo_console::log;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection, PointVector, ProcessedRelationResult};
+use crate::services::digraph_services::types::{CanvasPositioning, GraphEditCallbacks, GraphModes, ObjectSelection, PointVector, ProcessedRelationResult};
 use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
@@ -14,6 +14,7 @@ pub struct GraphProps {
     pub mode_change_callback: Callback<i32>,
     pub graph_mode: UseStateHandle<GraphModes>,
     pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
+    pub graph_edit_callbacks: GraphEditCallbacks
 }
 
 #[function_component(Graph)]
@@ -82,6 +83,7 @@ pub fn graph(props: &GraphProps) -> Html{
     }
 
     // Support moving and zooming
+
     // When the pointer is clicked down
     let on_pointer_down = {
         let pointer_down = pointer_down.clone();
@@ -150,7 +152,6 @@ pub fn graph(props: &GraphProps) -> Html{
         })
     };
 
-
     // Components
 
     let toggle = html! {
@@ -201,6 +202,7 @@ pub fn graph(props: &GraphProps) -> Html{
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
                                 points={points}
+                                graph_edit_callbacks={props.graph_edit_callbacks.clone()}
                             />
                         },
                         GraphModes::MATRIX => html! {
@@ -210,15 +212,13 @@ pub fn graph(props: &GraphProps) -> Html{
                                 object_selection={props.object_selection.clone()}
                             />
                         },
-                        _ => html! {
-                            <p>{"Unknown graph type"}</p>
-                        }
+                        
                     }
                 }
 
             </div>
         },
-        Err(e) => html! {
+        Err(_) => html! {
             <div class="graph--error">
                 {toggle}
                 <img class="graph__no-input" src={format!("/assets/digraph_assets/no_input_variant.png")}/>

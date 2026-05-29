@@ -1,6 +1,8 @@
 use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI};
 
-use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointVector, Relation}}};
+use gloo_console::log;
+
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -36,6 +38,9 @@ impl GraphTheoryRelation {
             },
             GraphTheoryTypes::NETWORK => {
                 self.position_points_circle();
+            },
+            GraphTheoryTypes::DISCONNECTED => {
+                // Do nothing, we don't position free-standing points
             }
         }
     }
@@ -376,6 +381,47 @@ pub struct GraphTheoryRelationManager {
     pub relation: Relation,
 }
 impl GraphTheoryRelationManager {
+    pub fn create_point(&mut self, point: Point) -> Result<Point, PointManagementError> {
+        // Ensure disconnected graph exists, create one if not
+        if !self.subgraphs.iter().any(|s| s.relation_type == GraphTheoryTypes::DISCONNECTED) {
+            let dc_layer = GraphTheoryRelation {
+                relation_type: GraphTheoryTypes::DISCONNECTED,
+                nodes: vec![],
+                points: vec![],
+                positioning_settings: GraphTheoryLayoutSettings::default(),
+                width_l: 0.0,
+                height_l: 0.0,
+            };
+            self.subgraphs.push(dc_layer);
+        }
+
+        // Find and add point to the disconnected graph
+        if let Some(dc) = self.subgraphs.iter_mut().find(|s| s.relation_type == GraphTheoryTypes::DISCONNECTED) {
+            dc.points.push(point.clone());
+            Ok(point)
+        } else {
+            Err(PointManagementError::new("Point creation failed"))
+        }
+    }
+    // This should only alter cosmetics of position and label
+    pub fn edit_point(&mut self, label: String, lx: f32, ly: f32) -> Result<Point, PointManagementError> {
+        log!("Editing point");
+
+        for graph in &mut self.subgraphs {
+            for point in graph.points.iter_mut() {
+                if point.label == label {
+                    point.x = lx;
+                    point.y = ly;
+
+                    return Ok(point.clone())
+                }
+            }
+        }
+
+        Err(PointManagementError::new("Point not found"))
+    }
+
+    // Collect all of the points from subgraphs
     pub fn get_points(&self) -> PointVector {
         let mut points = Vec::new();
         for graph in &self.subgraphs {
@@ -384,6 +430,16 @@ impl GraphTheoryRelationManager {
             }
         }
         points
+    }
+    pub fn delete_point(&mut self, label: String) -> Result<(), PointManagementError> {
+        for graph in &mut self.subgraphs {
+            let initial_len = graph.points.len();
+            graph.points.retain(|p| p.label != label);
+            if graph.points.len() != initial_len {
+                return Ok(());
+            }
+        }
+        Err(PointManagementError::new("Point not found"))
     }
     // Position points relatively within each subgraph, then absolutely across all subgraphs
     pub fn position_points(&mut self) {

@@ -1,9 +1,8 @@
-use gloo_console::log;
 use yew::prelude::*;
 
 use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
-use crate::services::digraph_services::point_layout::{create_edges, create_points};
-use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, ProcessedRelationResult, Relation};
+use crate::services::digraph_services::point_layout::create_edges;
+use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, GraphEditCallbacks, ObjectSelection, PointInteraction, PointLabel, PointVector};
 use crate::render::styles::RenderStyles;
 use crate::render::objects::point::Point;
 
@@ -18,7 +17,8 @@ pub struct DigraphCanvasProps {
     pub class: Classes,
     pub object_selection: UseStateHandle<ObjectSelection>,
     pub interrupt_graph_scrolling: UseStateHandle<bool>,
-    pub points: UseStateHandle<PointVector>
+    pub points: UseStateHandle<PointVector>,
+    pub graph_edit_callbacks: GraphEditCallbacks
 }
 
 #[function_component(DigraphCanvas)]
@@ -32,7 +32,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let selected_point: UseStateHandle<Option<Point>> = use_state(|| None);
     let hovered_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
 
-    // Update edges when the points changes
+    // Update edges when the points change
     {
         let points = points.clone();
         let edges = edges.clone();
@@ -93,8 +93,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let radius = styles.point.radius.clone();
         let canvas_pos = props.position.clone();
         let points = points.clone();
-        let edges = edges.clone();
-        let values = props.processed_relation.relation.values.clone();
+        let on_edit_point = props.graph_edit_callbacks.on_edit_point.clone();
         Callback::from(move |e: PointerEvent| {
             // HOVERING ON A POINT
             let x = e.client_x();
@@ -116,34 +115,15 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
             // MOVING A POINT
 
-            // If no point is selected, return
-            let Some(mut modified_point) = (*selected_point).clone() else {
-                return;
-            };
+            let offset_vx = e.client_x();
+            let offset_vy = e.client_y();
 
-            // Get visual px difference in moving the mouse
-            let offset_vx = e.client_x();// - (*last_pos).0;
-            let offset_vy = e.client_y();// - (*last_pos).1;
-
-            // Get logical coords
-            let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
-
-            // Modify the selected point's coordinates
-            modified_point.x = offset_lx;
-            modified_point.y = offset_ly;
-
-            // Replace old point
-            let mut new_points: PointVector = points
-                .iter()
-                .filter(|pt| pt.index != modified_point.index)
-                .cloned()
-                .collect();
-            new_points.push(modified_point);
-
-            // Update the edges
-            edges.set(create_edges(&values, &new_points));
-            // Update the points
-            points.set(new_points.clone());
+            if let Some(modified_point) = (*selected_point).clone() {
+                let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
+                // Emit an event instead
+                on_edit_point.emit((modified_point.label, offset_lx, offset_ly));
+            }
+            
         })
     };
 

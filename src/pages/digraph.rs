@@ -1,11 +1,12 @@
-use gloo_console::log;
 use yew::prelude::*;
 use crate::components::digraph_components::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
 use crate::services::digraph_services::classify_relation::process_reltaion;
 use crate::services::digraph_services::digest_values::{digest_values};
-use crate::services::digraph_services::types::{DigestedValuesResult, GraphModes, ObjectSelection, ParseError, ProcessedRelationResult};
+use crate::services::digraph_services::types::{DigestedValuesResult, GraphEditCallbacks, GraphModes, ObjectSelection, ParseError, ProcessedRelationResult};
 use crate::render::digraph_render::graph::{Graph};
+use crate::render::objects::point::Point;
+use crate::services::digraph_services::types::PointRenderSymbol;
 
 
 #[function_component(DigraphPage)]
@@ -58,6 +59,50 @@ pub fn digraph_page() -> Html {
         })
     };
 
+    // Point editing, creation and deletion
+    let graph_edit_callbacks = GraphEditCallbacks{
+        on_edit_point: {
+            let processed_relation = processed_relation.clone();
+            Callback::from(move |(label, lx, ly): (String, f32, f32)| {
+                let current = (*processed_relation).clone();
+                match current {
+                    Ok(mut gm) => {
+                        let _ = gm.edit_point(label.clone(), lx, ly);
+                        processed_relation.set(Ok(gm));
+                    },
+                    Err(_) => {}
+                }
+            })
+        },
+        on_point_create: {
+            let processed_relation = processed_relation.clone();
+            Callback::from(move |(label, lx, ly): (String, f32, f32)| {
+                let current = (*processed_relation).clone();
+                match current {
+                    Ok(mut gm) => {
+                        let p = Point::new(lx, ly, 0.0, label.clone(), PointRenderSymbol::CIRCLE, 0);
+                        let _ = gm.create_point(p);
+                        processed_relation.set(Ok(gm));
+                    },
+                    Err(_) => {}
+                }
+            })
+        },
+        on_point_delete: {
+            let processed_relation = processed_relation.clone();
+            Callback::from(move |label: String| {
+                let current = (*processed_relation).clone();
+                match current {
+                    Ok(mut gm) => {
+                        let _ = gm.delete_point(label.clone());
+                        processed_relation.set(Ok(gm));
+                    },
+                    Err(_) => {}
+                }
+            })
+        }
+    };
+
     // Set page name
     use_effect(|| {
         gloo_utils::document().set_title("Digraph");
@@ -81,6 +126,7 @@ pub fn digraph_page() -> Html {
                     mode_change_callback={on_mode_change}
                     graph_mode={graph_mode.clone()}
                     object_selection={selection_object}
+                    graph_edit_callbacks={graph_edit_callbacks}
                 />
             </div>
         </TopbarLayout>
