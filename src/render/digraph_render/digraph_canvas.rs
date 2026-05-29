@@ -18,8 +18,8 @@ pub struct DigraphCanvasProps {
     pub object_selection: UseStateHandle<ObjectSelection>,
     pub interrupt_graph_scrolling: UseStateHandle<bool>,
     pub points: UseStateHandle<PointVector>,
-    pub graph_edit_callbacks: GraphEditCallbacks
-    , pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>
+    pub graph_edit_callbacks: GraphEditCallbacks,
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>
 }
 
 #[function_component(DigraphCanvas)]
@@ -56,6 +56,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         Callback::from(move |e: PointerEvent| {
             let x = e.client_x();
             let y = e.client_y();
+
             let mut clicked_point = false;
             // Map through each point and see if the pointer is on it
             for point in points.iter() {
@@ -81,7 +82,39 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let on_pointer_up = {
         let interrupt = props.interrupt_graph_scrolling.clone();
         let selected_point = selected_point.clone();
-        Callback::from(move |_: PointerEvent| {
+        let canvas_pos = props.position.clone();
+        let points_len = (*points).len();
+        let graph_editing_mode = props.graph_editing_mode.clone();
+        let edit_callbacks =  props.graph_edit_callbacks.clone();
+        Callback::from(move |e: PointerEvent| {
+            let x = e.client_x();
+            let y = e.client_y();
+            
+            // Our response to this click depends on if graph editing is engaged
+
+            if let Some(edit_mode) = *graph_editing_mode {
+                match edit_mode {
+                    GraphTooltips::NEW_POINT => {
+                        let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
+                        edit_callbacks.on_point_create.emit((points_len.to_string(), lx, ly))
+                    },
+                    GraphTooltips::CONNECT_EDGE => {
+                        
+                    },
+                    GraphTooltips::DELETE_POINT => {
+
+                    },
+                    GraphTooltips::EDIT_LABEL => {
+
+                    },
+                    _ => {
+
+                    }
+                }
+            } else {
+
+            }
+
             interrupt.set(false);
             selected_point.set(None);
         })

@@ -83,6 +83,7 @@ pub fn digraph_page() -> Html {
         },
         on_point_create: {
             let processed_relation = processed_relation.clone();
+            // Expects logical units
             Callback::from(move |(label, lx, ly): (String, f32, f32)| {
                 let current = (*processed_relation).clone();
                 match current {
