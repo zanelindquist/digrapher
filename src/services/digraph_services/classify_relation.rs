@@ -451,7 +451,6 @@ impl GraphTheoryRelationManager {
         // Add the new edge to the relation
         self.relation.values.insert((from_label, to_label));
 
-
         // Now we need to re-evaluate the manager's logic
         self.reevaluate_strucure()
     }
@@ -569,6 +568,18 @@ impl GraphTheoryRelationManager {
 
 
         Ok((*self).clone())
+    }
+
+    pub fn to_string(&self) -> String {
+        let mut items: Vec<String> = self.relation.values
+            .iter()
+            .map(|(a, b)| format!("({}, {})", a, b))
+            .collect();
+
+        // optional: make output deterministic
+        items.sort();
+
+        format!("{{{}}}", items.join(", "))
     }
 }
 

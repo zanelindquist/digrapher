@@ -1,3 +1,4 @@
+use gloo_console::log;
 use yew::prelude::*;
 use crate::components::digraph_components::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
@@ -124,6 +125,8 @@ pub fn digraph_page() -> Html {
                     Ok(mut gm) => {
                         if let Ok(new_gm) = gm.connect_edge(from_label, to_label) {
                             processed_relation.set(Ok(new_gm));
+                        } else {
+                            log!("Error")
                         }
                     },
                     Err(_) => {}

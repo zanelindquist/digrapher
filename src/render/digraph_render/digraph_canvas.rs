@@ -39,7 +39,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let edges = edges.clone();
         let relation = props.processed_relation.relation.clone();
         let values = relation.values.clone();
-        use_effect_with(points.clone(), move |_| {
+        use_effect_with(values.clone(), move |_| {
             edges.set(create_edges(&values, &points));
         });
     }
