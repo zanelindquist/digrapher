@@ -109,6 +109,8 @@ pub fn digraph_page() -> Html {
                     Ok(mut gm) => {
                         if let Ok(new_gm) = gm.delete_point(label.clone()) {
                             processed_relation.set(Ok(new_gm));
+                        } else {
+                            log!("DELETE ERROR")
                         }
                         // HANDLE POINT SELECTION ERROR
                     },

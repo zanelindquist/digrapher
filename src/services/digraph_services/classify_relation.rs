@@ -438,11 +438,20 @@ impl GraphTheoryRelationManager {
     }
 
     pub fn delete_point(&mut self, label: String) -> Result<Self, PointManagementError> {
+        // Find the point to delete
         for graph in &mut self.subgraphs {
             let initial_len = graph.points.len();
+            // Remove the point object
             graph.points.retain(|p| p.label != label);
+
+            // Remove relations that contained the point
+            self.relation.values.retain(|v| v.0 != label && v.1 != label);
+            // Remove the retained point in 
+            self.relation.points.retain(|v| *v != label);
+
             if graph.points.len() != initial_len {
-                return Ok((*self).clone())
+                // If the relation successfully changed, we we need to re-evaluate the manager's logic
+                return self.reevaluate_strucure()
             }
         }
         Err(PointManagementError::new("Point not found"))

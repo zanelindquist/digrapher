@@ -163,7 +163,12 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                         }
                     },
                     GraphTooltips::DELETE_POINT => {
-
+                        for point in points.iter() {
+                            // If the mouse is on a point
+                            if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
+                                edit_callbacks.on_point_delete.emit(point.label.clone());
+                            }
+                        }
                     },
                     GraphTooltips::EDIT_LABEL => {
 
