@@ -71,13 +71,13 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     };
     // Whent the suers presses save relation
     let save_relation: Callback<MouseEvent> = {
-        let dv = props.digested_values.clone();
+        let pr = props.processed_relation.clone();
         let display_check = display_check.clone();
         let failed_delete_flash = failed_delete_flash.clone();
         Callback::from(move |_: MouseEvent| {
-            if let Ok(relation) = dv.deref() {
+            if let Ok(relation) = &*pr {
                 // If we successfully saved the relation, flash a checkmark
-                if let Ok(_) = store_new_relation(relation) {
+                if let Ok(_) = store_new_relation(&relation) {
                     display_check.set(true);
                     let dc = display_check.clone();
                     let timeout = Timeout::new(1_000, move || {
@@ -167,7 +167,10 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         // OR if we don't have a valid relation being displayed
                         disabled={
                             *input_display_mode == 1
-                            || !props.digested_values.is_ok()
+                            || props
+                                .processed_relation
+                                .as_ref()
+                                .map_or(true, |r| r.is_empty())
                         }
                     >{"Save relation"}</Button>
                     // Display the icon to flash a success or failure

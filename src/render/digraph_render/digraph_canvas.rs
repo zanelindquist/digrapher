@@ -39,7 +39,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let edges = edges.clone();
         let relation = props.processed_relation.relation.clone();
         let values = relation.values.clone();
-        use_effect_with(values.clone(), move |_| {
+        use_effect_with((points.clone(), values.clone()), move |_| {
             edges.set(create_edges(&values, &points));
         });
     }
@@ -112,7 +112,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                         // Get the coordinates
                         let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
                         // Create the point
-                        edit_callbacks.on_point_create.emit((points.len().to_string(), lx, ly));
+                        edit_callbacks.on_point_create.emit(((points.len() + 1).to_string(), lx, ly));
                         // Turn the mode to edge connection so we must set an edge?
                         // graph_editing_mode.set(Some(GraphTooltips::CONNECT_EDGE));
                     },
@@ -125,6 +125,11 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                                 // If there is a previously selected point, we need to link the edges
                                 if let Some(from_label) = &object_selection.edge_connection_selection_point {
                                     edit_callbacks.on_edge_connection.emit((from_label.clone(), point.label.clone()));
+
+                                    // Clear the conenction selection now
+                                    let mut new_obj_selection = (*object_selection).clone();
+                                    new_obj_selection.edge_connection_selection_point = None;
+                                    object_selection.set(new_obj_selection);
                                 }
                                 // If there is no selected edge connection point yet, set one and return
                                 else {
@@ -144,7 +149,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                             // First let's make sure that we have a draw object selection
                             if let Some(from_label) = &object_selection.edge_connection_selection_point {
                                 let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
-                                let new_label = points.len().to_string();
+                                let new_label = (points.len() + 1).to_string();
                                 // Create the point
                                 edit_callbacks.on_point_create.emit((new_label.clone(), lx, ly));
 

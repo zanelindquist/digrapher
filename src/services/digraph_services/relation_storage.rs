@@ -14,7 +14,7 @@
 use gloo_storage::{LocalStorage, Storage, errors::StorageError};
 use std::{fmt};
 
-use crate::services::digraph_services::types::{Relation, StoredRelation, StoredRelations};
+use crate::services::digraph_services::{classify_relation::GraphTheoryRelationManager, types::{Relation, StoredRelation, StoredRelations}};
 
 #[derive(Debug, Clone)]
 pub enum RelationStorageErr {
@@ -35,7 +35,7 @@ impl fmt::Display for RelationStorageErr {
 }
 
 // Store a new relation
-pub fn store_new_relation(new_relation: &Relation) -> Result<StoredRelations, RelationStorageErr> {
+pub fn store_new_relation(relation_manager: &GraphTheoryRelationManager) -> Result<StoredRelations, RelationStorageErr> {
     // Get all current relations
     match get_stored_relations() {
         // If we successfully fetch all relations
@@ -47,14 +47,7 @@ pub fn store_new_relation(new_relation: &Relation) -> Result<StoredRelations, Re
                 // Set its id
                 id: relations.len() as i32,
                 // Parse the relation into the form of {(a, b), (c, d)}...
-                raw_text: format!(
-                    "{{{}}}",
-                    new_relation.values
-                        .iter()
-                        .map(|(a, b)| format!("({}, {})", a, b))
-                        .collect::<Vec<_>>()
-                        .join(", ")
-                ),
+                raw_text: relation_manager.to_string(),
                 // No date for now
                 date_saved: String::new()
             };
