@@ -58,12 +58,6 @@ impl Point {
             styles.point.fill.to_string()
         };
 
-        let cursor_style = if point_interaction.is_hovered {
-            "cursor: move"
-        } else {
-            "cursor: grab"
-        }.to_string();
-        
         match self.symbol {
             PointRenderSymbol::TRIANGLE => html! {
                 <>
@@ -77,7 +71,6 @@ impl Point {
                         }
                         fill={fill_color.clone()}
                         stroke={styles.point.stroke}
-                        style={cursor_style}
                         // stroke-width={styles.point.stroke_width.to_string()}
                     />
                     <text
@@ -103,7 +96,6 @@ impl Point {
                         fill={fill_color.clone()}
                         stroke={styles.point.stroke}
                         stroke-width={styles.point.stroke_width.to_string()}
-                        style={cursor_style}
                     />
                     <text
                         x={(x + self.bearing.cos() * (styles.font.size + styles.point.label_displacement)).to_string()}

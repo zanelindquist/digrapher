@@ -184,8 +184,19 @@ impl ObjectSelection {
 #[derive(Clone, Copy, PartialEq)]
 pub struct PointInteraction {
     pub is_selected: bool,
+    pub is_connection_selected: bool,
     pub is_hovered: bool,
-    pub is_info: bool
+    pub is_info: bool,
+}
+impl PointInteraction {
+    pub fn none() -> Self {
+        Self {
+            is_selected: false,
+            is_connection_selected: false,
+            is_hovered: false,
+            is_info: false,
+        }
+    }
 }
 
 

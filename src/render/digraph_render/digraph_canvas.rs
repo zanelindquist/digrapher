@@ -231,10 +231,44 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         })
     };
 
+    let default = "grab";
+    let mut cursor_pointer: &'static str = match *props.graph_editing_mode {
+        Some(graph_edit_type) => {
+            let is_hovering_point = hovered_point.is_some();
+            match graph_edit_type {
+                GraphTooltips::CONNECT_EDGE => {
+                    if is_hovering_point { "e-resize" } else { default }
+                },
+                GraphTooltips::EDIT_LABEL => {
+                    if is_hovering_point { "text" } else { default }
+                },
+                GraphTooltips::DELETE_POINT => {
+                    if is_hovering_point { "pointer" } else { default }
+                },
+                GraphTooltips::MOVE => {
+                    if is_hovering_point { "move" } else { default }
+                },
+                GraphTooltips::NEW_POINT => {
+                    if is_hovering_point { "not-allowed" } else { "crosshair" }
+                },
+            }
+        },
+        _ => {
+            let is_hovering_point = hovered_point.is_some();
+            if is_hovering_point { "move" } else { default }
+        }
+    };
+
+    // For engaging the grabbing on movement of the canvas
+    if props.class.contains("pointer_down") && cursor_pointer == default {
+        cursor_pointer = "grabbing"
+    }
+
 
     html!{
         <div
             class={classes!("canvas", props.class.clone())}
+            style={format!("cursor: {};", cursor_pointer)}
             onpointerdown={on_pointer_down}
             onpointermove={on_pointer_move}
             onpointerup={on_pointer_up}
@@ -268,8 +302,9 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
                     let point_interaction = PointInteraction {
                         is_selected,
+                        is_connection_selected: props.object_selection.edge_connection_selection_point.as_ref().is_some_and(|p| *p == point.label),
                         is_hovered: hovered_point.as_ref().is_some_and(|p| *p == point.label),
-                        is_info: false
+                        is_info: false,
                     };
 
                     // Draw the point on the digraph

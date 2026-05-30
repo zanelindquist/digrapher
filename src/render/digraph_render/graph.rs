@@ -207,7 +207,7 @@ pub fn graph(props: &GraphProps) -> Html{
                     match *props.graph_mode {
                         GraphModes::DIGRAPH => html!{
                             <DigraphCanvas
-                                class={if *pointer_down { "grab"} else {""}}
+                                class={if *pointer_down { "pointer_down"} else {""}}
                                 position={(*canvas_position).clone()}
                                 processed_relation={graph_manager.clone()}
                                 object_selection={props.object_selection.clone()}
