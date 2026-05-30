@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
@@ -171,11 +172,21 @@ pub fn graph(props: &GraphProps) -> Html{
             canvas_position.zoom,
             if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"},
             props.processed_relation.as_ref().map(|rel| {
-                rel.subgraphs
-                    .iter()
-                    .map(|sub| sub.relation_type.to_string())
-                    .collect::<Vec<_>>()
-                    .join(",")
+                let mut counts: HashMap<String, usize> = HashMap::new();
+                for sub in rel.subgraphs.iter() {
+                    *counts.entry(sub.relation_type.to_string()).or_insert(0) += 1;
+                }
+                let mut entries: Vec<String> = counts.into_iter()
+                    .map(|(rel_type, count)| {
+                        if count == 1 {
+                            rel_type
+                        } else {
+                            format!("{}-{}", count, rel_type)
+                        }
+                    })
+                    .collect();
+                entries.sort();
+                entries.join(",")
             }).unwrap_or_else(|_| "none".to_string())
         )}</code>
     };

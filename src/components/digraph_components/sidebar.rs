@@ -185,9 +185,9 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 </div>
                 <div class="sidebar__analysis">
                     {
-                        match &*props.digested_values {
-                            Ok(relation) => html!{
-                                <Analytics relation={relation.clone()}/>
+                        match &*props.processed_relation {
+                            Ok(pr) => html!{
+                                <Analytics relation={pr.relation.clone()}/>
                             },
                             Err(e)  => html! {
                                 <div class="sidebar__preview">
@@ -198,11 +198,11 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     }
                 </div>
                 {
-                    match &*props.digested_values {
-                        Ok(relation) => html!{
+                    match &*props.processed_relation {
+                        Ok(pr) => html!{
                             <div class="sidebar__explorer">
                                 <Explorer
-                                    relation={relation.clone()}
+                                    relation={pr.relation.clone()}
                                     object_selection={props.object_selection.clone()}
                                 />
                             </div>

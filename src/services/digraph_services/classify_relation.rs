@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI, vec};
 
 use gloo_console::log;
 
-use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointVector, Relation}}};
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -41,6 +41,9 @@ impl GraphTheoryRelation {
             },
             GraphTheoryTypes::DISCONNECTED => {
                 // Do nothing, we don't position free-standing points
+            }
+            _ => {
+                // Do nothing
             }
         }
     }
@@ -426,8 +429,7 @@ impl GraphTheoryRelationManager {
                     point.x = lx;
                     point.y = ly;
 
-                    return Ok((*self).clone()
-)
+                    return Ok((*self).clone())
                 }
             }
         }
@@ -545,12 +547,12 @@ impl GraphTheoryRelationManager {
             }
         }
         
-        // First we need to see if the relation is compound
+        // Create our new subgraphs
         let mut subgraphs = split_into_components(&nodes);
         // Now we just have to link our existing points to the points produced in the new subgraphs
         for relation in &mut subgraphs {
             // Set the relation type
-            relation.relation_type =  classify_relation(relation, &relation.nodes);
+            relation.relation_type =  classify_relation(&relation.nodes);
             // Link existing points
             for point in &mut relation.points {
                 if let Some(index) = points.iter().position(|p| p.label == point.label) {
@@ -566,6 +568,12 @@ impl GraphTheoryRelationManager {
             }
         }
 
+        self.subgraphs = subgraphs;
+
+        // Rebuild the relation's properties
+        if let Ok(new_relation) = digest_values(self.to_string()) {
+            self.relation.properties = new_relation.properties;
+        }
 
         Ok((*self).clone())
     }
@@ -650,7 +658,7 @@ pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager
     // Then for each individual connected part
     for relation in &mut subgraphs {
         // See if it is cyclic, because that will tell us a lot
-        relation.relation_type =  classify_relation(relation, &relation.nodes);
+        relation.relation_type =  classify_relation(&relation.nodes);
     }
 
     let mut gm = GraphTheoryRelationManager {
@@ -720,7 +728,11 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
     components
 }
 
-fn classify_relation(_relation: &GraphTheoryRelation, nodes: &Vec<Node>) -> GraphTheoryTypes {
+fn classify_relation(nodes: &Vec<Node>) -> GraphTheoryTypes {
+    if is_isolated(&nodes) {
+        return GraphTheoryTypes::ISOLATED_POINT
+    }
+
     if is_cyclic(&nodes) {
         if is_circular(nodes) {
             return GraphTheoryTypes::CIRCULAR;
@@ -796,6 +808,9 @@ pub fn is_cyclic(nodes: &Vec<Node>) -> bool {
     false
 }
 
+fn is_isolated(nodes: &Vec<Node>) -> bool {
+    nodes.len() == 1
+}
 fn is_circular(nodes: &Vec<Node>) -> bool {
     for node in nodes {
         // Reflexive relations are already excluded

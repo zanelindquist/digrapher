@@ -54,7 +54,7 @@ impl GraphTooltips {
 }
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
-pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN, DISCONNECTED}
+pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN, DISCONNECTED, ISOLATED_POINT}
 impl fmt::Display for GraphTheoryTypes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match self {
@@ -64,7 +64,8 @@ impl fmt::Display for GraphTheoryTypes {
             GraphTheoryTypes::NETWORK => "network",
             GraphTheoryTypes::LAYERED_NETWORK => "layered_network",
             GraphTheoryTypes::CHAIN => "chain",
-            GraphTheoryTypes::DISCONNECTED => "disconnected"
+            GraphTheoryTypes::DISCONNECTED => "disconnected",
+            GraphTheoryTypes::ISOLATED_POINT => "point"
         };
 
         write!(f, "{}", msg)
