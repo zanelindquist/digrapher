@@ -250,7 +250,8 @@ pub struct GraphEditCallbacks {
     pub on_edit_point: Callback<(PointLabel, f32, f32)>,
     pub on_point_create: Callback<(PointLabel, f32, f32)>,
     pub on_point_delete: Callback<PointLabel>,
-    pub on_edge_connection: Callback<(PointLabel, PointLabel)>
+    pub on_edge_connection: Callback<(PointLabel, PointLabel)>,
+    pub on_point_create_and_connect: Callback<(PointLabel, f32, f32, PointLabel)>
 }
 
 // ERRORS

@@ -4,7 +4,6 @@ use crate::services::digraph_services::classify_relation::GraphTheoryRelationMan
 use crate::services::digraph_services::point_layout::create_edges;
 use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, GraphEditCallbacks, GraphTooltips, ObjectSelection, PointInteraction, PointLabel, PointVector};
 use crate::render::styles::RenderStyles;
-use crate::render::objects::point::Point;
 
 
 #[derive(Properties, PartialEq)]
@@ -85,8 +84,12 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 }
             }
 
+            // Clear info object selection
+            // Don't clear editing selection because we want to handle those in mouseup
             if !clicked_point {
-                object_selection.set(ObjectSelection::default());
+                let mut os = (*object_selection).clone();
+                os.inspect_selection = None;
+                object_selection.set(os);
             }
         })
     };
@@ -150,14 +153,14 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                             if let Some(from_label) = &object_selection.edge_connection_selection_point {
                                 let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
                                 let new_label = (points.len() + 1).to_string();
-                                // Create the point
-                                edit_callbacks.on_point_create.emit((new_label.clone(), lx, ly));
-
-                                edit_callbacks.on_edge_connection.emit((from_label.clone(), new_label));
+                                // Create the point and link the edge in one fresh update
+                                edit_callbacks.on_point_create_and_connect.emit((new_label.clone(), lx, ly, from_label.clone()));
+                                // Set the new point as the new connection selection point
+                                let mut new_obj_selection = (*object_selection).clone();
+                                new_obj_selection.edge_connection_selection_point = Some(new_label);
+                                object_selection.set(new_obj_selection);
                             }      
                         }
-
-  
                     },
                     GraphTooltips::DELETE_POINT => {
 

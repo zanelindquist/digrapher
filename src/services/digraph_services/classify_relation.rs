@@ -449,7 +449,6 @@ impl GraphTheoryRelationManager {
     }
 
     pub fn connect_edge(&mut self, from_label: String, to_label: String) -> Result<Self, PointManagementError> {
-        log!(format!("Added edge {} {}", from_label, to_label));
         // Add the new edge to the relation
         self.relation.values.insert((from_label, to_label));
 

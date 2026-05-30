@@ -132,6 +132,21 @@ pub fn digraph_page() -> Html {
                     Err(_) => {}
                 }
             })
+        },
+        on_point_create_and_connect: {
+            let processed_relation = processed_relation.clone();
+            Callback::from(move |(label, lx, ly, from_label): (String, f32, f32, String)| {
+                let current = (*processed_relation).clone();
+                match current {
+                    Ok(mut gm) => {
+                        let p = Point::new(lx, ly, 0.0, label.clone(), PointRenderSymbol::CIRCLE, 0);
+                        if let Ok(new_gm) = gm.create_point(p).and_then(|mut gm| gm.connect_edge(from_label, label)) {
+                            processed_relation.set(Ok(new_gm));
+                        }
+                    },
+                    Err(_) => {}
+                }
+            })
         }
     };
 
