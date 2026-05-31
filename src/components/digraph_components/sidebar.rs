@@ -29,6 +29,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     let input_display_mode = use_state(|| 0);
     let display_check = use_state(|| false);
     let failed_delete_flash = use_state(|| false);
+    let is_hidden = use_state(|| false);
 
     // When the user puts in text
     let oninput: Callback<InputEvent> = {
@@ -70,6 +71,13 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             input_display_mode.set(next);
         })
     };
+    // Toggle the sidebar visibility
+    let on_toggle_hidden: Callback<MouseEvent> = {
+        let is_hidden = is_hidden.clone();
+        Callback::from(move |_: MouseEvent| {
+            is_hidden.set(!*is_hidden);
+        })
+    };
     // Whent the suers presses save relation
     let save_relation: Callback<MouseEvent> = {
         let pr = props.processed_relation.clone();
@@ -106,114 +114,144 @@ pub fn sidebar(props: &SidebarProps) -> Html {
         })
     };
     
+
+    // Elements
+
     html! {
-        <aside class="sidebar">
-            <div class="sidebar__header">
-                <h2 class="sidebar__title">{"Digraph"}</h2>
-                <p class="sidebar__subtitle">{"Graph visualization"}</p>
-            </div>
-            
-            <div class="sidebar__content">
-                <div class="sidebar__input-group">
-                    <div class="sidebar__input__container">
-                        <label class="sidebar__label" for="graph-input">{"Enter graph"}</label>
-                        <Button
-                            class="sidebar__input__toggle"
-                            onclick={on_toggle_library}
-                        >
-                        // Show the button for the next mode to switch to
-                        {match *input_display_mode {
-                            3 => {"Create"},
-                            0 => {"Library"},
-                            1 => {"Browse"},
-                            2 => {"Editor"}
-                            _ => {""}
-                        }}
-                        </Button>
+        <>
+            <aside class={ if *is_hidden { "sidebar sidebar--hidden" } else { "sidebar" } }>
+                <div class="sidebar__header">
+                    <div class="sidebar__header__right">
+                        <h2 class="sidebar__title">{"Digraph"}</h2>
+                        <p class="sidebar__subtitle">{"Graph visualization"}</p>
                     </div>
-                    // Render different selection modes
-                    {match *input_display_mode {
-                        0 => html! {
-                            <textarea 
-                                id="graph-input"
-                                class="sidebar__input"
-                                rows="5"
-                                placeholder="{(a, b), (b, c), (c, c)}"
-                                value={props.value.clone()}
-                                oninput={oninput}
-                            />
-                        },
-                        1 => html! {
-                            <RelationLibrary
-                                onselect={load_saved_relation}
-                            />},
-                        2 => html! {
-                            <RelationBrowse
-                                onselect={load_saved_relation}
-                            />
-                        },
-                        3 => html! {
-                            <RelationEdit
-                                graph_editing_mode={props.graph_editing_mode.clone()}
-                            />
-                        },
-                        _ => html! {}
-                    }}
-                </div>
-                <div class="sidebar__input__save">
-                    // Show the save relation button
-                    <Button
-                        onclick={save_relation}
-                        // Disable the button if we are on saved relations
-                        // OR if we don't have a valid relation being displayed
-                        disabled={
-                            *input_display_mode == 1
-                            || props
-                                .processed_relation
-                                .as_ref()
-                                // If the result of this proceses relation, it returns true to disable the button,
-                                // Or if it is defined, it evaluates the closure, checking if it's empty to disable the save
-                                .map_or(true, |r| r.is_empty())
-                        }
-                    >{"Save relation"}</Button>
-                    // Display the icon to flash a success or failure
-                    if *display_check || *failed_delete_flash {
+                    <button
+                        class="sidebar__hide-toggle"
+                        onclick={on_toggle_hidden.clone()}
+                    >
                         <Icon
-                            // Set its values based on it being a success or failure
-                            icon={if *failed_delete_flash {"close"} else {"check"}}
-                            color={if *failed_delete_flash {"error"} else {"onSecondaryContainer"}}
-                            class={if *failed_delete_flash {"relation-row__right__trash--error"} else {"sidebar__input__save__check"}}
+                            icon={if *is_hidden {"arrow-collapse-right"} else {"arrow-collapse-left"}}
+                            size={24}
+                            color="outline"
                         />
-                    }
+                    </button>
                 </div>
-                <div class="sidebar__analysis">
+
+                <div class="sidebar__content">
+                    <div class="sidebar__input-group">
+                        <div class="sidebar__input__container">
+                            <label class="sidebar__label" for="graph-input">{"Enter graph"}</label>
+                            <Button
+                                class="sidebar__input__toggle"
+                                onclick={on_toggle_library}
+                            >
+                            // Show the button for the next mode to switch to
+                            {match *input_display_mode {
+                                3 => {"Create"},
+                                0 => {"Library"},
+                                1 => {"Browse"},
+                                2 => {"Editor"}
+                                _ => {""}
+                            }}
+                            </Button>
+                        </div>
+                        // Render different selection modes
+                        {match *input_display_mode {
+                            0 => html! {
+                                <textarea 
+                                    id="graph-input"
+                                    class="sidebar__input"
+                                    rows="5"
+                                    placeholder="{(a, b), (b, c), (c, c)}"
+                                    value={props.value.clone()}
+                                    oninput={oninput}
+                                />
+                            },
+                            1 => html! {
+                                <RelationLibrary
+                                    onselect={load_saved_relation}
+                                />},
+                            2 => html! {
+                                <RelationBrowse
+                                    onselect={load_saved_relation}
+                                />
+                            },
+                            3 => html! {
+                                <RelationEdit
+                                    graph_editing_mode={props.graph_editing_mode.clone()}
+                                />
+                            },
+                            _ => html! {}
+                        }}
+                    </div>
+                    <div class="sidebar__input__save">
+                        // Show the save relation button
+                        <Button
+                            onclick={save_relation}
+                            // Disable the button if we are on saved relations
+                            // OR if we don't have a valid relation being displayed
+                            disabled={
+                                *input_display_mode == 1
+                                || props
+                                    .processed_relation
+                                    .as_ref()
+                                    // If the result of this proceses relation, it returns true to disable the button,
+                                    // Or if it is defined, it evaluates the closure, checking if it's empty to disable the save
+                                    .map_or(true, |r| r.is_empty())
+                            }
+                        >{"Save relation"}</Button>
+                        // Display the icon to flash a success or failure
+                        if *display_check || *failed_delete_flash {
+                            <Icon
+                                // Set its values based on it being a success or failure
+                                icon={if *failed_delete_flash {"close"} else {"check"}}
+                                color={if *failed_delete_flash {"error"} else {"onSecondaryContainer"}}
+                                class={if *failed_delete_flash {"relation-row__right__trash--error"} else {"sidebar__input__save__check"}}
+                            />
+                        }
+                    </div>
+                    <div class="sidebar__analysis">
+                        {
+                            match &*props.processed_relation {
+                                Ok(pr) => html!{
+                                    <Analytics relation={pr.relation.clone()}/>
+                                },
+                                Err(e)  => html! {
+                                    <div class="sidebar__preview">
+                                        <code>{ format!("Parsing error: {}", e.message)}</code>                
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
                     {
                         match &*props.processed_relation {
                             Ok(pr) => html!{
-                                <Analytics relation={pr.relation.clone()}/>
-                            },
-                            Err(e)  => html! {
-                                <div class="sidebar__preview">
-                                    <code>{ format!("Parsing error: {}", e.message)}</code>                
+                                <div class="sidebar__explorer">
+                                    <Explorer
+                                        relation={pr.relation.clone()}
+                                        object_selection={props.object_selection.clone()}
+                                    />
                                 </div>
-                            }
+                            },
+                            Err(_)  => html! {}
                         }
                     }
                 </div>
-                {
-                    match &*props.processed_relation {
-                        Ok(pr) => html!{
-                            <div class="sidebar__explorer">
-                                <Explorer
-                                    relation={pr.relation.clone()}
-                                    object_selection={props.object_selection.clone()}
-                                />
-                            </div>
-                        },
-                        Err(_)  => html! {}
-                    }
-                }
+            </aside>
+
+            <div class={ if *is_hidden { "sidebar__hidden visible" } else { "sidebar__hidden" } }>
+                <button
+                    class="sidebar__hide-toggle"
+                    onclick={on_toggle_hidden}
+                >
+                    <Icon
+                        icon={if *is_hidden {"arrow-collapse-right"} else {"arrow-collapse-left"}}
+                        size={24}
+                        color="outline"
+                    />
+                </button>
             </div>
-        </aside>
+        </>
     }
 }

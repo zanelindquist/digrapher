@@ -45,6 +45,7 @@ pub fn graph(props: &GraphProps) -> Html{
         let canvas_pos = canvas_position.clone();
 
         move || {
+            gloo_console::log!("UPDATED DIMENTIONS CALLED");
             if let Some(element) = node_ref.cast::<HtmlElement>() {
                 let width = element.offset_width();
                 let height = element.offset_height();
