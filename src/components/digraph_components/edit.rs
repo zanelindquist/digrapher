@@ -11,9 +11,8 @@ pub struct RelationEditProps {
 #[function_component(RelationEdit)]
 pub fn relation_edit(props: &RelationEditProps) -> Html {
     let selected_tooltip = props.graph_editing_mode.clone();
-    let current = (*selected_tooltip).clone().unwrap_or(GraphTooltips::MOVE);
 
-    let tooltip_types: Vec<(&str, &str)> = vec![("Move", "move"), ("New point", "point"), ("Connect edge", "edge"), ("Edit Title", "pencil"), ("Delete element", "backspace")];
+    let tooltip_types: Vec<(&str, &str)> = vec![("Move", "move"), ("New point", "point"), ("Connect edge", "edge"), ("Edit title", "pencil"), ("Delete point", "backspace")];
 
     let onclick: Callback<i32> = {
         let selected = selected_tooltip.clone();
@@ -26,7 +25,7 @@ pub fn relation_edit(props: &RelationEditProps) -> Html {
     html! {
         <div class="edit">
             <code class="edit__description">
-                {match tooltip_types.get(current.to_i32() as usize){
+                {match tooltip_types.get(selected_tooltip.unwrap_or(GraphTooltips::MOVE).to_i32() as usize){
                     Some((description, _)) => {
                         description.to_string()
                     },
@@ -42,7 +41,7 @@ pub fn relation_edit(props: &RelationEditProps) -> Html {
                             id={index as i32}
                             onclick={onclick.clone()}
                             title={*name}
-                            selected={current.to_i32() == index as i32}
+                            selected={selected_tooltip.unwrap_or(GraphTooltips::MOVE).to_i32() == index as i32}
                             icon={icon.to_string()}
                             size={24}
                         />

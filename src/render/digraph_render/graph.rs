@@ -70,6 +70,7 @@ pub fn graph(props: &GraphProps) -> Html{
         }
     });
 
+    // Whenever the relation changes, we want to update the points
     {
         let points = points.clone();
         let processed_relation = props.processed_relation.clone();
@@ -167,10 +168,15 @@ pub fn graph(props: &GraphProps) -> Html{
     let graph_info = html! {
         <code class="graph__info">{format!(
             "{}x{} {:.1},{:.1} zoom: {:.2} {}:{}",
+            // Width and height
             canvas_position.width, canvas_position.height,
+            // X and Y offset
             canvas_position.offset_x as f32, canvas_position.offset_y as f32,
+            // Zoom
             canvas_position.zoom,
+            // Disply mode of the canvas
             if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"},
+            // Summary of the types of subgraphs in the relation
             props.processed_relation.as_ref().map(|rel| {
                 let mut counts: HashMap<String, usize> = HashMap::new();
                 for sub in rel.subgraphs.iter() {
@@ -181,7 +187,7 @@ pub fn graph(props: &GraphProps) -> Html{
                         if count == 1 {
                             rel_type
                         } else {
-                            format!("{}-{}", count, rel_type)
+                            format!("{}-{}", rel_type, count)
                         }
                     })
                     .collect();

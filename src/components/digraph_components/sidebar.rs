@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use yew::prelude::*;
 use gloo_timers::callback::Timeout;
 
@@ -51,7 +50,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
             // If it's going to the the editing, let's set the graph editing mode to move
             // We also want to set it to an empty canvas for creating stuff if there is no relation right now
             if next == 3 {
-                graph_editing_mode.set(Some(GraphTooltips::MOVE));
+                graph_editing_mode.set(Some(GraphTooltips::NEW_POINT));
                 // If the current processed relation is an error (e.x. it may be empty) then we want to set it as an empty manager to welcome drawing
                 if let Err(e) = &*pr {
                     if e.message == "No input" {
@@ -59,6 +58,8 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     }
                 }
             } else {
+                // If we are scrolling and the GTRM is empty, then the user didn't draw on it so we don't want to keep it around
+                // This will just show no input when the user scrolls past the relation builder
                 if let Ok(gtrm) = &*pr {
                     if gtrm.is_empty() {
                         pr.set(Err(ParseError::new("No input")))
@@ -125,7 +126,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             3 => {"Create"},
                             0 => {"Library"},
                             1 => {"Browse"},
-                            2 => {"Edit"}
+                            2 => {"Editor"}
                             _ => {""}
                         }}
                         </Button>
@@ -170,6 +171,8 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                             || props
                                 .processed_relation
                                 .as_ref()
+                                // If the result of this proceses relation, it returns true to disable the button,
+                                // Or if it is defined, it evaluates the closure, checking if it's empty to disable the save
                                 .map_or(true, |r| r.is_empty())
                         }
                     >{"Save relation"}</Button>

@@ -1,13 +1,10 @@
-use gloo_console::log;
 use yew::prelude::*;
 use crate::components::digraph_components::sidebar::Sidebar;
 use crate::components::navigation::topbar_layout::TopbarLayout;
-use crate::services::digraph_services::classify_relation::{GraphTheoryRelationManager, process_reltaion};
+use crate::services::digraph_services::classify_relation::{process_reltaion};
 use crate::services::digraph_services::digest_values::{digest_values};
 use crate::services::digraph_services::types::{DigestedValuesResult, GraphEditCallbacks, GraphModes, GraphTooltips, ObjectSelection, ParseError, ProcessedRelationResult};
 use crate::render::digraph_render::graph::{Graph};
-use crate::render::objects::point::Point;
-use crate::services::digraph_services::types::PointRenderSymbol;
 
 
 #[function_component(DigraphPage)]
@@ -27,8 +24,6 @@ pub fn digraph_page() -> Html {
         let input_value = input_value.clone();
         let digested_values = digested_values.clone();
         let processed_relation = processed_relation.clone();
-        let graph_editing_mode = graph_editing_mode.clone();
-
         Callback::from(move |v: String| {
             // Set the input value
             input_value.set(v.clone());
@@ -41,11 +36,6 @@ pub fn digraph_page() -> Html {
                 },
                 // Only set the error if there is no input, because we only care about that one
                 Err(e) => {
-                    // If we are on the graph editing tab, we don't want to show the error message
-                    if let Some(_) = *graph_editing_mode {
-                        // Instead, we want to set the relation as an empty one
-                        processed_relation.set(Ok(GraphTheoryRelationManager::empty()))
-                    }
                     if e.message == "No input" {
                         processed_relation.set(Err(e));
                     }
@@ -72,8 +62,8 @@ pub fn digraph_page() -> Html {
         on_edit_point: {
             let processed_relation = processed_relation.clone();
             Callback::from(move |(label, lx, ly): (String, f32, f32)| {
-                let current = (*processed_relation).clone();
-                match current {
+                let gtrm = (*processed_relation).clone();
+                match gtrm {
                     Ok(mut gm) => {
                         if let Ok(new_gm) = gm.edit_point(label.clone(), lx, ly) {
                             processed_relation.set(Ok(new_gm));
@@ -88,11 +78,10 @@ pub fn digraph_page() -> Html {
             let processed_relation = processed_relation.clone();
             // Expects logical units
             Callback::from(move |(label, lx, ly): (String, f32, f32)| {
-                let current = (*processed_relation).clone();
-                match current {
+                let gtrm = (*processed_relation).clone();
+                match gtrm {
                     Ok(mut gm) => {
-                        let p = Point::new(lx, ly, 0.0, label.clone(), PointRenderSymbol::CIRCLE, 0);
-                        if let Ok(new_gm) = gm.create_point(p) {
+                        if let Ok(new_gm) = gm.create_point(label, lx, ly) {
                             processed_relation.set(Ok(new_gm));
                         }
                         // HANDLE POINT SELECTION ERROR
@@ -104,13 +93,11 @@ pub fn digraph_page() -> Html {
         on_point_delete: {
             let processed_relation = processed_relation.clone();
             Callback::from(move |label: String| {
-                let current = (*processed_relation).clone();
-                match current {
+                let gtrm = (*processed_relation).clone();
+                match gtrm {
                     Ok(mut gm) => {
                         if let Ok(new_gm) = gm.delete_point(label.clone()) {
                             processed_relation.set(Ok(new_gm));
-                        } else {
-                            log!("DELETE ERROR")
                         }
                         // HANDLE POINT SELECTION ERROR
                     },
@@ -122,13 +109,11 @@ pub fn digraph_page() -> Html {
             let processed_relation = processed_relation.clone();
             // Expects logical units
             Callback::from(move |(from_label, to_label): (String, String)| {
-                let current = (*processed_relation).clone();
-                match current {
+                let gtrm = (*processed_relation).clone();
+                match gtrm {
                     Ok(mut gm) => {
                         if let Ok(new_gm) = gm.connect_edge(from_label, to_label) {
                             processed_relation.set(Ok(new_gm));
-                        } else {
-                            log!("Error")
                         }
                     },
                     Err(_) => {}
@@ -138,11 +123,11 @@ pub fn digraph_page() -> Html {
         on_point_create_and_connect: {
             let processed_relation = processed_relation.clone();
             Callback::from(move |(label, lx, ly, from_label): (String, f32, f32, String)| {
-                let current = (*processed_relation).clone();
-                match current {
+                let gtrm = (*processed_relation).clone();
+                match gtrm {
                     Ok(mut gm) => {
-                        let p = Point::new(lx, ly, 0.0, label.clone(), PointRenderSymbol::CIRCLE, 0);
-                        if let Ok(new_gm) = gm.create_point(p).and_then(|mut gm| gm.connect_edge(from_label, label)) {
+                        if let Ok(new_gm) = gm.create_point(label.clone(), lx, ly)
+                            .and_then(|mut gm| gm.connect_edge(from_label, label)) {
                             processed_relation.set(Ok(new_gm));
                         }
                     },

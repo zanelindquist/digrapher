@@ -32,7 +32,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let selected_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
     let hovered_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
 
-    // Update edges when the points change
+    // Update edges objects when the points or raw edge values change
     {
         let points = points.clone();
         let edges = edges.clone();
@@ -64,7 +64,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
                     clicked_point = true;
 
-                    // Check and see if we are on an edge connect right now with an unconnected edge
+                    // If we are on an edge connect right now with an unconnected edge, then this action will be handled by the callbacks in mouseup
                     if let Some(mode) = *graph_editing_mode {
                         if mode == GraphTooltips::CONNECT_EDGE {
                             return;
@@ -75,7 +75,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                     interrupt.set(true);
                     // Set the point as our selected point
                     selected_point.set(Some(point.label.clone()));
-                    // Set the info selection 
+                    // Set the inspection selection 
                     object_selection.set(ObjectSelection {
                         inspect_selection: Some(DrawObjectSelection::Point(point.label.clone())),
                         edge_connection_selection_point: None
@@ -84,9 +84,9 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 }
             }
 
-            // Clear info object selection
-            // Don't clear editing selection because we want to handle those in mouseup
+            // Clear inspection object selection on click away
             if !clicked_point {
+                // Don't clear editing selection because we want to handle those in mouseup
                 let mut os = (*object_selection).clone();
                 os.inspect_selection = None;
                 object_selection.set(os);
@@ -121,7 +121,6 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                     },
                     GraphTooltips::CONNECT_EDGE => {
                         // Map through each point and see if the pointer is on it
-                        let mut found_point = false;
                         for point in points.iter() {
                             // If the mouse is on a point
                             if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
@@ -134,7 +133,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                                     new_obj_selection.edge_connection_selection_point = None;
                                     object_selection.set(new_obj_selection);
                                 }
-                                // If there is no selected edge connection point yet, set one and return
+                                // If there is no selected edge connection point yet, set one
                                 else {
                                     let mut new_obj_selection = (*object_selection).clone();
                                     new_obj_selection.edge_connection_selection_point = Some(point.label.clone());
@@ -142,25 +141,23 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                                 }
 
                                 // We found what we want, we can break now
-                                found_point = true;
-                                break;
+                                return;
                             }
                         }
 
                         // If we didn't click on a point, we need to create a new point
-                        if !found_point {
-                            // First let's make sure that we have a draw object selection
-                            if let Some(from_label) = &object_selection.edge_connection_selection_point {
-                                let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
-                                let new_label = (points.len() + 1).to_string();
-                                // Create the point and link the edge in one fresh update
-                                edit_callbacks.on_point_create_and_connect.emit((new_label.clone(), lx, ly, from_label.clone()));
-                                // Set the new point as the new connection selection point
-                                let mut new_obj_selection = (*object_selection).clone();
-                                new_obj_selection.edge_connection_selection_point = Some(new_label);
-                                object_selection.set(new_obj_selection);
-                            }      
-                        }
+
+                        // First let's make sure that we have a draw object selection
+                        if let Some(from_label) = &object_selection.edge_connection_selection_point {
+                            let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
+                            let new_label = (points.len() + 1).to_string();
+                            // Create the point and link the edge in one fresh update
+                            edit_callbacks.on_point_create_and_connect.emit((new_label.clone(), lx, ly, from_label.clone()));
+                            // Set the new point as the new connection selection point
+                            let mut new_obj_selection = (*object_selection).clone();
+                            new_obj_selection.edge_connection_selection_point = Some(new_label);
+                            object_selection.set(new_obj_selection);
+                        }      
                     },
                     GraphTooltips::DELETE_POINT => {
                         for point in points.iter() {
@@ -224,13 +221,14 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
             if let Some(modified_point) = (*selected_point).clone() {
                 let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
-                // Emit an event instead
+                // Emit the poiint editing callback
                 on_edit_point.emit((modified_point, offset_lx, offset_ly));
             }
             
         })
     };
 
+    // Set the cursor style depending on the tooltip's needs
     let default = "grab";
     let mut cursor_pointer: &'static str = match *props.graph_editing_mode {
         Some(graph_edit_type) => {

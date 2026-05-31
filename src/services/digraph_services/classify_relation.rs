@@ -1,8 +1,6 @@
 use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI, vec};
 
-use gloo_console::log;
-
-use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointVector, Relation}}};
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointRenderSymbol, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -396,11 +394,13 @@ impl GraphTheoryRelationManager {
 
     // RELATION MODIFICATION
 
-    pub fn create_point(&mut self, point: Point) -> Result<Self, PointManagementError> {
+    pub fn create_point(&mut self, label: String, lx: f32, ly: f32) -> Result<Self, PointManagementError> {
         // Add the point to our relation
+        let point = Point::new(lx, ly, 0.0, label.clone(), PointRenderSymbol::CIRCLE, 0);
+
         self.relation.points.insert(point.label.clone());
 
-        // Ensure disconnected graph exists, create one if not
+        // Ensure disconnected graph exists, if not, create one to put the new point into
         if !self.subgraphs.iter().any(|s| s.relation_type == GraphTheoryTypes::DISCONNECTED) {
             let dc_layer = GraphTheoryRelation {
                 relation_type: GraphTheoryTypes::DISCONNECTED,
@@ -441,16 +441,16 @@ impl GraphTheoryRelationManager {
         // Find the point to delete
         for graph in &mut self.subgraphs {
             let initial_len = graph.points.len();
+
             // Remove the point object
             graph.points.retain(|p| p.label != label);
-
             // Remove relations that contained the point
             self.relation.values.retain(|v| v.0 != label && v.1 != label);
             // Remove the retained point in 
             self.relation.points.retain(|v| *v != label);
 
             if graph.points.len() != initial_len {
-                // If the relation successfully changed, we we need to re-evaluate the manager's logic
+                // If the relation successfully changed, we we need to re-evaluate the manager's logical structure
                 return self.reevaluate_strucure()
             }
         }
@@ -461,7 +461,7 @@ impl GraphTheoryRelationManager {
         // Add the new edge to the relation
         self.relation.values.insert((from_label, to_label));
 
-        // Now we need to re-evaluate the manager's logic
+        // Re-evaluating the manager's logical structure will do the rest for us
         self.reevaluate_strucure()
     }
 
@@ -498,84 +498,14 @@ impl GraphTheoryRelationManager {
     }
 
     pub fn reevaluate_strucure(&mut self) -> Result<Self, PointManagementError> {
-        // Collect all of our points because we want to keep their states
-        let mut points = self.get_points();
-
         // Rebuild our subgraphs by
         // rebuilding node strucutre
         // reevaluating strucutre
         // linking existing points to their correct relation
 
-        // MOST OF THIS CODE IS FROM THE PROCESS_RELATION FUNCTION, WE WE MAY WANT TO REFACTOR IT INTO ONE COMBINED FUNCTION
-
-        // Create stable node ordering
-        let mut sorted_points: Vec<String> = self.relation.points.clone().into_iter().collect();
-        sorted_points.sort();
-
-        // Build nodes
-        let mut nodes: Vec<Node> = vec![];
-        let mut label_to_id: HashMap<String, usize> = HashMap::new();
-
-        // Create the each point as a node with deault values
-        for (i, label) in sorted_points.iter().enumerate() {
-            label_to_id.insert(label.clone(), i);
-
-            nodes.push(Node {
-                id: i as i64,
-                label: label.clone(),
-                node_type: NodeType::NORMAL,
-                parents: vec![],
-                children: vec![],
-                depth: 0,
-            });
-        }
-
-        // Populate graph edges into node structure
-        for (a, b) in &self.relation.values {
-            if let Some(parent_id) = label_to_id.get(a) {
-            if  let Some(child_id) = label_to_id.get(b) {
-                // Reflexive edge
-                if parent_id == child_id {
-                    continue;
-                }
-                // Add child
-                nodes[*parent_id].children.push(*child_id as i64);
-                // Assign parent
-                nodes[*child_id].parents.push(*parent_id as i64);
-            }}
-        }
-
-        // Identify roots
-        for node in &mut nodes {
-            if node.parents.is_empty() {
-                node.node_type = NodeType::ROOT;
-            }
-            if node.children.is_empty() {
-                node.node_type = NodeType::END;
-            }
-        }
-        
-        // Create our new subgraphs
-        let mut subgraphs = split_into_components(&nodes);
-        // Now we just have to link our existing points to the points produced in the new subgraphs
-        for relation in &mut subgraphs {
-            // Set the relation type
-            relation.relation_type =  classify_relation(&relation.nodes);
-            // Link existing points
-            for point in &mut relation.points {
-                if let Some(index) = points.iter().position(|p| p.label == point.label) {
-                    // Remove the existing point so that the search algorithm is more efficient later on
-                    let existing_point = points.remove(index);
-
-                    // Preserve positioning
-                    point.x = existing_point.x;
-                    point.y = existing_point.y;
-                } else {
-                    return Err(PointManagementError::new("Failed to link points"));
-                }
-            }
-        }
-
+        // Build the new subgraphs and link existing point positions
+        let mut subgraphs = build_subgraphs_from_relation(&self.relation);
+        self.link_existing_points(&mut subgraphs)?;
         self.subgraphs = subgraphs;
 
         // Rebuild the relation's properties
@@ -584,6 +514,22 @@ impl GraphTheoryRelationManager {
         }
 
         Ok((*self).clone())
+    }
+
+    fn link_existing_points(&self, subgraphs: &mut [GraphTheoryRelation]) -> Result<(), PointManagementError> {
+        let mut existing_points = self.get_points();
+        for relation in subgraphs.iter_mut() {
+            for point in &mut relation.points {
+                if let Some(index) = existing_points.iter().position(|p| p.label == point.label) {
+                    let existing_point = existing_points.remove(index);
+                    point.x = existing_point.x;
+                    point.y = existing_point.y;
+                } else {
+                    return Err(PointManagementError::new("Failed to link points"));
+                }
+            }
+        }
+        Ok(())
     }
 
     pub fn to_string(&self) -> String {
@@ -611,63 +557,7 @@ pub struct Node {
 
 
 pub fn process_reltaion(relation: Relation) -> Result<GraphTheoryRelationManager, ParseError> {
-
-    // Create stable node ordering
-    let mut sorted_points: Vec<String> = relation.points.clone().into_iter().collect();
-    sorted_points.sort();
-
-    // Build nodes
-    let mut nodes: Vec<Node> = vec![];
-    let mut label_to_id: HashMap<String, usize> = HashMap::new();
-
-    // Create the each point as a node with deault values
-    for (i, label) in sorted_points.iter().enumerate() {
-        label_to_id.insert(label.clone(), i);
-
-        nodes.push(Node {
-            id: i as i64,
-            label: label.clone(),
-            node_type: NodeType::NORMAL,
-            parents: vec![],
-            children: vec![],
-            depth: 0,
-        });
-    }
-
-    // Populate graph edges into node structure
-    for (a, b) in &relation.values {
-        if let Some(parent_id) = label_to_id.get(a) {
-        if  let Some(child_id) = label_to_id.get(b) {
-            // Reflexive edge
-            if parent_id == child_id {
-                continue;
-            }
-            // Add child
-            nodes[*parent_id].children.push(*child_id as i64);
-            // Assign parent
-            nodes[*child_id].parents.push(*parent_id as i64);
-        }}
-    }
-
-    // Identify roots
-    for node in &mut nodes {
-        if node.parents.is_empty() {
-            node.node_type = NodeType::ROOT;
-        }
-        if node.children.is_empty() {
-            node.node_type = NodeType::END;
-        }
-    }
-
-    // At this point, nodes are built, and we just need to diagnose the relationship
-    
-    // First we need to see if the relation is compound
-    let mut subgraphs = split_into_components(&nodes);
-    // Then for each individual connected part
-    for relation in &mut subgraphs {
-        // See if it is cyclic, because that will tell us a lot
-        relation.relation_type =  classify_relation(&relation.nodes);
-    }
+    let subgraphs = build_subgraphs_from_relation(&relation);
 
     let mut gm = GraphTheoryRelationManager {
         relation,
@@ -735,6 +625,66 @@ pub fn split_into_components( nodes: &Vec<Node>) -> Vec<GraphTheoryRelation> {
 
     components
 }
+
+// Build subgraphs (nodes -> components) and classify each component.
+fn build_subgraphs_from_relation(relation: &Relation) -> Vec<GraphTheoryRelation> {
+    // Create stable node ordering
+    let mut sorted_points: Vec<String> = relation.points.clone().into_iter().collect();
+    sorted_points.sort();
+
+    // Build nodes
+    let mut nodes: Vec<Node> = Vec::with_capacity(sorted_points.len());
+    let mut label_to_id: HashMap<String, usize> = HashMap::new();
+
+    // Create each point as a node with default values
+    for (i, label) in sorted_points.iter().enumerate() {
+        label_to_id.insert(label.clone(), i);
+
+        nodes.push(Node {
+            id: i as i64,
+            label: label.clone(),
+            node_type: NodeType::NORMAL,
+            parents: vec![],
+            children: vec![],
+            depth: 0,
+        });
+    }
+
+    // Populate edges into node structure
+    for (a, b) in &relation.values {
+        if let Some(parent_id) = label_to_id.get(a) {
+            if let Some(child_id) = label_to_id.get(b) {
+                // Reflexive edge
+                if parent_id == child_id {
+                    continue;
+                }
+                // Add child
+                nodes[*parent_id].children.push(*child_id as i64);
+                // Assign parent
+                nodes[*child_id].parents.push(*parent_id as i64);
+            }
+        }
+    }
+
+    // Identify roots/ends
+    for node in &mut nodes {
+        if node.parents.is_empty() {
+            node.node_type = NodeType::ROOT;
+        }
+        if node.children.is_empty() {
+            node.node_type = NodeType::END;
+        }
+    }
+
+    // Split into components and classify each
+    let mut subgraphs = split_into_components(&nodes);
+    for relation in &mut subgraphs {
+        relation.relation_type = classify_relation(&relation.nodes);
+    }
+
+    subgraphs
+}
+
 
 fn classify_relation(nodes: &Vec<Node>) -> GraphTheoryTypes {
     if is_isolated(&nodes) {
