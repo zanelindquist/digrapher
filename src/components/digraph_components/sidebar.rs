@@ -132,7 +132,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         <Icon
                             icon={if *is_hidden {"arrow-collapse-right"} else {"arrow-collapse-left"}}
                             size={24}
-                            color="onSurface"
+                            color="outline"
                         />
                     </button>
                 </div>
@@ -248,7 +248,7 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     <Icon
                         icon={if *is_hidden {"arrow-collapse-right"} else {"arrow-collapse-left"}}
                         size={24}
-                        color="onSurface"
+                        color="outline"
                     />
                 </button>
             </div>
