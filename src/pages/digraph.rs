@@ -68,7 +68,6 @@ pub fn digraph_page() -> Html {
                         if let Ok(new_gm) = gm.edit_point(label.clone(), lx, ly) {
                             processed_relation.set(Ok(new_gm));
                         }
-                        // HANDLE POINT SELECTION ERROR
                     },
                     Err(_) => {}
                 }
@@ -84,7 +83,6 @@ pub fn digraph_page() -> Html {
                         if let Ok(new_gm) = gm.create_point(label, lx, ly) {
                             processed_relation.set(Ok(new_gm));
                         }
-                        // HANDLE POINT SELECTION ERROR
                     },
                     Err(_) => {}
                 }
@@ -99,7 +97,6 @@ pub fn digraph_page() -> Html {
                         if let Ok(new_gm) = gm.delete_point(label.clone()) {
                             processed_relation.set(Ok(new_gm));
                         }
-                        // HANDLE POINT SELECTION ERROR
                     },
                     Err(_) => {}
                 }

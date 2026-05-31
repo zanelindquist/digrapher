@@ -6,6 +6,7 @@ pub struct PointStyle {
     pub stroke_width: f32,
     pub highlighted_stroke: &'static str,
     pub hovered_stroke: &'static str,
+    pub point_connection_origin_highlight: &'static str,
     pub label_displacement: f32
 }
 impl Default for PointStyle {
@@ -17,6 +18,7 @@ impl Default for PointStyle {
             stroke_width: 2.0,
             highlighted_stroke: "var(--inversePrimary)",
             hovered_stroke: "var(--error)",
+            point_connection_origin_highlight: "#FFAE42",
             label_displacement: 8.0
         }
     }

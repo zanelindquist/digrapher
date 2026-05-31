@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 
-use gloo_console::log;
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
@@ -49,10 +48,12 @@ impl Point {
             (x + (self.bearing + 4.0/3.0 * PI).cos() * styles.point.radius, y + (self.bearing + 4.0/3.0 * PI).sin() * styles.point.radius),
         ];
 
-        // Hovering has precedence over selection
-        let fill_color = if point_interaction.is_hovered {
+        // Order of precedence is: connection_selected, hovered, inspection_selected
+        let fill_color = if point_interaction.is_connection_selected {
+            styles.point.point_connection_origin_highlight.to_string()
+        }else if point_interaction.is_hovered {
             styles.point.hovered_stroke.to_string()
-        }else if point_interaction.is_selected {
+        } else if point_interaction.is_selected {
             styles.point.highlighted_stroke.to_string()
         } else {
             styles.point.fill.to_string()

@@ -235,7 +235,13 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
             let is_hovering_point = hovered_point.is_some();
             match graph_edit_type {
                 GraphTooltips::CONNECT_EDGE => {
-                    if is_hovering_point { "e-resize" } else { default }
+                    if is_hovering_point { "e-resize" } else { 
+                        if props.object_selection.edge_connection_selection_point.is_some() {
+                            "crosshair"
+                        } else {
+                            default
+                        }
+                     }
                 },
                 GraphTooltips::EDIT_LABEL => {
                     if is_hovering_point { "text" } else { default }
