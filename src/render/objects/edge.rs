@@ -90,11 +90,7 @@ impl Edge {
 
         let stroke_color = if is_selected {styles.edge.highlighted_stroke.to_string() } else { styles.edge.stroke.to_string()};
 
-        let no_select_midpoint = PointInteraction {
-            is_selected: true,
-            is_hovered: false,
-            is_info: false
-        };
+        let no_select_midpoint = PointInteraction::none();
 
         match self.relation_type {
             RelationProperty::REFLEXIVE => html!{

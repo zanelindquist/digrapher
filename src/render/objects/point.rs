@@ -1,6 +1,5 @@
 use std::f32::consts::PI;
 
-use gloo_console::log;
 use serde::{Serialize, Deserialize};
 use yew::prelude::*;
 
@@ -49,21 +48,17 @@ impl Point {
             (x + (self.bearing + 4.0/3.0 * PI).cos() * styles.point.radius, y + (self.bearing + 4.0/3.0 * PI).sin() * styles.point.radius),
         ];
 
-        // Hovering has precedence over selection
-        let fill_color = if point_interaction.is_hovered {
+        // Order of precedence is: connection_selected, hovered, inspection_selected
+        let fill_color = if point_interaction.is_connection_selected {
+            styles.point.point_connection_origin_highlight.to_string()
+        }else if point_interaction.is_hovered {
             styles.point.hovered_stroke.to_string()
-        }else if point_interaction.is_selected {
+        } else if point_interaction.is_selected {
             styles.point.highlighted_stroke.to_string()
         } else {
             styles.point.fill.to_string()
         };
 
-        let cursor_style = if point_interaction.is_hovered {
-            "cursor: move"
-        } else {
-            "cursor: grab"
-        }.to_string();
-        
         match self.symbol {
             PointRenderSymbol::TRIANGLE => html! {
                 <>
@@ -77,7 +72,6 @@ impl Point {
                         }
                         fill={fill_color.clone()}
                         stroke={styles.point.stroke}
-                        style={cursor_style}
                         // stroke-width={styles.point.stroke_width.to_string()}
                     />
                     <text
@@ -103,7 +97,6 @@ impl Point {
                         fill={fill_color.clone()}
                         stroke={styles.point.stroke}
                         stroke-width={styles.point.stroke_width.to_string()}
-                        style={cursor_style}
                     />
                     <text
                         x={(x + self.bearing.cos() * (styles.font.size + styles.point.label_displacement)).to_string()}

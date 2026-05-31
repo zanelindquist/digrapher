@@ -1,11 +1,9 @@
-use gloo_console::log;
 use yew::prelude::*;
 
 use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
-use crate::services::digraph_services::point_layout::{create_edges, create_points};
-use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, ObjectSelection, PointInteraction, PointLabel, PointVector, ProcessedRelationResult, Relation};
+use crate::services::digraph_services::point_layout::create_edges;
+use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, GraphEditCallbacks, GraphTooltips, ObjectSelection, PointInteraction, PointLabel, PointVector};
 use crate::render::styles::RenderStyles;
-use crate::render::objects::point::Point;
 
 
 #[derive(Properties, PartialEq)]
@@ -17,31 +15,31 @@ pub struct DigraphCanvasProps {
     #[prop_or_default]
     pub class: Classes,
     pub object_selection: UseStateHandle<ObjectSelection>,
-    pub interrupt_graph_scrolling: UseStateHandle<bool>
+    pub interrupt_graph_scrolling: UseStateHandle<bool>,
+    pub points: UseStateHandle<PointVector>,
+    pub graph_edit_callbacks: GraphEditCallbacks,
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>
 }
 
 #[function_component(DigraphCanvas)]
 pub fn canvas(props: &DigraphCanvasProps) -> Html {
     // The actual points live here
-    let points: UseStateHandle<PointVector> = use_state(|| props.processed_relation.get_points());
+    let points = props.points.clone();
     let edges: UseStateHandle<EdgeVector> = use_state(|| create_edges(&props.processed_relation.relation.values, &(*points)));
     let styles = props.styles;
 
     // Point selecton and moving
-    let selected_point: UseStateHandle<Option<Point>> = use_state(|| None);
+    let selected_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
     let hovered_point: UseStateHandle<Option<PointLabel>> = use_state(|| None);
 
-    // Update points and edges when the relation changes
+    // Update edges objects when the points or raw edge values change
     {
         let points = points.clone();
         let edges = edges.clone();
-        let processed_relation = props.processed_relation.clone();
         let relation = props.processed_relation.relation.clone();
         let values = relation.values.clone();
-        use_effect_with(relation, move |_| {
-            let new_points = processed_relation.get_points();
-            edges.set(create_edges(&values, &new_points));
-            points.set(new_points.clone());
+        use_effect_with((points.clone(), values.clone()), move |_| {
+            edges.set(create_edges(&values, &points));
         });
     }
 
@@ -54,27 +52,44 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let radius = styles.point.radius.clone();
         let interrupt = props.interrupt_graph_scrolling.clone();
         let object_selection = props.object_selection.clone();
+        let graph_editing_mode = props.graph_editing_mode.clone();
         Callback::from(move |e: PointerEvent| {
             let x = e.client_x();
             let y = e.client_y();
+
             let mut clicked_point = false;
             // Map through each point and see if the pointer is on it
             for point in points.iter() {
                 // If the mouse is clicking on a point
                 if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
                     clicked_point = true;
+
+                    // If we are on an edge connect right now with an unconnected edge, then this action will be handled by the callbacks in mouseup
+                    if let Some(mode) = *graph_editing_mode {
+                        if mode == GraphTooltips::CONNECT_EDGE {
+                            return;
+                        }
+                    }
+
                     // Interrup the graph's scrolling
                     interrupt.set(true);
                     // Set the point as our selected point
-                    selected_point.set(Some(point.clone()));
-                    // Set the info selection 
-                    object_selection.set(ObjectSelection { selection: Some(DrawObjectSelection::Point(point.label.clone())) });
+                    selected_point.set(Some(point.label.clone()));
+                    // Set the inspection selection 
+                    object_selection.set(ObjectSelection {
+                        inspect_selection: Some(DrawObjectSelection::Point(point.label.clone())),
+                        edge_connection_selection_point: None
+                    });
                     break;
                 }
             }
 
+            // Clear inspection object selection on click away
             if !clicked_point {
-                object_selection.set(ObjectSelection::default());
+                // Don't clear editing selection because we want to handle those in mouseup
+                let mut os = (*object_selection).clone();
+                os.inspect_selection = None;
+                object_selection.set(os);
             }
         })
     };
@@ -82,7 +97,87 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
     let on_pointer_up = {
         let interrupt = props.interrupt_graph_scrolling.clone();
         let selected_point = selected_point.clone();
-        Callback::from(move |_: PointerEvent| {
+        let canvas_pos = props.position.clone();
+        let radius = styles.point.radius.clone();
+        let points = points.clone();
+        let graph_editing_mode = props.graph_editing_mode.clone();
+        let edit_callbacks =  props.graph_edit_callbacks.clone();
+        let object_selection = props.object_selection.clone();
+        Callback::from(move |e: PointerEvent| {
+            let x = e.client_x();
+            let y = e.client_y();
+            
+            // Our response to this click depends on if graph editing is engaged
+
+            if let Some(edit_mode) = *graph_editing_mode {
+                match edit_mode {
+                    GraphTooltips::NEW_POINT => {
+                        // Get the coordinates
+                        let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
+                        // Create the point
+                        edit_callbacks.on_point_create.emit(((points.len() + 1).to_string(), lx, ly));
+                        // Turn the mode to edge connection so we must set an edge?
+                        // graph_editing_mode.set(Some(GraphTooltips::CONNECT_EDGE));
+                    },
+                    GraphTooltips::CONNECT_EDGE => {
+                        // Map through each point and see if the pointer is on it
+                        for point in points.iter() {
+                            // If the mouse is on a point
+                            if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
+                                // If there is a previously selected point, we need to link the edges
+                                if let Some(from_label) = &object_selection.edge_connection_selection_point {
+                                    edit_callbacks.on_edge_connection.emit((from_label.clone(), point.label.clone()));
+
+                                    // Clear the conenction selection now
+                                    let mut new_obj_selection = (*object_selection).clone();
+                                    new_obj_selection.edge_connection_selection_point = None;
+                                    object_selection.set(new_obj_selection);
+                                }
+                                // If there is no selected edge connection point yet, set one
+                                else {
+                                    let mut new_obj_selection = (*object_selection).clone();
+                                    new_obj_selection.edge_connection_selection_point = Some(point.label.clone());
+                                    object_selection.set(new_obj_selection);
+                                }
+
+                                // We found what we want, we can break now
+                                return;
+                            }
+                        }
+
+                        // If we didn't click on a point, we need to create a new point
+
+                        // First let's make sure that we have a draw object selection
+                        if let Some(from_label) = &object_selection.edge_connection_selection_point {
+                            let (lx, ly) = canvas_pos.pointer_to_logical_xy(x as f32, y as f32);
+                            let new_label = (points.len() + 1).to_string();
+                            // Create the point and link the edge in one fresh update
+                            edit_callbacks.on_point_create_and_connect.emit((new_label.clone(), lx, ly, from_label.clone()));
+                            // Set the new point as the new connection selection point
+                            let mut new_obj_selection = (*object_selection).clone();
+                            new_obj_selection.edge_connection_selection_point = Some(new_label);
+                            object_selection.set(new_obj_selection);
+                        }      
+                    },
+                    GraphTooltips::DELETE_POINT => {
+                        for point in points.iter() {
+                            // If the mouse is on a point
+                            if point.clone().pointer_by(x as f32, y as f32, radius, canvas_pos) {
+                                edit_callbacks.on_point_delete.emit(point.label.clone());
+                            }
+                        }
+                    },
+                    GraphTooltips::EDIT_LABEL => {
+
+                    },
+                    _ => {
+
+                    }
+                }
+            } else {
+
+            }
+
             interrupt.set(false);
             selected_point.set(None);
         })
@@ -95,12 +190,15 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
         let radius = styles.point.radius.clone();
         let canvas_pos = props.position.clone();
         let points = points.clone();
-        let edges = edges.clone();
-        let values = props.processed_relation.relation.values.clone();
+        let on_edit_point = props.graph_edit_callbacks.on_edit_point.clone();
         Callback::from(move |e: PointerEvent| {
-            // HOVERING ON A POINT
             let x = e.client_x();
             let y = e.client_y();
+
+            // DRAW LINE TO EDGE SELECTION
+
+            // HOVERING ON A POINT
+
             let mut is_hovering_point = false;
             // Map through each point and see if the pointer is on it
             for point in points.iter() {
@@ -118,41 +216,63 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
             // MOVING A POINT
 
-            // If no point is selected, return
-            let Some(mut modified_point) = (*selected_point).clone() else {
-                return;
-            };
+            let offset_vx = e.client_x();
+            let offset_vy = e.client_y();
 
-            // Get visual px difference in moving the mouse
-            let offset_vx = e.client_x();// - (*last_pos).0;
-            let offset_vy = e.client_y();// - (*last_pos).1;
-
-            // Get logical coords
-            let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
-
-            // Modify the selected point's coordinates
-            modified_point.x = offset_lx;
-            modified_point.y = offset_ly;
-
-            // Replace old point
-            let mut new_points: PointVector = points
-                .iter()
-                .filter(|pt| pt.index != modified_point.index)
-                .cloned()
-                .collect();
-            new_points.push(modified_point);
-
-            // Update the edges
-            edges.set(create_edges(&values, &new_points));
-            // Update the points
-            points.set(new_points.clone());
+            if let Some(modified_point) = (*selected_point).clone() {
+                let (offset_lx, offset_ly) = canvas_pos.pointer_to_logical_xy(offset_vx as f32, offset_vy as f32);
+                // Emit the poiint editing callback
+                on_edit_point.emit((modified_point, offset_lx, offset_ly));
+            }
+            
         })
     };
+
+    // Set the cursor style depending on the tooltip's needs
+    let default = "grab";
+    let mut cursor_pointer: &'static str = match *props.graph_editing_mode {
+        Some(graph_edit_type) => {
+            let is_hovering_point = hovered_point.is_some();
+            match graph_edit_type {
+                GraphTooltips::CONNECT_EDGE => {
+                    if is_hovering_point { "e-resize" } else { 
+                        if props.object_selection.edge_connection_selection_point.is_some() {
+                            "crosshair"
+                        } else {
+                            default
+                        }
+                     }
+                },
+                GraphTooltips::EDIT_LABEL => {
+                    if is_hovering_point { "text" } else { default }
+                },
+                GraphTooltips::DELETE_POINT => {
+                    if is_hovering_point { "pointer" } else { default }
+                },
+                GraphTooltips::MOVE => {
+                    if is_hovering_point { "move" } else { default }
+                },
+                GraphTooltips::NEW_POINT => {
+                    if is_hovering_point { "not-allowed" } else { "crosshair" }
+                },
+            }
+        },
+        _ => {
+            let is_hovering_point = hovered_point.is_some();
+            if is_hovering_point { "move" } else { default }
+        }
+    };
+
+    // For engaging the grabbing on movement of the canvas
+    if props.class.contains("pointer_down") && cursor_pointer == default {
+        cursor_pointer = "grabbing"
+    }
 
 
     html!{
         <div
             class={classes!("canvas", props.class.clone())}
+            style={format!("cursor: {};", cursor_pointer)}
             onpointerdown={on_pointer_down}
             onpointermove={on_pointer_move}
             onpointerup={on_pointer_up}
@@ -165,7 +285,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 { for (*edges).iter().map(|edge| {
                     // Pass is_selected to the draw function based on:
                     let is_selected = matches!(
-                        &props.object_selection.selection,
+                        &props.object_selection.inspect_selection,
                         // If we have a selection that is valid AND is an Edge
                         Some(DrawObjectSelection::Edge(label))
                             // AND the labels on the start and end match the selection
@@ -177,7 +297,7 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
                 { for (*points).iter().map(|point| {
                     // Pass is_selected to the draw function based on:
                     let is_selected = matches!(
-                        &props.object_selection.selection,
+                        &props.object_selection.inspect_selection,
                         // If we have a defined selection that is a point
                         Some(DrawObjectSelection::Point(pt))
                             // AND the point's string label is equal to this point
@@ -186,8 +306,9 @@ pub fn canvas(props: &DigraphCanvasProps) -> Html {
 
                     let point_interaction = PointInteraction {
                         is_selected,
+                        is_connection_selected: props.object_selection.edge_connection_selection_point.as_ref().is_some_and(|p| *p == point.label),
                         is_hovered: hovered_point.as_ref().is_some_and(|p| *p == point.label),
-                        is_info: false
+                        is_info: false,
                     };
 
                     // Draw the point on the digraph

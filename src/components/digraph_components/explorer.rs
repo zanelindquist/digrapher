@@ -131,7 +131,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                                 class={classes!(
                                         "explorer__row",
                                         // Based on the object selection, see if we ned to add a class that highlights this row
-                                        match &props.object_selection.selection {
+                                        match &props.object_selection.inspect_selection {
                                             Some(DrawObjectSelection::Edge(pair)) => {
                                                 if pair.0 == *a && pair.1 == *b {
                                                     String::from("explorer__row--selected")
@@ -168,7 +168,7 @@ pub fn explorer(props: &ExplorerProps) -> Html {
                                 class={classes!(
                                         "explorer__row",
                                         // Based on the object selection, see if we ned to add a class that highlights this row
-                                        match &props.object_selection.selection {
+                                        match &props.object_selection.inspect_selection {
                                             Some(DrawObjectSelection::Point(p)) => {
                                                 if *p == *point {
                                                     String::from("explorer__row--selected")

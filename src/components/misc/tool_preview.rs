@@ -21,7 +21,7 @@ pub struct ToolPreviewProps {
 }
 
 #[function_component(ToolPreview)]
-pub fn logo(props: &ToolPreviewProps) -> Html {
+pub fn tool_preview(props: &ToolPreviewProps) -> Html {
     html!{
         <div class={classes!("tool-preview", props.class.clone())}>
             <Link<Route>

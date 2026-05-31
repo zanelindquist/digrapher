@@ -29,9 +29,32 @@ pub enum PointRenderSymbol{CIRCLE, TRIANGLE}
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum GraphModes{DIGRAPH, MATRIX}
 pub enum RelationExplorerModes{EDGES, POINTS}
+#[derive(Clone, Copy, PartialEq)]
+pub enum GraphTooltips{MOVE, NEW_POINT, CONNECT_EDGE, EDIT_LABEL, DELETE_POINT}
+impl GraphTooltips {
+    pub fn from_i32(value: i32) -> Self {
+        match value {
+            0 => GraphTooltips::MOVE,
+            1 => GraphTooltips::NEW_POINT,
+            2 => GraphTooltips::CONNECT_EDGE,
+            3 => GraphTooltips::EDIT_LABEL,
+            4 => GraphTooltips::DELETE_POINT,
+            _ => GraphTooltips::NEW_POINT, // fallback
+        }
+    }
+    pub fn to_i32(&self) -> i32 {
+        match self {
+            GraphTooltips::MOVE => 0,
+            GraphTooltips::NEW_POINT => 1,
+            GraphTooltips::CONNECT_EDGE => 2,
+            GraphTooltips::EDIT_LABEL => 3,
+            GraphTooltips::DELETE_POINT => 4,
+        }
+    }
+}
 
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
-pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN}
+pub enum GraphTheoryTypes {TREE, CIRCULAR, CLIQUE, NETWORK, LAYERED_NETWORK, CHAIN, DISCONNECTED, ISOLATED_POINT}
 impl fmt::Display for GraphTheoryTypes {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match self {
@@ -40,7 +63,9 @@ impl fmt::Display for GraphTheoryTypes {
             GraphTheoryTypes::CLIQUE => "clique",
             GraphTheoryTypes::NETWORK => "network",
             GraphTheoryTypes::LAYERED_NETWORK => "layered_network",
-            GraphTheoryTypes::CHAIN => "chain"
+            GraphTheoryTypes::CHAIN => "chain",
+            GraphTheoryTypes::DISCONNECTED => "disconnected",
+            GraphTheoryTypes::ISOLATED_POINT => "point"
         };
 
         write!(f, "{}", msg)
@@ -49,13 +74,14 @@ impl fmt::Display for GraphTheoryTypes {
 #[derive(Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub enum NodeType {ROOT, NORMAL, END, CIRCLE_ROOT}
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum DrawObjectSelection {
     Point(PointLabel),
     Edge(EdgePair),
 }
 
 // INFRASTRUCTURE
+
 const SCALING_CONSTANT: f32 = 4.0;
 #[derive(Clone, Copy, PartialEq)]
 pub struct CanvasPositioning {
@@ -127,26 +153,30 @@ impl CanvasPositioning {
 }
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct ObjectSelection {
-    pub selection: Option<DrawObjectSelection>
+    pub inspect_selection: Option<DrawObjectSelection>,
+    pub edge_connection_selection_point: Option<PointLabel>
 }
 impl ObjectSelection {
     // Intake a raw tuple string pairing and set it as the selected object type
     pub fn from_edge(paring: EdgePair) -> Self {
         Self{
-            selection: Option::from(DrawObjectSelection::Edge(paring))
+            inspect_selection: Option::from(DrawObjectSelection::Edge(paring)),
+            edge_connection_selection_point: None
         }
     }
     // Intake a raw string and set it as the selected object type
     pub fn from_point(point: PointLabel) -> Self {
         Self{
-            selection: Option::from(DrawObjectSelection::Point(point))
+            inspect_selection: Option::from(DrawObjectSelection::Point(point)),
+            edge_connection_selection_point: None
         }
     }
     pub fn default() -> Self {
         Self {
-            selection: None
+            inspect_selection: None,
+            edge_connection_selection_point: None
         }
     }
 }
@@ -154,8 +184,19 @@ impl ObjectSelection {
 #[derive(Clone, Copy, PartialEq)]
 pub struct PointInteraction {
     pub is_selected: bool,
+    pub is_connection_selected: bool,
     pub is_hovered: bool,
-    pub is_info: bool
+    pub is_info: bool,
+}
+impl PointInteraction {
+    pub fn none() -> Self {
+        Self {
+            is_selected: false,
+            is_connection_selected: false,
+            is_hovered: false,
+            is_info: false,
+        }
+    }
 }
 
 
@@ -186,6 +227,15 @@ pub struct Relation {
     pub points: RawCharPoints,
     pub properties: RelationProperties
 }
+impl Relation {
+    pub fn empty() -> Self {
+        Self {
+            values: HashSet::new(),
+            points: HashSet::new(),
+            properties: RelationProperties::default()
+        }
+    }
+}
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, PartialEq)]
 pub struct StoredRelation {
@@ -206,7 +256,14 @@ impl Default for StoredRelation {
     }
 }
 
-
+#[derive(Properties, PartialEq, Clone)]
+pub struct GraphEditCallbacks {
+    pub on_edit_point: Callback<(PointLabel, f32, f32)>,
+    pub on_point_create: Callback<(PointLabel, f32, f32)>,
+    pub on_point_delete: Callback<PointLabel>,
+    pub on_edge_connection: Callback<(PointLabel, PointLabel)>,
+    pub on_point_create_and_connect: Callback<(PointLabel, f32, f32, PointLabel)>
+}
 
 // ERRORS
 #[derive(Debug, PartialEq, Clone)]
@@ -214,6 +271,18 @@ pub struct ParseError {
     pub message: String,
 }
 impl ParseError {
+    pub fn new(message: &str) -> Self {
+        Self {
+            message: message.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct PointManagementError {
+    pub message: String,
+}
+impl PointManagementError {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_string(),

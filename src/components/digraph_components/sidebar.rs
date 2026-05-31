@@ -1,14 +1,15 @@
-use std::ops::Deref;
 use yew::prelude::*;
 use gloo_timers::callback::Timeout;
 
-use crate::components::digraph_tools::analytics::Analytics;
-use crate::components::digraph_tools::browse::RelationBrowse;
-use crate::components::digraph_tools::explorer::Explorer;
-use crate::components::digraph_tools::library::RelationLibrary;
+use crate::components::digraph_components::analytics::Analytics;
+use crate::components::digraph_components::browse::RelationBrowse;
+use crate::components::digraph_components::edit::RelationEdit;
+use crate::components::digraph_components::explorer::Explorer;
+use crate::components::digraph_components::library::RelationLibrary;
 use crate::components::misc::button::Button;
 use crate::components::misc::icon::Icon;
-use crate::services::digraph_services::types::{DigestedValuesResult, ObjectSelection, StoredRelation};
+use crate::services::digraph_services::classify_relation::GraphTheoryRelationManager;
+use crate::services::digraph_services::types::{DigestedValuesResult, GraphTooltips, ObjectSelection, ParseError, ProcessedRelationResult, StoredRelation};
 use crate::services::digraph_services::relation_storage::{store_new_relation};
 
 
@@ -17,8 +18,11 @@ pub struct SidebarProps {
     pub value: String,
     pub on_input: Callback<String>,
     pub digested_values: UseStateHandle<DigestedValuesResult>,
-    pub object_selection: UseStateHandle<ObjectSelection>
+    pub object_selection: UseStateHandle<ObjectSelection>,
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>,
+    pub processed_relation: UseStateHandle<ProcessedRelationResult>,
 }
+
 
 #[function_component(Sidebar)]
 pub fn sidebar(props: &SidebarProps) -> Html {
@@ -38,20 +42,43 @@ pub fn sidebar(props: &SidebarProps) -> Html {
     // When the button to switch between selection modes is pressed
     let on_toggle_library: Callback<MouseEvent> = {
         let input_display_mode = input_display_mode.clone();
+        let graph_editing_mode = props.graph_editing_mode.clone();
+        let pr = props.processed_relation.clone();
         Callback::from(move |_: MouseEvent| {
             // Circular scroll the display mode
-            input_display_mode.set((*input_display_mode + 1) % 3);
+            let next = (*input_display_mode + 1) % 4;
+            // If it's going to the the editing, let's set the graph editing mode to move
+            // We also want to set it to an empty canvas for creating stuff if there is no relation right now
+            if next == 3 {
+                graph_editing_mode.set(Some(GraphTooltips::NEW_POINT));
+                // If the current processed relation is an error (e.x. it may be empty) then we want to set it as an empty manager to welcome drawing
+                if let Err(e) = &*pr {
+                    if e.message == "No input" {
+                        pr.set(Ok(GraphTheoryRelationManager::empty()));
+                    }
+                }
+            } else {
+                // If we are scrolling and the GTRM is empty, then the user didn't draw on it so we don't want to keep it around
+                // This will just show no input when the user scrolls past the relation builder
+                if let Ok(gtrm) = &*pr {
+                    if gtrm.is_empty() {
+                        pr.set(Err(ParseError::new("No input")))
+                    }
+                }
+                graph_editing_mode.set(None);
+            }
+            input_display_mode.set(next);
         })
     };
     // Whent the suers presses save relation
     let save_relation: Callback<MouseEvent> = {
-        let dv = props.digested_values.clone();
+        let pr = props.processed_relation.clone();
         let display_check = display_check.clone();
         let failed_delete_flash = failed_delete_flash.clone();
         Callback::from(move |_: MouseEvent| {
-            if let Ok(relation) = dv.deref() {
+            if let Ok(relation) = &*pr {
                 // If we successfully saved the relation, flash a checkmark
-                if let Ok(_) = store_new_relation(relation) {
+                if let Ok(_) = store_new_relation(&relation) {
                     display_check.set(true);
                     let dc = display_check.clone();
                     let timeout = Timeout::new(1_000, move || {
@@ -96,9 +123,10 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         >
                         // Show the button for the next mode to switch to
                         {match *input_display_mode {
-                            2 => {"Create"},
+                            3 => {"Create"},
                             0 => {"Library"},
                             1 => {"Browse"},
+                            2 => {"Editor"}
                             _ => {""}
                         }}
                         </Button>
@@ -124,6 +152,11 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                                 onselect={load_saved_relation}
                             />
                         },
+                        3 => html! {
+                            <RelationEdit
+                                graph_editing_mode={props.graph_editing_mode.clone()}
+                            />
+                        },
                         _ => html! {}
                     }}
                 </div>
@@ -135,7 +168,12 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                         // OR if we don't have a valid relation being displayed
                         disabled={
                             *input_display_mode == 1
-                            || !props.digested_values.is_ok()
+                            || props
+                                .processed_relation
+                                .as_ref()
+                                // If the result of this proceses relation, it returns true to disable the button,
+                                // Or if it is defined, it evaluates the closure, checking if it's empty to disable the save
+                                .map_or(true, |r| r.is_empty())
                         }
                     >{"Save relation"}</Button>
                     // Display the icon to flash a success or failure
@@ -150,9 +188,9 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                 </div>
                 <div class="sidebar__analysis">
                     {
-                        match &*props.digested_values {
-                            Ok(relation) => html!{
-                                <Analytics relation={relation.clone()}/>
+                        match &*props.processed_relation {
+                            Ok(pr) => html!{
+                                <Analytics relation={pr.relation.clone()}/>
                             },
                             Err(e)  => html! {
                                 <div class="sidebar__preview">
@@ -163,11 +201,11 @@ pub fn sidebar(props: &SidebarProps) -> Html {
                     }
                 </div>
                 {
-                    match &*props.digested_values {
-                        Ok(relation) => html!{
+                    match &*props.processed_relation {
+                        Ok(pr) => html!{
                             <div class="sidebar__explorer">
                                 <Explorer
-                                    relation={relation.clone()}
+                                    relation={pr.relation.clone()}
                                     object_selection={props.object_selection.clone()}
                                 />
                             </div>

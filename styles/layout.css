@@ -323,6 +323,20 @@
     border-top: 1px solid var(--outlineVariant);
 }
 
+.edit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.edit__description {
+
+}
+.edit__tooltips {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
 .explorer {
     position: relative;
     display: flex;

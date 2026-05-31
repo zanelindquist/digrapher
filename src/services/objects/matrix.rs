@@ -83,7 +83,7 @@ impl Matrix {
                             
                             // See if this is the selected relation
                             let is_selected = matches!(
-                                &object_selection.selection,
+                                &object_selection.inspect_selection,
                                 Some(DrawObjectSelection::Edge(edge))
                                     if labels
                                         .iter()

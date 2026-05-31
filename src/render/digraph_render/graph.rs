@@ -1,8 +1,8 @@
-use gloo_console::log;
+use std::collections::HashMap;
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::services::digraph_services::types::{CanvasPositioning, DigestedValuesResult, GraphModes, ObjectSelection, ProcessedRelationResult};
+use crate::services::digraph_services::types::{CanvasPositioning, GraphEditCallbacks, GraphModes, GraphTooltips, ObjectSelection, PointVector, ProcessedRelationResult};
 use crate::render::digraph_render::digraph_canvas::DigraphCanvas;
 use crate::components::misc::toggle::{Toggle, ToggleOption};
 use crate::render::digraph_render::matrix_canvas::MatrixCanvas;
@@ -14,6 +14,8 @@ pub struct GraphProps {
     pub mode_change_callback: Callback<i32>,
     pub graph_mode: UseStateHandle<GraphModes>,
     pub object_selection: UseStateHandle<ObjectSelection>, // For just passing down the object selection information to child components at this time
+    pub graph_edit_callbacks: GraphEditCallbacks,
+    pub graph_editing_mode: UseStateHandle<Option<GraphTooltips>>
 }
 
 #[function_component(Graph)]
@@ -27,6 +29,14 @@ pub fn graph(props: &GraphProps) -> Html{
     let pointer_down = use_state(|| false);
     let last_pos = use_state(|| (0,0));
     let interrupt_scrolling = use_state(|| false);
+
+    // Make these points stateful to pass to the DigraphCanvas
+    let points: UseStateHandle<PointVector> = use_state(|| {
+        match &*props.processed_relation {
+            Ok(relation) => relation.get_points(),
+            Err(_) => vec![],
+        }
+    });
 
     // On layout set the dimentions of the canvas
     use_effect({
@@ -60,7 +70,22 @@ pub fn graph(props: &GraphProps) -> Html{
         }
     });
 
+    // Whenever the relation changes, we want to update the points
+    {
+        let points = points.clone();
+        let processed_relation = props.processed_relation.clone();
+        use_effect_with(processed_relation.clone(), move |_| {
+            points.set(
+                match &*processed_relation {
+                    Ok(relation) => relation.get_points(),
+                    Err(_) => vec![],
+                }
+            );
+        });
+    }
+
     // Support moving and zooming
+
     // When the pointer is clicked down
     let on_pointer_down = {
         let pointer_down = pointer_down.clone();
@@ -129,6 +154,8 @@ pub fn graph(props: &GraphProps) -> Html{
         })
     };
 
+    // Components
+
     let toggle = html! {
         <Toggle
             class="graph__toggle"
@@ -141,16 +168,31 @@ pub fn graph(props: &GraphProps) -> Html{
     let graph_info = html! {
         <code class="graph__info">{format!(
             "{}x{} {:.1},{:.1} zoom: {:.2} {}:{}",
+            // Width and height
             canvas_position.width, canvas_position.height,
+            // X and Y offset
             canvas_position.offset_x as f32, canvas_position.offset_y as f32,
+            // Zoom
             canvas_position.zoom,
+            // Disply mode of the canvas
             if *props.graph_mode == GraphModes::DIGRAPH {"digraph"} else {"matrix"},
+            // Summary of the types of subgraphs in the relation
             props.processed_relation.as_ref().map(|rel| {
-                rel.subgraphs
-                    .iter()
-                    .map(|sub| sub.relation_type.to_string())
-                    .collect::<Vec<_>>()
-                    .join(",")
+                let mut counts: HashMap<String, usize> = HashMap::new();
+                for sub in rel.subgraphs.iter() {
+                    *counts.entry(sub.relation_type.to_string()).or_insert(0) += 1;
+                }
+                let mut entries: Vec<String> = counts.into_iter()
+                    .map(|(rel_type, count)| {
+                        if count == 1 {
+                            rel_type
+                        } else {
+                            format!("{}-{}", rel_type, count)
+                        }
+                    })
+                    .collect();
+                entries.sort();
+                entries.join(",")
             }).unwrap_or_else(|_| "none".to_string())
         )}</code>
     };
@@ -171,11 +213,14 @@ pub fn graph(props: &GraphProps) -> Html{
                     match *props.graph_mode {
                         GraphModes::DIGRAPH => html!{
                             <DigraphCanvas
-                                class={if *pointer_down { "grab"} else {""}}
+                                class={if *pointer_down { "pointer_down"} else {""}}
                                 position={(*canvas_position).clone()}
                                 processed_relation={graph_manager.clone()}
                                 object_selection={props.object_selection.clone()}
                                 interrupt_graph_scrolling={interrupt_scrolling}
+                                points={points}
+                                graph_edit_callbacks={props.graph_edit_callbacks.clone()}
+                                graph_editing_mode={props.graph_editing_mode.clone()}
                             />
                         },
                         GraphModes::MATRIX => html! {
@@ -185,15 +230,13 @@ pub fn graph(props: &GraphProps) -> Html{
                                 object_selection={props.object_selection.clone()}
                             />
                         },
-                        _ => html! {
-                            <p>{"Unknown graph type"}</p>
-                        }
+                        
                     }
                 }
 
             </div>
         },
-        Err(e) => html! {
+        Err(_) => html! {
             <div class="graph--error">
                 {toggle}
                 <img class="graph__no-input" src={format!("/assets/digraph_assets/no_input_variant.png")}/>
