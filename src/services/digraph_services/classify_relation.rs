@@ -1,6 +1,6 @@
-use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI, vec};
+use std::{cmp::max, collections::{HashMap, HashSet, VecDeque}, f32::{INFINITY, consts::PI}, vec};
 
-use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointRenderSymbol, PointVector, Relation}}};
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointLabel, PointManagementError, PointRenderSymbol, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -35,7 +35,7 @@ impl GraphTheoryRelation {
                 self.position_points_circle();
             },
             GraphTheoryTypes::NETWORK => {
-                self.position_points_circle();
+                self.position_points_network();
             },
             GraphTheoryTypes::DISCONNECTED => {
                 // Do nothing, we don't position free-standing points
@@ -352,6 +352,112 @@ impl GraphTheoryRelation {
                         }
                     }
                 }
+            }
+        }
+
+        // Update the layout size at the end
+        self.update_layout_size();
+    }
+
+    // This function is direction agnostic (undirected)
+    fn position_points_network(&mut self) {
+        // If there are no nodes, do nothing
+        if self.nodes.len() == 0 {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
+            return;
+        }
+
+        let mut node_depths: HashMap<NodeId, i32> = HashMap::default();
+
+        fn bfs(start: NodeId, nodes: &[Node]) -> HashMap<NodeId, i32> {
+            let mut distances = HashMap::new();
+            let mut queue = VecDeque::new();
+
+            distances.insert(start, 0);
+            queue.push_back(start);
+
+            while let Some(current) = queue.pop_front() {
+                let depth = distances[&current];
+
+                let node = nodes.iter().find(|n| n.id == current).unwrap();
+
+                for neighbor in node.children.iter().chain(node.parents.iter()) {
+                    if !distances.contains_key(neighbor) {
+                        distances.insert(*neighbor, depth + 1);
+                        queue.push_back(*neighbor);
+                    }
+                }
+            }
+
+            distances
+        }
+
+        // Determine the outside points by who has the most conenctions
+        let mut outer_nodes: Vec<(NodeId, usize)>  = vec![];
+        for node in &self.nodes {
+            let current_connections = node.children.len() + node.parents.len();
+            // If we haven't reached the quota yet
+            if outer_nodes.len() < self.positioning_settings.network_settings.num_outer_nodes as usize {
+                outer_nodes.push((node.id, current_connections));
+                // Sort the points
+                outer_nodes.sort_by(|a, b| b.1.cmp(&a.1));
+                continue
+            }
+            // Check and see if this point has more connections that the least now
+            if current_connections > outer_nodes.get(outer_nodes.len() - 1).unwrap().1 {
+                outer_nodes.pop();
+                outer_nodes.push((node.id, current_connections));
+                // Sort the points
+                outer_nodes.sort_by(|a, b| b.1.cmp(&a.1));
+            }
+        }
+
+        gloo_console::log!(format!("{:?}", outer_nodes));
+
+        // Create the point depths table
+        for node in outer_nodes {
+            for (id, depth) in bfs(node.0.clone(), &self.nodes) {
+                node_depths
+                .entry(id)
+                .and_modify(|d| *d = (*d)
+                .min(depth))
+                .or_insert(depth);
+            }
+        }
+
+        gloo_console::log!(format!("{:?}", node_depths));
+
+        // Group points by depth
+        let mut depth_groups: HashMap<i32, Vec<usize>> = HashMap::new();
+
+        for (i, point) in self.points.iter().enumerate() {
+            if let Some(node) = self.nodes.iter().find(|n| n.label == point.label) {
+                if let Some(depth) = node_depths.get(&node.id) {
+                    depth_groups.entry(*depth).or_default().push(i);
+                }
+            }
+        }
+
+        let max_depth = *node_depths.values().max().unwrap_or(&0);
+
+        // Position each ring independently
+        for (depth, point_indices) in depth_groups {
+            let count = point_indices.len();
+
+            // depth 0 = outer ring
+            // max_depth = center ring
+            let radius = if max_depth == 0 {
+                2.0
+            } else {
+                1.5 - (depth as f32 / max_depth as f32)
+            };
+
+            for (i, point_index) in point_indices.iter().enumerate() {
+                let theta = -(i as f32) * (2.0 * PI / count as f32);
+
+                self.points[*point_index].x = radius * theta.cos();
+                self.points[*point_index].y = radius * theta.sin();
             }
         }
 
