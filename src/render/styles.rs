@@ -162,13 +162,15 @@ pub struct GraphTheoryNetworkLayoutSettings {
     pub num_outer_nodes: i32,
     pub max_width_l: f32,
     pub max_height_l: f32,
+    pub max_fr_iterations: i32,
 }
 impl Default for GraphTheoryNetworkLayoutSettings {
     fn default() -> Self {
         Self {
             num_outer_nodes: 4,
             max_width_l: 2.0,
-            max_height_l: 2.0
+            max_height_l: 2.0,
+            max_fr_iterations: 60
         }
     }
 }

@@ -1,6 +1,6 @@
-use std::{cmp::max, collections::{HashMap, HashSet, VecDeque}, f32::{INFINITY, consts::PI}, vec};
+use std::{collections::{HashMap, HashSet, VecDeque}, f32::consts::PI, vec};
 
-use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointLabel, PointManagementError, PointRenderSymbol, PointVector, Relation}}};
+use crate::{render::{objects::point::Point, styles::GraphTheoryLayoutSettings}, services::digraph_services::{digest_values::digest_values, point_layout::create_points, types::{GraphTheoryTypes, NodeId, NodeType, ParseError, PointManagementError, PointRenderSymbol, PointVector, Relation}}};
 
 
 // GRAPH THEORY RELATIONS
@@ -35,7 +35,7 @@ impl GraphTheoryRelation {
                 self.position_points_circle();
             },
             GraphTheoryTypes::NETWORK => {
-                self.position_points_network();
+                self.position_points_fruchterman_reingold();
             },
             GraphTheoryTypes::DISCONNECTED => {
                 // Do nothing, we don't position free-standing points
@@ -360,7 +360,7 @@ impl GraphTheoryRelation {
     }
 
     // This function is direction agnostic (undirected)
-    fn position_points_network(&mut self) {
+    fn position_points_network_rings(&mut self) {
         // If there are no nodes, do nothing
         if self.nodes.len() == 0 {
             self.width_l = 0.0;
@@ -398,7 +398,7 @@ impl GraphTheoryRelation {
         for node in &self.nodes {
             let current_connections = node.children.len() + node.parents.len();
             // If we haven't reached the quota yet
-            if outer_nodes.len() < self.positioning_settings.network_settings.num_outer_nodes as usize {
+            if outer_nodes.len() < (self.nodes.len() as f32 / 5.0).max(3.0) as usize {
                 outer_nodes.push((node.id, current_connections));
                 // Sort the points
                 outer_nodes.sort_by(|a, b| b.1.cmp(&a.1));
@@ -462,6 +462,126 @@ impl GraphTheoryRelation {
         }
 
         // Update the layout size at the end
+        self.update_layout_size();
+    }
+
+    fn position_points_fruchterman_reingold(&mut self) {
+        let n = self.points.len();
+        if n == 0 {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
+            return;
+        }
+
+        let width = self.positioning_settings.network_settings.max_width_l.max(0.1);
+        let height = self.positioning_settings.network_settings.max_height_l.max(0.1);
+        let max_iter = self.positioning_settings.network_settings.max_fr_iterations;
+        
+        let area = width * height;
+        let k = (area / n as f32).sqrt();
+        let mut temperature = ((width + height) / 2.0).max(0.05);
+        let cooling = temperature / max_iter as f32;
+
+        // Use existing positions when available, otherwise initialize on a circle.
+        if self.points.iter().all(|p| p.x == 0.0 && p.y == 0.0) {
+            for (i, point) in self.points.iter_mut().enumerate() {
+                let theta = 2.0 * PI * i as f32 / n as f32;
+                point.x = theta.cos() * width * 0.5;
+                point.y = theta.sin() * height * 0.5;
+            }
+        }
+
+        let mut positions: Vec<(f32, f32)> = self.points.iter().map(|p| (p.x, p.y)).collect();
+        let mut displacements: Vec<(f32, f32)> = vec![(0.0, 0.0); n];
+
+        // Build a quick edge lookup for undirected attraction
+        let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n];
+        let label_to_index: HashMap<String, usize> = self.points
+            .iter()
+            .enumerate()
+            .map(|(idx, p)| (p.label.clone(), idx))
+            .collect();
+
+        for node in &self.nodes {
+            for child_id in &node.children {
+                if let Some(child) = self.nodes.iter().find(|n| n.id == *child_id) {
+                    if let (Some(&u), Some(&v)) = (label_to_index.get(&node.label), label_to_index.get(&child.label)) {
+                        adjacency[u].push(v);
+                        adjacency[v].push(u);
+                    }
+                }
+            }
+        }
+
+        for _iteration in 0..max_iter {
+            // Reset displacements
+            for disp in displacements.iter_mut() {
+                *disp = (0.0, 0.0);
+            }
+
+            // Repulsive forces for every pair of vertices
+            for i in 0..n {
+                for j in (i + 1)..n {
+                    let dx = positions[i].0 - positions[j].0;
+                    let dy = positions[i].1 - positions[j].1;
+                    let distance = (dx * dx + dy * dy).sqrt().max(std::f32::EPSILON);
+                    let force = (k * k) / distance;
+                    let direction_x = dx / distance;
+                    let direction_y = dy / distance;
+                    let displacement_x = direction_x * force;
+                    let displacement_y = direction_y * force;
+
+                    displacements[i].0 += displacement_x;
+                    displacements[i].1 += displacement_y;
+                    displacements[j].0 -= displacement_x;
+                    displacements[j].1 -= displacement_y;
+                }
+            }
+
+            // Attractive forces along edges
+            for u in 0..n {
+                for &v in &adjacency[u] {
+                    if u == v {
+                        continue;
+                    }
+                    let dx = positions[u].0 - positions[v].0;
+                    let dy = positions[u].1 - positions[v].1;
+                    let distance = (dx * dx + dy * dy).sqrt().max(std::f32::EPSILON);
+                    let force = (distance * distance) / k;
+                    let direction_x = dx / distance;
+                    let direction_y = dy / distance;
+                    let displacement_x = direction_x * force;
+                    let displacement_y = direction_y * force;
+
+                    displacements[u].0 -= displacement_x;
+                    displacements[u].1 -= displacement_y;
+                    displacements[v].0 += displacement_x;
+                    displacements[v].1 += displacement_y;
+                }
+            }
+
+            // Move vertices and cool
+            for i in 0..n {
+                let dx = displacements[i].0;
+                let dy = displacements[i].1;
+                let length = (dx * dx + dy * dy).sqrt().max(std::f32::EPSILON);
+                let limited = temperature.min(length);
+                positions[i].0 += dx / length * limited;
+                positions[i].1 += dy / length * limited;
+
+                positions[i].0 = positions[i].0.clamp(-width / 2.0, width / 2.0);
+                positions[i].1 = positions[i].1.clamp(-height / 2.0, height / 2.0);
+            }
+
+            temperature = (temperature - cooling).max(0.01);
+        }
+
+        for (point, (x, y)) in self.points.iter_mut().zip(positions.into_iter()) {
+            point.x = x;
+            point.y = y;
+            point.bearing = 0.0;
+        }
+
         self.update_layout_size();
     }
 
