@@ -110,14 +110,16 @@ impl Default for RenderStyles {
 pub struct GraphTheoryLayoutSettings {
     pub tree_settings: GraphTheoryTreeLayoutSettings,
     pub chain_settings: GraphTheoryChainLayoutSettings,
-    pub layered_settings: GraphTheoryLayeredLayoutSettings
+    pub layered_settings: GraphTheoryLayeredLayoutSettings,
+    pub network_settings: GraphTheoryNetworkLayoutSettings
 }
 impl Default for GraphTheoryLayoutSettings {
     fn default() -> Self {
         Self {
             tree_settings: GraphTheoryTreeLayoutSettings::default(),
             chain_settings: GraphTheoryChainLayoutSettings::default(),
-            layered_settings: GraphTheoryLayeredLayoutSettings::default()
+            layered_settings: GraphTheoryLayeredLayoutSettings::default(),
+            network_settings: GraphTheoryNetworkLayoutSettings::default()
         }
     }
 }
@@ -152,6 +154,27 @@ impl Default for GraphTheoryLayeredLayoutSettings {
     fn default() -> Self {
         Self {
             bookend_taper_scale_l: 0.65
+        }
+    }
+}
+#[derive(Clone, Copy, PartialEq)]
+pub struct GraphTheoryNetworkLayoutSettings {
+    pub num_outer_nodes: i32,
+    pub max_width_l: f32,
+    pub max_height_l: f32,
+    pub max_fr_iterations: i32,
+    pub repulsion_multiplier: f32,
+    pub attraction_multiplier: f32,
+}
+impl Default for GraphTheoryNetworkLayoutSettings {
+    fn default() -> Self {
+        Self {
+            num_outer_nodes: 4,
+            max_width_l: 2.0,
+            max_height_l: 2.0,
+            max_fr_iterations: 60,
+            repulsion_multiplier: 1.0,
+            attraction_multiplier: 1.0
         }
     }
 }

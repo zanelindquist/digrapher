@@ -35,7 +35,7 @@ impl GraphTheoryRelation {
                 self.position_points_circle();
             },
             GraphTheoryTypes::NETWORK => {
-                self.position_points_circle();
+                self.position_points_fruchterman_reingold();
             },
             GraphTheoryTypes::DISCONNECTED => {
                 // Do nothing, we don't position free-standing points
@@ -356,6 +356,151 @@ impl GraphTheoryRelation {
         }
 
         // Update the layout size at the end
+        self.update_layout_size();
+    }
+
+    fn position_points_fruchterman_reingold(&mut self) {
+        let n = self.points.len();
+        // If there are no points, do noting
+        if n == 0 {
+            self.width_l = 0.0;
+            self.height_l = 0.0;
+            return;
+        }
+
+        // Get settings
+        let width = self.positioning_settings.network_settings.max_width_l.max(0.1);
+        let height = self.positioning_settings.network_settings.max_height_l.max(0.1);
+        let max_iter = self.positioning_settings.network_settings.max_fr_iterations;
+        let attraction_multiplier = self.positioning_settings.network_settings.attraction_multiplier;
+        let repulsion_multiplier = self.positioning_settings.network_settings.repulsion_multiplier;
+        
+        // Set variables for positioning
+        let area = width * height;
+        let k = (area / n as f32).sqrt();
+        let mut temperature = ((width + height) / 2.0).max(0.05);
+        let cooling = temperature / max_iter as f32;
+
+        // Use existing positions when available, otherwise initialize on a circle.
+        if self.points.iter().all(|p| p.x == 0.0 && p.y == 0.0) {
+            for (i, point) in self.points.iter_mut().enumerate() {
+                let theta = 2.0 * PI * i as f32 / n as f32;
+                point.x = theta.cos() * width;
+                point.y = theta.sin() * height;
+            }
+        }
+
+        let mut positions: Vec<(f32, f32)> = self.points.iter().map(|p| (p.x, p.y)).collect();
+        let mut displacements: Vec<(f32, f32)> = vec![(0.0, 0.0); n];
+
+        // Build a quick edge lookup for undirected attraction
+        let mut adjacency: Vec<Vec<usize>> = vec![Vec::new(); n];
+        let label_to_index: HashMap<String, usize> = self.points
+            .iter()
+            .enumerate()
+            .map(|(idx, p)| (p.label.clone(), idx))
+            .collect();
+
+        // Create a list of list of adjacent nodes
+        for node in &self.nodes {
+            for child_id in &node.children {
+                if let Some(child) = self.nodes.iter().find(|n| n.id == *child_id) {
+                    if let (Some(&u), Some(&v)) = (label_to_index.get(&node.label), label_to_index.get(&child.label)) {
+                        adjacency[u].push(v);
+                        adjacency[v].push(u);
+                    }
+                }
+            }
+        }
+
+        // Do our iterations for positioning the points
+        for _iteration in 0..max_iter {
+            // Reset displacements
+            for disp in displacements.iter_mut() {
+                *disp = (0.0, 0.0);
+            }
+
+            // Repulsive forces for every pair of vertices
+            // For every node
+            for i in 0..n {
+                // Iterate for every other node following this one (we dont do squares, we do triangles for iterations. not ::, but :.)
+                for j in (i + 1)..n {
+                    // Calculate the displacement between the points
+                    let dx = positions[i].0 - positions[j].0;
+                    let dy = positions[i].1 - positions[j].1;
+                    // Get the distance between the points
+                    let distance = (dx * dx + dy * dy).sqrt().max(std::f32::EPSILON);
+                    // Calculate force based on a standard force formula
+                    let force = (k * k) / distance * repulsion_multiplier;
+                    // Basically gets the cosine and sine
+                    let direction_x = dx / distance;
+                    let direction_y = dy / distance;
+                    // Break down the force into x and y components
+                    let displacement_x = direction_x * force;
+                    let displacement_y = direction_y * force;
+
+                    // Add displacements to the first and subtract them from the second for replusion
+                    displacements[i].0 += displacement_x;
+                    displacements[i].1 += displacement_y;
+                    displacements[j].0 -= displacement_x;
+                    displacements[j].1 -= displacement_y;
+                }
+            }
+
+            // Attractive forces along edges
+            // For every point
+            for u in 0..n {
+                // Apply attraction between connected points
+                for &v in &adjacency[u] {
+                    // If it is itself (reflexivity), return
+                    if u == v {
+                        continue;
+                    }
+                    // Get displacement
+                    let dx = positions[u].0 - positions[v].0;
+                    let dy = positions[u].1 - positions[v].1;
+                    let distance = (dx * dx + dy * dy).sqrt().max(std::f32::EPSILON);
+                    // Clculate forces and displacements
+                    let force = (distance * distance) / k * attraction_multiplier;
+                    let direction_x = dx / distance;
+                    let direction_y = dy / distance;
+                    let displacement_x = direction_x * force;
+                    let displacement_y = direction_y * force;
+
+                    // Bring the points closer together
+                    displacements[u].0 -= displacement_x;
+                    displacements[u].1 -= displacement_y;
+                    displacements[v].0 += displacement_x;
+                    displacements[v].1 += displacement_y;
+                }
+            }
+
+            // Move points based on the displacement
+            for i in 0..n {
+                let dx = displacements[i].0;
+                let dy = displacements[i].1;
+                // Limit the point's travel length based on the temperature
+                let length = (dx * dx + dy * dy).sqrt().max(std::f32::EPSILON);
+                let limited = temperature.min(length);
+                positions[i].0 += dx / length * limited;
+                positions[i].1 += dy / length * limited;
+
+                // Clamp for width and height
+                positions[i].0 = positions[i].0.clamp(-width / 2.0, width / 2.0);
+                positions[i].1 = positions[i].1.clamp(-height / 2.0, height / 2.0);
+            }
+
+            // Adjust the temperature so that points say in more of the same place
+            temperature = (temperature - cooling).max(0.01);
+        }
+
+        // Now set the point's positions based on the iterations
+        for (point, (x, y)) in self.points.iter_mut().zip(positions.into_iter()) {
+            point.x = x;
+            point.y = y;
+            point.bearing = 0.0;
+        }
+
         self.update_layout_size();
     }
 
