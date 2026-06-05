@@ -163,6 +163,8 @@ pub struct GraphTheoryNetworkLayoutSettings {
     pub max_width_l: f32,
     pub max_height_l: f32,
     pub max_fr_iterations: i32,
+    pub repulsion_multiplier: f32,
+    pub attraction_multiplier: f32,
 }
 impl Default for GraphTheoryNetworkLayoutSettings {
     fn default() -> Self {
@@ -170,7 +172,9 @@ impl Default for GraphTheoryNetworkLayoutSettings {
             num_outer_nodes: 4,
             max_width_l: 2.0,
             max_height_l: 2.0,
-            max_fr_iterations: 60
+            max_fr_iterations: 60,
+            repulsion_multiplier: 1.0,
+            attraction_multiplier: 1.0
         }
     }
 }
