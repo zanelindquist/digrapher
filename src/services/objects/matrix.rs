@@ -1,7 +1,7 @@
 use yew::prelude::*;
 
-use crate::services::digraph_services::types::{EdgeVector, MatrixData, ObjectSelection, PointVector, DrawObjectSelection};
-use crate::render::{objects::point::Point, styles::MatrixStyle};
+use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, MatrixData, ObjectSelection, PointVector};
+use crate::render::{styles::MatrixStyle};
 
 pub struct Matrix {
     data: MatrixData,
@@ -27,25 +27,28 @@ impl Matrix {
         vec![vec![false; cols as usize]; rows as usize]
     }
     
-    pub fn draw(self, style: &MatrixStyle, center: &Point, object_selection: UseStateHandle<ObjectSelection>) -> Html {
-        let cell_size = style.cell_size; // spacing between cells
+    pub fn draw(self, style: &MatrixStyle, canvas_pos: &CanvasPositioning, object_selection: UseStateHandle<ObjectSelection>) -> Html {
+        // Cell size in visual units
+        let cell_size = (style.cell_size as f32 * canvas_pos.zoom) as i32; // spacing between cells
         let total_w = self.cols * cell_size;
         let total_h = self.rows * cell_size;
         let serif_w = cell_size / 3;
 
-        // Upper left coordinates
-        let ul_x = center.x as i32 - total_w / 2;
-        let ul_y = center.y as i32 - total_h / 2;
+        // Upper left coordinates in visual units
+        let center_vx = canvas_pos.offset_x + canvas_pos.width / 2;
+        let center_vy = canvas_pos.offset_y + canvas_pos.height / 2;
+        let ul_vx = center_vx - total_w / 2;
+        let ul_vy = center_vy - total_h / 2;
 
         html! {
             <g>
                 // Legend
                 {
                     for self.data.iter().enumerate().map(|(i, _)| {
-                        let x1 = ul_x - cell_size / 2;
-                        let y1 = ul_y + i as i32 * cell_size + cell_size / 2;
-                        let x2 = ul_x + i as i32 * cell_size + cell_size / 2;
-                        let y2 = ul_y - cell_size / 2;
+                        let x1 = ul_vx - cell_size / 2;
+                        let y1 = ul_vy + i as i32 * cell_size + cell_size / 2;
+                        let x2 = ul_vx + i as i32 * cell_size + cell_size / 2;
+                        let y2 = ul_vy - cell_size / 2;
                         html! {
                             <>
                                 <text
@@ -78,8 +81,8 @@ impl Matrix {
                         let object_selection = object_selection.clone();
                         let labels = self.labels.clone();
                         row.iter().enumerate().map(move |(j, val)| {
-                            let x = j as i32 * cell_size + cell_size / 2 + ul_x;
-                            let y = i as i32 * cell_size + cell_size / 2 + ul_y;
+                            let x = j as i32 * cell_size + cell_size / 2 + ul_vx;
+                            let y = i as i32 * cell_size + cell_size / 2 + ul_vy;
                             
                             // See if this is the selected relation
                             let is_selected = matches!(
@@ -106,10 +109,10 @@ impl Matrix {
                                         true => html! {
                                             <path
                                                 d={format!("M {} {} L {} {} L {} {} L {} {} Z",
-                                                    ul_x + j as i32 * cell_size, ul_y + i as i32 * cell_size,
-                                                    ul_x + j as i32 * cell_size, ul_y + (i as i32 + 1) * cell_size,
-                                                    ul_x + (j as i32 + 1) * cell_size, ul_y + (i as i32 + 1) * cell_size,
-                                                    ul_x + (j as i32 + 1) * cell_size, ul_y + i as i32 * cell_size,
+                                                    ul_vx + j as i32 * cell_size, ul_vy + i as i32 * cell_size,
+                                                    ul_vx + j as i32 * cell_size, ul_vy + (i as i32 + 1) * cell_size,
+                                                    ul_vx + (j as i32 + 1) * cell_size, ul_vy + (i as i32 + 1) * cell_size,
+                                                    ul_vx + (j as i32 + 1) * cell_size, ul_vy + i as i32 * cell_size,
                                                 )}
                                                 fill="none"
                                                 stroke={style.selected_outline_color}
@@ -136,10 +139,10 @@ impl Matrix {
                 // Left bracket
                 <path
                     d={format!("M {} {} L {} {} L {} {} L {} {} ",
-                        ul_x + serif_w, ul_y,
-                        ul_x, ul_y,
-                        ul_x, ul_y + total_h,
-                        ul_x + serif_w, ul_y + total_h
+                        ul_vx + serif_w, ul_vy,
+                        ul_vx, ul_vy,
+                        ul_vx, ul_vy + total_h,
+                        ul_vx + serif_w, ul_vy + total_h
                     )}
                     fill="none"
                     stroke={style.stroke}
@@ -147,10 +150,10 @@ impl Matrix {
                 />
                 <path
                     d={format!("M {} {} L {} {} L {} {} L {} {} ",
-                        ul_x + total_w - serif_w, ul_y,
-                        ul_x + total_w, ul_y,
-                        ul_x + total_w, ul_y + total_h,
-                        ul_x + total_w - serif_w, ul_y + total_h
+                        ul_vx + total_w - serif_w, ul_vy,
+                        ul_vx + total_w, ul_vy,
+                        ul_vx + total_w, ul_vy + total_h,
+                        ul_vx + total_w - serif_w, ul_vy + total_h
                     )}
                     fill="none"
                     stroke={style.stroke}
