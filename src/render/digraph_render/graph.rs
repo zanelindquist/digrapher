@@ -144,8 +144,9 @@ pub fn graph(props: &GraphProps) -> Html{
         Callback::from(move |e: web_sys::WheelEvent| {
             // Make scrolling up zoom in
             let delta_y = -e.delta_y();
+            let scroll_fraction = 1.0 + (delta_y / 1000.0) as f32;
             // Clamp and scale zooming
-            let new_zoom= (canvas_position.zoom + (delta_y / 1500.0) as f32).clamp(0.25, 5.0);
+            let new_zoom= (canvas_position.zoom * scroll_fraction).clamp(0.20, 5.0);
 
             // Update the canvas
             let mut updated_canvas = (*canvas_position).clone();
