@@ -49,6 +49,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    position: relative;
 }
 .topbar__logo {
     border-right: 1px solid var(--outlineVariant);
@@ -93,6 +94,37 @@
     border: 1px solid var(--outlineVariant);
     color: var(--onSurfaceVariant);
     font-size: 13px;
+    cursor: pointer;
+}
+.topbar__status__dropdown {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 10px;
+    background-color: var(--surfaceContainer);
+    border: 1px solid var(--outlineVariant);
+    color: var(--onSurfaceVariant);
+    min-width: 150px;
+}
+.topbar__status__dropdown__item {
+    padding: 8px;
+    cursor: pointer;
+    align-items: right;
+    font-family: "Fira Code", monospace;
+    font-size: 13px;
+    color: var(--onSurface);
+    margin: 0;
+    text-align: right;
+}
+
+.topbar__status__dropdown__item:hover {
+    background-color: var(--surfaceContainerHighest);
+}
+.topbar__status__dropdown__item--selected {
+    background-color: var(--surfaceContainerLowest);
 }
 .topbar__dot {
     width: 8px;
