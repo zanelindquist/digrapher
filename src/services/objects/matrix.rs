@@ -3,6 +3,19 @@ use yew::prelude::*;
 use crate::services::digraph_services::types::{CanvasPositioning, DrawObjectSelection, EdgeVector, MatrixData, ObjectSelection, PointVector};
 use crate::render::{styles::MatrixStyle};
 
+pub struct MatrixPositioning {
+    pub offset_vx: i32,
+    pub offset_vy: i32,
+}
+impl MatrixPositioning {
+    pub fn from_xy(x: f32, y: f32) -> Self {
+        Self {
+            offset_vx: x as i32,
+            offset_vy: y as i32
+        }
+    }
+}
+
 pub struct Matrix {
     data: MatrixData,
     labels: Vec<String>,
@@ -27,7 +40,7 @@ impl Matrix {
         vec![vec![false; cols as usize]; rows as usize]
     }
     
-    pub fn draw(self, style: &MatrixStyle, canvas_pos: &CanvasPositioning, object_selection: UseStateHandle<ObjectSelection>) -> Html {
+    pub fn draw(self, style: &MatrixStyle, matrix_pos: &MatrixPositioning, canvas_pos: &CanvasPositioning, object_selection: UseStateHandle<ObjectSelection>) -> Html {
         // Cell size in visual units
         let cell_size = (style.cell_size as f32 * canvas_pos.zoom) as i32; // spacing between cells
         let total_w = self.cols * cell_size;
@@ -37,8 +50,8 @@ impl Matrix {
         // Upper left coordinates in visual units
         let center_vx = canvas_pos.offset_x + canvas_pos.width / 2;
         let center_vy = canvas_pos.offset_y + canvas_pos.height / 2;
-        let ul_vx = center_vx - total_w / 2;
-        let ul_vy = center_vy - total_h / 2;
+        let ul_vx = center_vx - total_w / 2 + matrix_pos.offset_vx;
+        let ul_vy = center_vy - total_h / 2 + matrix_pos.offset_vy;
 
         html! {
             <g>

@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use crate::services::digraph_services::point_layout::{create_edges, create_points};
 use crate::services::digraph_services::types::{CanvasPositioning, EdgeVector, ObjectSelection, PointVector, Relation};
-use crate::services::objects::matrix::{Matrix};
+use crate::services::objects::matrix::{Matrix, MatrixPositioning};
 use crate::render::styles::RenderStyles;
 
 
@@ -30,6 +30,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
 
     let matrix: Matrix = Matrix::from_edges(points, edges);
 
+
     html!{
         <div
             class={classes!("matrix", props.class.clone())}
@@ -39,7 +40,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                {matrix.draw(&styles.matrix, &props.position, props.object_selection.clone())}
+                {matrix.draw(&styles.matrix, &MatrixPositioning::from_xy(1000.0, 0.0), &props.position, props.object_selection.clone())}
             </svg>
         </div>
     }
