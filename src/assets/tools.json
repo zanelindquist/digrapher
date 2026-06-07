@@ -7,11 +7,11 @@
         "url": "/digraph"
     },
     {
-        "name": "Matrix Multiplication",
-        "description": "Visualize vector, matrix, and even tensor multiplication.",
+        "name": "Matrix",
+        "description": "Perform operations like multiplication, addition, and more on matrices.",
         "published_date": "⚠️ Under construction",
         "image_path": "matrix.png",
-        "url": "/matrixmultiplication"
+        "url": "/matrix"
     },
     {
         "name": "Line Integrals",

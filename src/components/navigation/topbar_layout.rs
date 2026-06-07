@@ -63,6 +63,12 @@ pub fn topbar_layout(props: &TopbarProps) -> Html {
                     >
                         {"digraph"}
                     </Link<Route>>
+                    <Link<Route>
+                        to={Route::Matrix}
+                        classes="topbar__link"
+                    >
+                        {"matrix"}
+                    </Link<Route>>
                 </nav>
                 <div class="topbar__right">
                     <StyleToggle/>
