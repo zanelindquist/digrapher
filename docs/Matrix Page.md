@@ -97,4 +97,8 @@ while stack.len() > 0 {
 
 1. Search the raw text input for scalars and `\matrix{...}` declarations. Replace them with an id in the string, and store them in a `HashMap<TermId, Term>`
 2. Declare a stack of `Vec<EvaluationTerm>` with the raw equasion as the only element
-3. From left to right, identify parenthesis. Anything in parenthesis, add it's contents into the stack
+3. WHILE we have values in the stack: 
+4. IF we only have one element in the stack and it's a term, we're DONE, return the value
+5. Get the top element off the stack
+6. IF the element is indepenedently computable, compute and substitute it's value into the expression below it, AND remove this top element
+7. IF the element is not indepenedently computable, immediately stop PEMDAS, substitute the element for {n + 1} stack ID in the raw text, and push the subequation to the top of the stack
