@@ -16,8 +16,9 @@ impl MatrixPositioning {
     }
 }
 
+#[derive(PartialEq)]
 pub struct Matrix {
-    data: MatrixData,
+    pub data: MatrixData,
     labels: Vec<String>,
     pub rows: i32,
     pub cols: i32
@@ -32,12 +33,12 @@ impl Matrix {
         let labels = points.iter().map(|p| p.label.clone()).collect();
         let mut data = Matrix::initialize_matrix(size, size);
         for edge in edges {
-            data[edge.start.index as usize][edge.end.index as usize] = true;
+            data[edge.start.index as usize][edge.end.index as usize] = 1.0;
         };
         Self {rows: size, cols: size, data, labels}
     }
     fn initialize_matrix(rows: i32, cols: i32) -> MatrixData {
-        vec![vec![false; cols as usize]; rows as usize]
+        vec![vec![0.0; cols as usize]; rows as usize]
     }
     
     pub fn draw(self, style: &MatrixStyle, matrix_pos: &MatrixPositioning, canvas_pos: &CanvasPositioning, object_selection: UseStateHandle<ObjectSelection>) -> Html {
@@ -112,7 +113,7 @@ impl Matrix {
                                         .is_some_and(|edge_j| edge_j == j)
                             );
 
-                            let text = if *val { "1" } else { "0" };
+                            let text = if *val != 0.0 { "1" } else { "0" };
                             let text_fill = if is_selected {style.selected_text_color} else {style.font.fill};
 
                             html! {
