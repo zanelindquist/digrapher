@@ -1,12 +1,14 @@
+use std::iter::empty;
+
 use yew::prelude::*;
 
 use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 
 // ENUMS
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum Term {
-    Marix(Matrix),
+    Matrix(Matrix),
     Scalar(Scalar)
 }
 
@@ -29,7 +31,7 @@ impl Default for ObjectSelection {
     }
 }
 
-#[derive(Properties, PartialEq)]
+#[derive(Properties, PartialEq, Clone)]
 pub struct MatrixEquation {
     pub raw_text: String,
     pub terms: Vec<Term>
@@ -40,6 +42,11 @@ impl MatrixEquation {
     }
     pub fn from_text(text: String) -> Self {
         Self { raw_text: text, terms: vec![] }
+    }
+
+    pub fn parse_terms(&mut self) {
+        let terms: Vec<Term> = vec![];
+
     }
 }
 

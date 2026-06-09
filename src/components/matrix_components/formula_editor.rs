@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::{components::misc::icon::Icon, services::matrix_services::types::{MatrixEquation, MatrixEquationResult, ObjectSelection}};
+use crate::{components::misc::icon::Icon, services::matrix_services::types::{MatrixEquation, MatrixEquationResult, ObjectSelection, ParseError}};
 
 #[derive(Properties, PartialEq)]
 pub struct FormulaEditorProps {
@@ -16,7 +16,11 @@ pub fn formula_editor(props: &FormulaEditorProps) -> Html {
         let matrix_equation = props.matrix_equation.clone();
         Callback::from(move |e: InputEvent | {
             let input: web_sys::HtmlTextAreaElement = e.target_unchecked_into();
-            matrix_equation.set(Ok(MatrixEquation::from_text(input.value())));
+            if input.value().is_empty() {
+                matrix_equation.set(Err(ParseError::new("No input")))
+            } else {
+                matrix_equation.set(Ok(MatrixEquation::from_text(input.value())));
+            }
         })
     };
 

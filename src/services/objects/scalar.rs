@@ -1,6 +1,6 @@
 use crate::services::objects::matrix::Matrix;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Scalar {
     value: f32,
 }

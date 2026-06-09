@@ -16,7 +16,7 @@ impl MatrixPositioning {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub struct Matrix {
     pub data: MatrixData,
     labels: Vec<String>,
@@ -41,7 +41,7 @@ impl Matrix {
         vec![vec![0.0; cols as usize]; rows as usize]
     }
     
-    pub fn draw(self, style: &MatrixStyle, matrix_pos: &MatrixPositioning, canvas_pos: &CanvasPositioning, object_selection: UseStateHandle<ObjectSelection>) -> Html {
+    pub fn draw(self, style: &MatrixStyle, matrix_pos: &MatrixPositioning, canvas_pos: &CanvasPositioning, object_selection: &ObjectSelection) -> Html {
         // Cell size in visual units
         let cell_size = (style.cell_size as f32 * canvas_pos.zoom) as i32; // spacing between cells
         let total_w = self.cols * cell_size;

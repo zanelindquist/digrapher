@@ -40,7 +40,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 width={props.position.width.to_string()}
                 height={props.position.height.to_string()}
             >
-                {matrix.draw(&styles.matrix, &MatrixPositioning::from_xy(0.0, 0.0), &props.position, props.object_selection.clone())}
+                {matrix.draw(&styles.matrix, &MatrixPositioning::from_xy(0.0, 0.0), &props.position, &*props.object_selection)}
             </svg>
         </div>
     }
