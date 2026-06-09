@@ -13,7 +13,8 @@ This feature will add the basic necessities for a functioning matrix calculator.
 | MatrixEquationResult | `type` | Result of processing text in the hopes of producing a matix equation | `Result<MatrixEquation, ParsingError>` |
 | ParsingError | `struct` | Record and communicate to the user what errors occurred while inputting a relation. This is with formatting, and is different from a MathError | e.x. `Parenthesis not closed` |
 | MathError | `struct` | This is an errror that will be thrown when the MatrixEquation evaluation engine runs into an illegal mathematical statement | e.x. `Matrix dimension mismatch`, `Division by zero`, `Invalid operation`
-| EvaluationTerm | `type` | Used in the evaluation algorithm to manage the stack. | (`i32`, `String`)
+| EvaluationTerm | `type` | Used in the evaluation algorithm to manage the stack. | (`i32`, `String`) |
+| ObjectSelection | `struct` | Used to tell what objects in the equation are selected | `selected_term: ???`, `hovered_term: ???` |
 
 ## Components
 <!-- <img src="../assets/doc_images/matrix_calculator/ui_layout.png" width=400/> -->
