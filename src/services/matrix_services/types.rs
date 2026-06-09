@@ -58,7 +58,6 @@ impl MatrixEquation {
         let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)").unwrap();
 
         for mat in digit_selector.find_iter(&self.raw_text) {
-            gloo_console::log!(mat.as_str());
             // Process a scalar
             if let Ok(scalar) = mat.as_str().parse::<f64>() {
                 terms.push(Term::Scalar(
@@ -96,8 +95,8 @@ impl MatrixEquation {
                 // Extract values
                 let values = partition.get(1)
                     .unwrap()
-                    .trim_matches(|v| v == '(' || v == ')')
                     .trim()
+                    .trim_matches(|v| v == '(' || v == ')')
                     .split(",")
                     .map(|s| {
                         s.trim()

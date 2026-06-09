@@ -88,7 +88,7 @@ impl Matrix {
                                     font-size={style.legend_font.size.to_string()}
                                     fill={style.legend_font.fill}
                                 >
-                                    { self.labels[i].clone() }
+                                    { self.labels.get(i).cloned().unwrap_or_default() }
                                 </text>
                                 <text
                                     x={x2.to_string()}
@@ -98,7 +98,7 @@ impl Matrix {
                                     font-size={style.legend_font.size.to_string()}
                                     fill={style.legend_font.fill}
                                 >
-                                    { self.labels[i].clone() }
+                                    { self.labels.get(i).cloned().unwrap_or_default() }
                                 </text>
                             </>
                         }
@@ -128,7 +128,7 @@ impl Matrix {
                                         .is_some_and(|edge_j| edge_j == j)
                             );
 
-                            let text = if *val != 0.0 { "1" } else { "0" };
+                            let text = if *val != 0.0 { (*val).to_string() } else { 0.to_string() };
                             let text_fill = if is_selected {style.selected_text_color} else {style.font.fill};
 
                             html! {
