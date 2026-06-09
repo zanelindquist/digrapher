@@ -89,6 +89,18 @@ impl Default for MatrixStyle {
 }
 
 #[derive(Clone, Copy, PartialEq)]
+pub struct ScalarStyle {
+    pub font: FontStyle,
+}
+impl Default for ScalarStyle {
+    fn default() -> Self {
+        Self {
+            font: FontStyle::default(),
+        }        
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
 pub struct RenderStyles {
     pub point: PointStyle,
     pub edge: EdgeStyle,

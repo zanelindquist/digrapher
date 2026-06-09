@@ -1,6 +1,6 @@
 use std::iter::empty;
-
 use yew::prelude::*;
+use regex::Regex;
 
 use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 
@@ -41,12 +41,27 @@ impl MatrixEquation {
         Self { raw_text: String::default(), terms: vec![] }
     }
     pub fn from_text(text: String) -> Self {
-        Self { raw_text: text, terms: vec![] }
+        let mut new = Self { raw_text: text, terms: vec![] };
+        new.parse_terms();
+        new
     }
 
     pub fn parse_terms(&mut self) {
-        let terms: Vec<Term> = vec![];
+        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)").unwrap();
 
+        for mat in digit_selector.find_iter(&self.raw_text) {
+            gloo_console::log!(mat.as_str());
+            // Process a scalar
+            if let Ok(scalar) = mat.as_str().parse::<f64>() {
+                self.terms.push(Term::Scalar(
+                    Scalar::from_f64(scalar)
+                ));
+            }
+            // Process a matrix
+            else {
+
+            }
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::{render::styles::MatrixStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::types::{MatrixEquation, ObjectSelection, Term}, objects::matrix::MatrixPositioning}};
+use crate::{render::styles::{MatrixStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::types::{MatrixEquation, ObjectSelection, Term}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
 use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 
 
@@ -61,6 +61,8 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
         >
             <svg
                 class="canvas__svg"
+                width={canvas_position.width.to_string()}
+                height={canvas_position.height.to_string()}
             >
             {for props.matrix_equation.terms.iter().enumerate().map(|(index, term)| {
                 html! {
@@ -74,7 +76,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                             )
                         },
                         Term::Scalar(scalar) => html! {
-
+                            scalar.draw(&ScalarStyle::default(), &ScalarPositioning::from_xy(100.0 + index as f32 * 100.0, 500.0), &canvas_position)
                         }
                     }}
                 }
