@@ -31,13 +31,23 @@ pub fn matrix() -> Html {
                     }
                 }
                 Err(e) => {
-                    html! {
-                        <div class="graph--error">
-                            <img class="graph__no-input" src={format!("/assets/digraph_assets/no_input_variant.png")}/>
-                            <code class="graph__error--heading">{ "No Input" }</code>     
-                            <code class="graph__error">{ "Enter a formula to get started." }</code>                
-                        </div>
+
+                    if e.message.to_lowercase() == "no input" {
+                        html! {
+                            <div class="graph--error">
+                                <img class="graph__no-input" src={format!("/assets/digraph_assets/no_input_variant.png")}/>
+                                <code class="graph__error--heading">{ "No Input" }</code>     
+                                <code class="graph__error">{ "Enter a formula to get started." }</code>                
+                            </div>
+                        }
+                    } else {
+                        html!{
+                            <div class="graph--error">
+                                <code class="graph__error--heading">{ e.message.to_string() }</code>     
+                            </div>
+                        }
                     }
+
                 }
             }}
 

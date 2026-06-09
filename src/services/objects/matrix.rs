@@ -37,6 +37,21 @@ impl Matrix {
         };
         Self {rows: size, cols: size, data, labels}
     }
+    pub fn from_values((rows, cols): (i32, i32), values: Vec<f64>) -> Self {
+        let mut data = Matrix::initialize_matrix(rows, cols);
+        // Crash the program if the matrix is improperly filled
+        assert_eq!(rows * cols, values.len() as i32);
+        let mut index = 0;
+        for row in data.iter_mut() {
+            for value in row.iter_mut() {
+                *value = values[index];
+                index += 1;
+            }            
+        }
+
+        Self { data, labels: vec![], rows, cols }
+    }
+
     fn initialize_matrix(rows: i32, cols: i32) -> MatrixData {
         vec![vec![0.0; cols as usize]; rows as usize]
     }

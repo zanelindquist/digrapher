@@ -2,7 +2,7 @@ use std::iter::empty;
 use yew::prelude::*;
 use regex::Regex;
 
-use crate::services::objects::{matrix::Matrix, scalar::Scalar};
+use crate::services::{objects::{scalar::Scalar, matrix::Matrix}};
 
 // ENUMS
 
@@ -40,28 +40,88 @@ impl MatrixEquation {
     pub fn default() -> Self {
         Self { raw_text: String::default(), terms: vec![] }
     }
-    pub fn from_text(text: String) -> Self {
+    pub fn from_text(text: String) -> Result<Self, ParseError> {
         let mut new = Self { raw_text: text, terms: vec![] };
-        new.parse_terms();
-        new
+        match new.parse_terms() {
+            Ok(terms) => {
+                new.terms = terms;
+                Ok(new)
+            },
+            Err(e) => {
+                Err(e)
+            }
+        }
     }
 
-    pub fn parse_terms(&mut self) {
+    pub fn parse_terms(&self) -> Result<Vec<Term>, ParseError> {
+        let mut terms: Vec<Term> = vec![];
         let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)").unwrap();
 
         for mat in digit_selector.find_iter(&self.raw_text) {
             gloo_console::log!(mat.as_str());
             // Process a scalar
             if let Ok(scalar) = mat.as_str().parse::<f64>() {
-                self.terms.push(Term::Scalar(
+                terms.push(Term::Scalar(
                     Scalar::from_f64(scalar)
                 ));
             }
             // Process a matrix
+            else if mat.len() > 5 {
+                let trimmed = mat.as_str().trim();
+                let inner = &trimmed[8..trimmed.len()-1];
+                // Partition the dimentions and the values
+                let partition: Vec<&str> = inner.split("),").collect();
+                if partition.len() != 2 {
+                    return Err(ParseError::new("Partition size must be 2. E.X. \\matrix{(2, 3), (1, 2, 3, 4, 5, 6)}"))
+                }
+                // Get the dimentions
+                let dims = partition
+                    .get(0)
+                    .ok_or(ParseError::new("Missing dimensions"))?
+                    .trim_matches(|c| c == '(' || c == ')')
+                    .split(',')
+                    .map(|s| {
+                        s.trim()
+                            .parse::<i32>()
+                            .map_err(|_| ParseError::new("Row or column is not an integer"))
+                    })
+                    .collect::<Result<Vec<i32>, ParseError>>()?;
+
+                if dims.len() != 2 {
+                    return Err(ParseError::new("Dimensions must be exactly two integers, e.g. (4, 3)"));
+                }
+
+                let (rows, cols) = (dims[0], dims[1]);
+
+                // Extract values
+                let values = partition.get(1)
+                    .unwrap()
+                    .trim_matches(|v| v == '(' || v == ')')
+                    .trim()
+                    .split(",")
+                    .map(|s| {
+                        s.trim()
+                            .parse::<f64>()
+                            .map_err(|_| ParseError::new("Value is not an integer"))
+                    })
+                     .collect::<Result<Vec<f64>, ParseError>>()?;
+
+                if values.len() as i32 != rows * cols {
+                    return Err(ParseError::new("Matrix is improperly filled: values does not equal rows times columns"));
+                }
+
+                terms.push(Term::Matrix(
+                    crate::services::objects::matrix::Matrix::from_values((rows, cols), values)
+                ))
+                    
+            }
+            // Process an operator 
             else {
 
             }
         }
+
+        Ok(terms)
     }
 }
 

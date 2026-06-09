@@ -19,7 +19,7 @@ pub fn formula_editor(props: &FormulaEditorProps) -> Html {
             if input.value().is_empty() {
                 matrix_equation.set(Err(ParseError::new("No input")))
             } else {
-                matrix_equation.set(Ok(MatrixEquation::from_text(input.value())));
+                matrix_equation.set(MatrixEquation::from_text(input.value()));
             }
         })
     };
