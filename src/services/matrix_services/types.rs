@@ -279,10 +279,6 @@ impl MatrixEquation {
             }
         }
 
-        terms.push(Term::Error(
-            MathError::new("Division by zero")
-        ));
-
         Ok(terms)
     }
 }
@@ -333,16 +329,34 @@ impl MathError {
         1.0
     }
 
-    pub fn draw(&self, style: &MathErrorStyle, scalar_pos: &MathErrorPositioning, canvas_pos: &CanvasPositioning) -> Html {
+    pub fn draw(&self, style: &MathErrorStyle, error_pos: &MathErrorPositioning, canvas_pos: &CanvasPositioning) -> Html {
+        let error_vx = error_pos.offset_vx as f32 - self.message.len() as f32 * style.size as f32 * 0.4 / 2.0;
+        let error_vy = error_pos.offset_vy  + style.size  * 2;
         html! {
-            <text
-                x={(canvas_pos.width / 2 + canvas_pos.offset_x + scalar_pos.offset_vx).to_string()}
-                y={(canvas_pos.height / 2 + canvas_pos.offset_y + scalar_pos.offset_vy).to_string()}
-                font-size={(style.size as f32 * canvas_pos.zoom).to_string()}
-                fill={style.fill}
-            >
-                { self.message.clone() }
-            </text>
+            <>
+                <svg
+                    viewBox="0 0 24 24"
+                    x={(error_pos.offset_vx + canvas_pos.offset_x + canvas_pos.width / 2).to_string()}
+                    y={(error_pos.offset_vy + canvas_pos.offset_y + canvas_pos.height / 2).to_string()}
+                    width={style.size.to_string()}
+                    height={style.size.to_string()}
+                    fill="none"
+                    stroke={style.fill}
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M7 15 L12 8 L17 15" />
+                </svg>
+                <text
+                    x={(canvas_pos.width / 2 + canvas_pos.offset_x + error_vx as i32).to_string()}
+                    y={(canvas_pos.height / 2 + canvas_pos.offset_y + error_vy).to_string()}
+                    font-size={(style.size as f32 * canvas_pos.zoom).to_string()}
+                    fill={style.fill}
+                >
+                    { self.message.clone() }
+                </text>
+            </>
         }
 
     }

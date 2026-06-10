@@ -67,7 +67,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
             Term::Matrix(matrix) => matrix.width() * equation_style.matrix_style.cell_size as f32 / equation_style.vx_per_lx,
             Term::Scalar(scalar) => scalar.width(),
             Term::Operator(operator) => operator.width(),
-            Term::Error(error) => 0.0
+            Term::Error(error) => 1.0
         };
 
         current_lx += width + equation_style.horizontal_spacing_lx;
@@ -92,7 +92,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 ),
                 Term::Error(error) => error.draw(
                     &equation_style.error_style,
-                    &MathErrorPositioning::from_xy(vx - error.width() / 2.0 * equation_style.vx_per_lx, vy + equation_style.error_style.size as f32 * 1.5),
+                    &MathErrorPositioning::from_xy(vx, vy),
                     &canvas_position
                 )
             }}
