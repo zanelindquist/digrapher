@@ -100,6 +100,22 @@ impl Default for ScalarStyle {
     }
 }
 
+pub struct OperatorStyle {
+    pub fill: &'static str,
+    pub selected_fill: &'static str,
+    pub size: i32
+}
+impl Default for OperatorStyle {
+    fn default() -> Self {
+        Self {
+            fill: "var(--outlineVariant)",
+            selected_fill: "red",
+            size: 24
+        }        
+    }
+}
+
+
 #[derive(Clone, Copy, PartialEq)]
 pub struct RenderStyles {
     pub point: PointStyle,

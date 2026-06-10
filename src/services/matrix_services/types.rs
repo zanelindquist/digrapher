@@ -2,14 +2,17 @@ use std::iter::empty;
 use yew::prelude::*;
 use regex::Regex;
 
-use crate::services::{objects::{scalar::Scalar, matrix::Matrix}};
+use crate::services::{matrix_services::operators::{BaseOperator, OperatorTypes}, objects::{matrix::Matrix, scalar::Scalar}};
 
 // ENUMS
+#[derive(PartialEq, Clone)]
+pub enum TermTypes{ MATRIX, SCALAR }
 
 #[derive(PartialEq, Clone)]
 pub enum Term {
     Matrix(Matrix),
-    Scalar(Scalar)
+    Scalar(Scalar),
+    Operator(BaseOperator)
 }
 
 
@@ -55,7 +58,7 @@ impl MatrixEquation {
 
     pub fn parse_terms(&self) -> Result<Vec<Term>, ParseError> {
         let mut terms: Vec<Term> = vec![];
-        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)").unwrap();
+        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∧⊙\.])|(det|trans)").unwrap();
 
         for mat in digit_selector.find_iter(&self.raw_text) {
             // Process a scalar
@@ -116,7 +119,126 @@ impl MatrixEquation {
             }
             // Process an operator 
             else {
-
+                match mat.as_str() {
+                    "+" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::SCALAR, TermTypes::SCALAR),
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                                (TermTypes::MATRIX, TermTypes::SCALAR),
+                                (TermTypes::SCALAR, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 1,
+                            symbol: "+".to_string(),
+                        }));
+                    }
+                    "-" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::SCALAR, TermTypes::SCALAR),
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                                (TermTypes::MATRIX, TermTypes::SCALAR),
+                            ],
+                            pemdas_level: 1,
+                            symbol: "-".to_string(),
+                        }));
+                    }
+                    "/" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::SCALAR, TermTypes::SCALAR),
+                            ],
+                            pemdas_level: 2,
+                            symbol: "/".to_string(),
+                        }));
+                    }
+                    "*" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::SCALAR, TermTypes::SCALAR),
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                                (TermTypes::MATRIX, TermTypes::SCALAR),
+                                (TermTypes::SCALAR, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 2,
+                            symbol: "*".to_string(),
+                        }));
+                    }
+                    "^" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::SCALAR, TermTypes::SCALAR),
+                                (TermTypes::MATRIX, TermTypes::SCALAR),
+                            ],
+                            pemdas_level: 3,
+                            symbol: "^".to_string(),
+                        }));
+                    }
+                    "x" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 2,
+                            symbol: "x".to_string(),
+                        }));
+                    }
+                    "⊙" | "o" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 2,
+                            symbol: "⊙".to_string(),
+                        }));
+                    }
+                    "." => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 2,
+                            symbol: ".".to_string(),
+                        }));
+                    }
+                    "v" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 0,
+                            symbol: "v".to_string(),
+                        }));
+                    }
+                    "∧" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 0,
+                            symbol: "∧".to_string(),
+                        }));
+                    },
+                    "det" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 3,
+                            symbol: "det".to_string(),
+                        }));
+                    },
+                    "trans" => {
+                        terms.push(Term::Operator(BaseOperator {
+                            supported_operands: vec![
+                                (TermTypes::MATRIX, TermTypes::MATRIX),
+                            ],
+                            pemdas_level: 3,
+                            symbol: "trans".to_string(),
+                        }));
+                    }
+                    _ => {}
+                }
             }
         }
 

@@ -18,7 +18,7 @@ impl ScalarPositioning {
 
 #[derive(PartialEq, Clone)]
 pub struct Scalar {
-    value: f64,
+    pub value: f64,
 }
 impl Scalar {
     pub fn from_f64(f: f64) -> Self {
