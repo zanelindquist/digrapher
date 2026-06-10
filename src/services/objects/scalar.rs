@@ -40,13 +40,18 @@ impl Scalar {
         matrix
     }
 
+    pub fn width(&self) -> f32 {
+        (self.value as f32).to_string().len() as f32 * 0.5 + 0.3
+    }
+    pub fn height(&self) -> f32 {
+        1.0
+    }
+
     pub fn draw(&self, style: &ScalarStyle, scalar_pos: &ScalarPositioning, canvas_pos: &CanvasPositioning) -> Html {
         html! {
             <text
-                x={(canvas_pos.offset_x + scalar_pos.offset_vx).to_string()}
-                y={(canvas_pos.offset_y + scalar_pos.offset_vy).to_string()}
-                text-anchor="middle"
-                dominant-baseline="middle"
+                x={(canvas_pos.width / 2 + canvas_pos.offset_x + scalar_pos.offset_vx).to_string()}
+                y={(canvas_pos.height / 2 + canvas_pos.offset_y + scalar_pos.offset_vy).to_string()}
                 font-size={(style.font.size * canvas_pos.zoom).to_string()}
                 fill={style.font.fill}
             >

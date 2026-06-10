@@ -55,6 +55,14 @@ impl Matrix {
     fn initialize_matrix(rows: i32, cols: i32) -> MatrixData {
         vec![vec![0.0; cols as usize]; rows as usize]
     }
+
+    // Returns width in logical units
+    pub fn width(&self) -> f32 {
+        self.cols as f32
+    }
+    pub fn height(&self) -> f32 {
+        self.rows as f32
+    }
     
     pub fn draw(self, style: &MatrixStyle, matrix_pos: &MatrixPositioning, canvas_pos: &CanvasPositioning, object_selection: &ObjectSelection) -> Html {
         // Cell size in visual units

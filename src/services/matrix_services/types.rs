@@ -130,6 +130,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 1,
                             symbol: "+".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5 , 0.0)
                         }));
                     }
                     "-" => {
@@ -141,6 +144,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 1,
                             symbol: "-".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5 , 0.0)
                         }));
                     }
                     "/" => {
@@ -150,6 +156,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 2,
                             symbol: "/".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.0 , -1.0)
                         }));
                     }
                     "*" => {
@@ -162,6 +171,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 2,
                             symbol: "*".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5 , 0.0)
                         }));
                     }
                     "^" => {
@@ -172,6 +184,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 3,
                             symbol: "^".to_string(),
+                            width: 0.0,
+                            height: 0.0,
+                            cursor_translate_l: (0.3 , 0.6)
                         }));
                     }
                     "x" => {
@@ -181,6 +196,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 2,
                             symbol: "x".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5 , 0.0)
                         }));
                     }
                     "⊙" | "o" => {
@@ -190,6 +208,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 2,
                             symbol: "⊙".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5 , 0.0)
                         }));
                     }
                     "." => {
@@ -199,6 +220,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 2,
                             symbol: ".".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5, 0.0)
                         }));
                     }
                     "v" => {
@@ -208,6 +232,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 0,
                             symbol: "v".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5, 0.0)
                         }));
                     }
                     "∧" => {
@@ -217,6 +244,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 0,
                             symbol: "∧".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5, 0.0)
                         }));
                     },
                     "det" => {
@@ -226,6 +256,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 3,
                             symbol: "det".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.5, 0.0)
                         }));
                     },
                     "trans" => {
@@ -235,6 +268,9 @@ impl MatrixEquation {
                             ],
                             pemdas_level: 3,
                             symbol: "trans".to_string(),
+                            width: 1.0,
+                            height: 1.0,
+                            cursor_translate_l: (0.25, 0.0)
                         }));
                     }
                     _ => {}

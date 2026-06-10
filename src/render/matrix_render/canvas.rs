@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::{render::styles::{MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
+use crate::{render::styles::{EquationStyle, MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
 use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 
 
@@ -53,6 +53,49 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
         }
     });
 
+    let equation_style = EquationStyle::default();
+
+    let mut current_lx = -canvas_position.width as f32 / (3.0 * equation_style.vx_per_lx);
+    let mut current_ly = 0.0;
+
+    let rendered_terms = props.matrix_equation.terms.iter().map(|term| {
+        // Matrices are centered a little differnt, so we have to do some math
+        let ms = MatrixStyle::default();
+
+        let vx = current_lx * equation_style.vx_per_lx;
+        let vy = current_ly * equation_style.vx_per_lx;
+
+        let width = match term {
+            Term::Matrix(matrix) => matrix.width() * ms.cell_size as f32 / equation_style.vx_per_lx,
+            Term::Scalar(scalar) => scalar.width(),
+            Term::Operator(operator) => operator.width(),
+        };
+
+        current_lx += width + equation_style.horizontal_spacing_lx;
+        
+        html! {
+            {match term {
+                Term::Matrix(matrix) => matrix.clone().draw(
+                    &ms,
+                    &MatrixPositioning::from_xy(vx + matrix.width() / 2.0 * ms.cell_size as f32, vy - equation_style.vx_per_lx / 2.0),
+                    &canvas_position,
+                    &crate::services::digraph_services::types::ObjectSelection::default()
+                ),
+                Term::Scalar(scalar) => scalar.draw(
+                    &ScalarStyle::default(),
+                    &ScalarPositioning::from_xy(vx, vy),
+                    &canvas_position
+                ),
+                Term::Operator(operator) => operator.draw(
+                    &OperatorStyle::default(),
+                    &OperatorPositioning::from_xy(vx, vy - operator.height() * equation_style.vx_per_lx),
+                    &canvas_position
+                ),
+            }}
+        }
+    });
+
+
     html! {
         <div
             ref={node_ref}
@@ -64,26 +107,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 width={canvas_position.width.to_string()}
                 height={canvas_position.height.to_string()}
             >
-            {for props.matrix_equation.terms.iter().enumerate().map(|(index, term)| {
-                html! {
-                    {match term {
-                        Term::Matrix(matrix) => html! {
-                            matrix.clone().draw(
-                                &MatrixStyle::default(),
-                                &MatrixPositioning::from_xy(index as f32 * 200.0, 0.0),
-                                &canvas_position,
-                                &crate::services::digraph_services::types::ObjectSelection::default()
-                            )
-                        },
-                        Term::Scalar(scalar) => html! {
-                            scalar.draw(&ScalarStyle::default(), &ScalarPositioning::from_xy(100.0 + index as f32 * 100.0, 500.0), &canvas_position)
-                        },
-                        Term::Operator(operator) => html! {
-                            operator.draw(&OperatorStyle::default(), &OperatorPositioning::from_xy(100.0 + index as f32 * 100.0, 500.0), &canvas_position)
-                        }
-                    }}
-                }
-            })}
+            {for rendered_terms}
             </svg>
         </div>
     }

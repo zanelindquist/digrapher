@@ -36,13 +36,23 @@ impl OperatorPositioning {
 pub struct BaseOperator {
     pub supported_operands: Vec<(TermTypes, TermTypes)>,
     pub pemdas_level: i32,
-    pub symbol: String
+    pub symbol: String,
+    pub width: f32,
+    pub height: f32,
+    pub cursor_translate_l: (f32, f32)
 }
 impl BaseOperator {
+    pub fn width(&self) -> f32 {
+        self.width + self.cursor_translate_l.0
+    }
+    pub fn height(&self) -> f32 {
+        self.height + self.cursor_translate_l.1
+    }
+
     pub fn draw(&self, style: &OperatorStyle, position: &OperatorPositioning, canvas_pos: &CanvasPositioning) -> Html {
         let path = match self.symbol.as_str() {
             "+" => html! {
-                <path d="M10 4H14V10H20V14H14V20H10V14H4V10H10Z" />
+                <path d="M12 4V20M4 12H20" />
             },
             "-" => html! {
                 <path d="M4 10H20V14H4Z" />
@@ -102,8 +112,8 @@ impl BaseOperator {
         html! {
             <svg
                 viewBox="0 0 24 24"
-                x={(position.offset_vx + canvas_pos.offset_x).to_string()}
-                y={(position.offset_vy + canvas_pos.offset_y).to_string()}
+                x={(position.offset_vx + canvas_pos.offset_x + canvas_pos.width / 2).to_string()}
+                y={(position.offset_vy + canvas_pos.offset_y + canvas_pos.height / 2).to_string()}
                 width={style.size.to_string()}
                 height={style.size.to_string()}
                 fill="none"

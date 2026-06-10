@@ -115,6 +115,21 @@ impl Default for OperatorStyle {
     }
 }
 
+pub struct EquationStyle {
+    pub horizontal_spacing_lx: f32,
+    pub vertical_spacing_ly: f32,
+    pub vx_per_lx: f32
+}
+impl Default for EquationStyle {
+    fn default() -> Self {
+        Self {
+            horizontal_spacing_lx: 0.25,
+            vertical_spacing_ly: 0.25,
+            vx_per_lx: 20.0
+        }        
+    }
+}
+
 
 #[derive(Clone, Copy, PartialEq)]
 pub struct RenderStyles {
