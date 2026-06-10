@@ -1,9 +1,9 @@
 use yew::prelude::*;
 
-use crate::{render::styles::OperatorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::types::{TermTypes}, objects::{matrix::Matrix, scalar::Scalar}}};
+use crate::{render::styles::OperatorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::types::{TermTypes, MathError}, objects::{matrix::Matrix, scalar::Scalar}}};
 
 #[derive(PartialEq, Clone)]
-pub enum OperatorTypes {
+pub enum OperatorType {
     Addition(AdditionOperator),
     Subtraction(SubtractionOperator),
     Division(DivisionOperator),
@@ -16,6 +16,25 @@ pub enum OperatorTypes {
     LogicalOr(LogicalOrOperator),
     Transpose(TransposeOperator),
     Determinate(DeterminateOperator),
+}
+
+impl OperatorType {
+    pub fn get_base_operator(&self) -> BaseOperator {
+        match self {
+            OperatorType::Addition(op) => op.base.clone(),
+            OperatorType::Subtraction(op) => op.base.clone(),
+            OperatorType::Division(op) => op.base.clone(),
+            OperatorType::Multiplication(op) => op.base.clone(),
+            OperatorType::Exponentiation(op) => op.base.clone(),
+            OperatorType::CrossProduct(op) => op.base.clone(),
+            OperatorType::BooleanMultiplication(op) => op.base.clone(),
+            OperatorType::DotProduct(op) => op.base.clone(),
+            OperatorType::LogicalAnd(op) => op.base.clone(),
+            OperatorType::LogicalOr(op) => op.base.clone(),
+            OperatorType::Transpose(op) => op.base.clone(),
+            OperatorType::Determinate(op) => op.base.clone(),
+        }
+    }
 }
 
 pub struct OperatorPositioning {
@@ -133,13 +152,13 @@ pub struct AdditionOperator {
     pub base: BaseOperator
 }
 impl AdditionOperator {
-    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Scalar {
-        Scalar::from_f64(s1.value + s2.value)
+    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Result<Scalar, MathError> {
+        Ok(Scalar::from_f64(s1.value + s2.value))
     }
 
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         if m1.rows != m2.rows || m1.cols != m2.cols {
-            return m1.clone();
+            return Err(MathError::new(&format!("Dimension mismatch: {}x{} vs {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let mut result = Matrix::create(m1.rows, m1.cols);
@@ -148,20 +167,20 @@ impl AdditionOperator {
                 result.data[i][j] = m1.data[i][j] + m2.data[i][j];
             }
         }
-        result
+        Ok(result)
     }
 
-    pub fn m_s(m: &Matrix, s: &Scalar) -> Matrix {
+    pub fn m_s(m: &Matrix, s: &Scalar) -> Result<Matrix, MathError> {
         let mut result = Matrix::create(m.rows, m.cols);
         for i in 0..m.rows as usize {
             for j in 0..m.cols as usize {
                 result.data[i][j] = m.data[i][j] + s.value;
             }
         }
-        result
+        Ok(result)
     }
 
-    pub fn s_m(s: &Scalar, m: &Matrix) -> Matrix {
+    pub fn s_m(s: &Scalar, m: &Matrix) -> Result<Matrix, MathError> {
         Self::m_s(m, s)
     }
 }
@@ -171,13 +190,13 @@ pub struct SubtractionOperator {
     pub base: BaseOperator,
 }
 impl SubtractionOperator {
-    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Scalar {
-        Scalar::from_f64(s1.value - s2.value)
+    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Result<Scalar, MathError> {
+        Ok(Scalar::from_f64(s1.value - s2.value))
     }
 
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         if m1.rows != m2.rows || m1.cols != m2.cols {
-            return m1.clone();
+            return Err(MathError::new(&format!("Dimension mismatch: {}x{} vs {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let mut result = Matrix::create(m1.rows, m1.cols);
@@ -186,27 +205,27 @@ impl SubtractionOperator {
                 result.data[i][j] = m1.data[i][j] - m2.data[i][j];
             }
         }
-        result
+        Ok(result)
     }
 
-    pub fn m_s(m: &Matrix, s: &Scalar) -> Matrix {
+    pub fn m_s(m: &Matrix, s: &Scalar) -> Result<Matrix, MathError> {
         let mut result = Matrix::create(m.rows, m.cols);
         for i in 0..m.rows as usize {
             for j in 0..m.cols as usize {
                 result.data[i][j] = m.data[i][j] - s.value;
             }
         }
-        result
+        Ok(result)
     }
 
-    pub fn s_m(s: &Scalar, m: &Matrix) -> Matrix {
+    pub fn s_m(s: &Scalar, m: &Matrix) -> Result<Matrix, MathError> {
         let mut result = Matrix::create(m.rows, m.cols);
         for i in 0..m.rows as usize {
             for j in 0..m.cols as usize {
                 result.data[i][j] = s.value - m.data[i][j];
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -215,8 +234,11 @@ pub struct DivisionOperator {
     pub base: BaseOperator,
 }
 impl DivisionOperator {
-    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Scalar {
-        Scalar::from_f64(s1.value / s2.value)
+    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Result<Scalar, MathError> {
+        if s2.value.abs() < f64::EPSILON {
+            return Err(MathError::new("Division by zero"));
+        }
+        Ok(Scalar::from_f64(s1.value / s2.value))
     }
 }
 
@@ -225,13 +247,13 @@ pub struct MultiplicationOperator {
     pub base: BaseOperator,
 }
 impl MultiplicationOperator {
-    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Scalar {
-        Scalar::from_f64(s1.value * s2.value)
+    pub fn s_s(s1: &Scalar, s2: &Scalar) -> Result<Scalar, MathError> {
+        Ok(Scalar::from_f64(s1.value * s2.value))
     }
 
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         if m1.cols != m2.rows {
-            return m1.clone();
+            return Err(MathError::new(&format!("Incompatible dimensions for multiplication: {}x{} and {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let mut result = Matrix::create(m1.rows, m2.cols);
@@ -244,20 +266,20 @@ impl MultiplicationOperator {
                 result.data[i][j] = sum;
             }
         }
-        result
+        Ok(result)
     }
 
-    pub fn m_s(m: &Matrix, s: &Scalar) -> Matrix {
+    pub fn m_s(m: &Matrix, s: &Scalar) -> Result<Matrix, MathError> {
         let mut result = Matrix::create(m.rows, m.cols);
         for i in 0..m.rows as usize {
             for j in 0..m.cols as usize {
                 result.data[i][j] = m.data[i][j] * s.value;
             }
         }
-        result
+        Ok(result)
     }
 
-    pub fn s_m(s: &Scalar, m: &Matrix) -> Matrix {
+    pub fn s_m(s: &Scalar, m: &Matrix) -> Result<Matrix, MathError> {
         Self::m_s(m, s)
     }
 }
@@ -267,14 +289,20 @@ pub struct ExponentiationOperator {
     pub base: BaseOperator,
 }
 impl ExponentiationOperator {
-    pub fn s_s(base: &Scalar, exponent: &Scalar) -> Scalar {
-        Scalar::from_f64(base.value.powf(exponent.value))
+    pub fn s_s(base: &Scalar, exponent: &Scalar) -> Result<Scalar, MathError> {
+        Ok(Scalar::from_f64(base.value.powf(exponent.value)))
     }
 
-    pub fn m_s(matrix: &Matrix, exponent: &Scalar) -> Matrix {
+    pub fn m_s(matrix: &Matrix, exponent: &Scalar) -> Result<Matrix, MathError> {
         let exponent_int = exponent.value.round() as i32;
-        if exponent.value.fract().abs() > f64::EPSILON || exponent_int < 0 || matrix.rows != matrix.cols {
-            return matrix.clone();
+        if exponent.value.fract().abs() > f64::EPSILON {
+            return Err(MathError::new("Exponent must be an integer"));
+        }
+        if exponent_int < 0 {
+            return Err(MathError::new("Negative exponents not supported"));
+        }
+        if matrix.rows != matrix.cols {
+            return Err(MathError::new(&format!("Matrix must be square, got {}x{}", matrix.rows, matrix.cols)));
         }
 
         if exponent_int == 0 {
@@ -282,14 +310,14 @@ impl ExponentiationOperator {
             for i in 0..matrix.rows as usize {
                 result.data[i][i] = 1.0;
             }
-            return result;
+            return Ok(result);
         }
 
         let mut result = matrix.clone();
         for _ in 1..exponent_int {
-            result = MultiplicationOperator::m_m(&result, matrix);
+            result = MultiplicationOperator::m_m(&result, matrix)?;
         }
-        result
+        Ok(result)
     }
 }
 
@@ -308,11 +336,11 @@ impl CrossProductOperator {
         }
     }
 
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         let a = Self::to_vector3(m1);
         let b = Self::to_vector3(m2);
         if a.is_none() || b.is_none() {
-            return m1.clone();
+            return Err(MathError::new(&format!("Cross product requires 3D vectors, got {}x{} and {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let a = a.unwrap();
@@ -333,7 +361,7 @@ impl CrossProductOperator {
                 result.data[i][0] = cross[i];
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -342,9 +370,9 @@ pub struct BooleanMultiplicationOperator {
     pub base: BaseOperator,
 }
 impl BooleanMultiplicationOperator {
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         if m1.cols != m2.rows {
-            return m1.clone();
+            return Err(MathError::new(&format!("Incompatible dimensions for boolean multiplication: {}x{} and {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let mut result = Matrix::create(m1.rows, m2.cols);
@@ -360,7 +388,7 @@ impl BooleanMultiplicationOperator {
                 result.data[i][j] = value;
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -369,7 +397,7 @@ pub struct DotProductOperator {
     pub base: BaseOperator,
 }
 impl DotProductOperator {
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Scalar {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Scalar, MathError> {
         let mut total = 0.0;
         if m1.rows == m2.rows && m1.cols == m2.cols {
             for i in 0..m1.rows as usize {
@@ -377,24 +405,24 @@ impl DotProductOperator {
                     total += m1.data[i][j] * m2.data[i][j];
                 }
             }
-            return Scalar::from_f64(total);
+            return Ok(Scalar::from_f64(total));
         }
 
         if m1.rows == 1 && m2.cols == 1 && m1.cols == m2.rows {
             for k in 0..m1.cols as usize {
                 total += m1.data[0][k] * m2.data[k][0];
             }
-            return Scalar::from_f64(total);
+            return Ok(Scalar::from_f64(total));
         }
 
         if m1.cols == 1 && m2.rows == 1 && m1.rows == m2.cols {
             for k in 0..m1.rows as usize {
                 total += m1.data[k][0] * m2.data[0][k];
             }
-            return Scalar::from_f64(total);
+            return Ok(Scalar::from_f64(total));
         }
 
-        Scalar::from_f64(0.0)
+        Err(MathError::new(&format!("Incompatible dimensions for dot product: {}x{} and {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)))
     }
 }
 
@@ -403,9 +431,9 @@ pub struct LogicalAndOperator {
     pub base: BaseOperator,
 }
 impl LogicalAndOperator {
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         if m1.rows != m2.rows || m1.cols != m2.cols {
-            return m1.clone();
+            return Err(MathError::new(&format!("Dimension mismatch: {}x{} vs {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let mut result = Matrix::create(m1.rows, m1.cols);
@@ -414,7 +442,7 @@ impl LogicalAndOperator {
                 result.data[i][j] = if m1.data[i][j] != 0.0 && m2.data[i][j] != 0.0 { 1.0 } else { 0.0 };
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -423,9 +451,9 @@ pub struct LogicalOrOperator {
     pub base: BaseOperator,
 }
 impl LogicalOrOperator {
-    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Matrix {
+    pub fn m_m(m1: &Matrix, m2: &Matrix) -> Result<Matrix, MathError> {
         if m1.rows != m2.rows || m1.cols != m2.cols {
-            return m1.clone();
+            return Err(MathError::new(&format!("Dimension mismatch: {}x{} vs {}x{}", m1.rows, m1.cols, m2.rows, m2.cols)));
         }
 
         let mut result = Matrix::create(m1.rows, m1.cols);
@@ -434,7 +462,7 @@ impl LogicalOrOperator {
                 result.data[i][j] = if m1.data[i][j] != 0.0 || m2.data[i][j] != 0.0 { 1.0 } else { 0.0 };
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -443,14 +471,14 @@ pub struct TransposeOperator {
     pub base: BaseOperator,
 }
 impl TransposeOperator {
-    pub fn m(matrix: &Matrix) -> Matrix {
+    pub fn m(matrix: &Matrix) -> Result<Matrix, MathError> {
         let mut result = Matrix::create(matrix.cols, matrix.rows);
         for i in 0..matrix.rows as usize {
             for j in 0..matrix.cols as usize {
                 result.data[j][i] = matrix.data[i][j];
             }
         }
-        result
+        Ok(result)
     }
 }
 
@@ -459,12 +487,12 @@ pub struct DeterminateOperator {
     pub base: BaseOperator,
 }
 impl DeterminateOperator {
-    pub fn m(matrix: &Matrix) -> Scalar {
+    pub fn m(matrix: &Matrix) -> Result<Scalar, MathError> {
         if matrix.rows != matrix.cols {
-            return Scalar::from_f64(0.0);
+            return Err(MathError::new(&format!("Matrix must be square, got {}x{}", matrix.rows, matrix.cols)));
         }
 
-        Scalar::from_f64(Self::determinant(&matrix.data))
+        Ok(Scalar::from_f64(Self::determinant(&matrix.data)))
     }
 
     fn determinant(data: &[Vec<f64>]) -> f64 {

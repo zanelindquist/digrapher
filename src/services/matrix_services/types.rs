@@ -1,8 +1,7 @@
-use std::iter::empty;
 use yew::prelude::*;
 use regex::Regex;
 
-use crate::{render::styles::MathErrorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::operators::{BaseOperator, OperatorTypes}, objects::{matrix::Matrix, scalar::Scalar}}};
+use crate::{render::styles::MathErrorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::operators::BaseOperator, matrix_services::supported_operators, objects::{matrix::Matrix, scalar::Scalar}}};
 
 // ENUMS
 #[derive(PartialEq, Clone)]
@@ -59,21 +58,30 @@ impl MatrixEquation {
 
     pub fn parse_terms(&self) -> Result<Vec<Term>, ParseError> {
         let mut terms: Vec<Term> = vec![];
-        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∨∧⊙⋅\.])|(det|trans)").unwrap();
+        // Matrix | Scalar | Binary Operators | Unary Operators | \mat... Incompleted | Text | Unupported operators
+        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∨∧⊙⋅\.])|(det|trans)|\\[A-Za-z]{1,7}\{?[^}]*|(\w+)|(\W+)").unwrap();
 
-        for mat in digit_selector.find_iter(&self.raw_text) {
-            // Process a scalar
-            if let Ok(scalar) = mat.as_str().parse::<f64>() {
-                terms.push(Term::Scalar(
-                    Scalar::from_f64(scalar)
-                ));
+        let removed_whitespace = self.raw_text.chars()
+            .filter(|c| !c.is_whitespace())
+            .collect::<String>();
+
+        for (index, capture) in digit_selector.captures_iter(&removed_whitespace).into_iter().enumerate() {
+            // Add an error if we have unexpected text and continue
+            if let Some(_incomplete_escape) = capture.get(5) {
+                continue
             }
-            // Process a matrix
-            else if mat.len() > 5 {
-                let trimmed = mat.as_str().trim();
-                let inner = &trimmed[8..trimmed.len()-1];
+            if let Some(_text) = capture.get(6) {
+                terms.push(Term::Error(MathError::new("Unexpected text")));
+                continue
+            }
+            if let Some(_unsupported_operators) = capture.get(7) {
+                terms.push(Term::Error(MathError::new("Unexpected operator")));
+                continue
+            }
+            // Parse real terms
+            if let Some(matrix) = capture.get(1) {
                 // Partition the dimentions and the values
-                let partition: Vec<&str> = inner.split("),").collect();
+                let partition: Vec<&str> = matrix.as_str().split("),").collect();
                 if partition.len() != 2 {
                     return Err(ParseError::new("Partition size must be 2. E.X. \\matrix{(2, 3), (1, 2, 3, 4, 5, 6)}"))
                 }
@@ -116,170 +124,53 @@ impl MatrixEquation {
                 terms.push(Term::Matrix(
                     crate::services::objects::matrix::Matrix::from_values((rows, cols), values)
                 ))
-                    
             }
-            // Process an operator 
-            else {
-                match mat.as_str() {
-                    "+" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::SCALAR, TermTypes::SCALAR),
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                                (TermTypes::MATRIX, TermTypes::SCALAR),
-                                (TermTypes::SCALAR, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 1,
-                            symbol: "+".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5 , 0.0)
-                        }));
-                    }
-                    "-" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::SCALAR, TermTypes::SCALAR),
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                                (TermTypes::MATRIX, TermTypes::SCALAR),
-                            ],
-                            pemdas_level: 1,
-                            symbol: "-".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5 , 0.0)
-                        }));
-                    }
-                    "/" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::SCALAR, TermTypes::SCALAR),
-                            ],
-                            pemdas_level: 2,
-                            symbol: "/".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.0 , -1.0)
-                        }));
-                    }
-                    "*" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::SCALAR, TermTypes::SCALAR),
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                                (TermTypes::MATRIX, TermTypes::SCALAR),
-                                (TermTypes::SCALAR, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 2,
-                            symbol: "*".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5 , 0.0)
-                        }));
-                    }
-                    "^" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::SCALAR, TermTypes::SCALAR),
-                                (TermTypes::MATRIX, TermTypes::SCALAR),
-                            ],
-                            pemdas_level: 3,
-                            symbol: "^".to_string(),
-                            width: 0.0,
-                            height: 0.0,
-                            cursor_translate_l: (0.3 , 0.6)
-                        }));
-                    }
-                    "x" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 2,
-                            symbol: "x".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5 , 0.0)
-                        }));
-                    }
-                    "⊙" | "o" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 2,
-                            symbol: "⊙".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5 , 0.0)
-                        }));
-                    }
-                    "⋅" | "." => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 2,
-                            symbol: ".".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5, 0.0)
-                        }));
-                    }
-                    "∨" | "v" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 0,
-                            symbol: "v".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5, 0.0)
-                        }));
-                    }
-                    "∧" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 0,
-                            symbol: "∧".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5, 0.0)
-                        }));
-                    }
-                    "det" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 3,
-                            symbol: "det".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.5, 0.0)
-                        }));
-                    }
-                    "trans" => {
-                        terms.push(Term::Operator(BaseOperator {
-                            supported_operands: vec![
-                                (TermTypes::MATRIX, TermTypes::MATRIX),
-                            ],
-                            pemdas_level: 3,
-                            symbol: "trans".to_string(),
-                            width: 1.0,
-                            height: 1.0,
-                            cursor_translate_l: (0.25, 0.0)
-                        }));
-                    }
-                    _ => {}
+            if let Some(number) = capture.get(2) {
+                if let Ok(scalar) = number.as_str().parse::<f64>() {
+                    terms.push(Term::Scalar(
+                        Scalar::from_f64(scalar)
+                    ));
                 }
+            }
+            if let Some(operator) = capture.get(3) {
+                let supported_ops = supported_operators::get_supported_operators();
+                if let Some(op_type) = supported_ops.get(operator.as_str()) {
+                    terms.push(Term::Operator(op_type.get_base_operator()));
+                }
+            }
+            if let Some(unary_operator) = capture.get(4) {
+                let supported_ops = supported_operators::get_supported_operators();
+                if let Some(op_type) = supported_ops.get(unary_operator.as_str()) {
+                    terms.push(Term::Operator(op_type.get_base_operator()));
+                }
+            }
+        
+            // Check the term with the previous term to see if the two are compatible
+            // If we are the first or second term, just continue because you cant make an equation out of that (TODO: UNLESS ITS UNARY)
+            if index == 0 || index == 1 {
+                continue;
+            }
+
+            // If there is an error in compatiblity, add it
+            if let Err(math_error) = self.check_term_compatibility(terms.get(terms.len() - 3).unwrap(),terms.get(terms.len() - 2).unwrap(), terms.get(terms.len() - 1).unwrap()) {
+                terms.push(Term::Error(math_error));
             }
         }
 
         Ok(terms)
+    }
+
+    pub fn check_term_compatibility(&self, _term1: &Term, operator: &Term, _term2: &Term) -> Result<bool, MathError> {
+        if let Term::Operator(operator) = operator {
+            if let Some(specific_op) = supported_operators::get_supported_operator_by_symbol(operator.symbol.as_str()) {
+                
+                Ok(true)
+            } else {
+                return Err(MathError::new("Unexpected operator"))
+            }
+        } else {
+            Ok(true)
+        }
     }
 }
 
