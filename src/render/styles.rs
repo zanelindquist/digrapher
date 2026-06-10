@@ -82,7 +82,7 @@ impl Default for MatrixStyle {
             stroke: "var(--outlineVariant)",
             stroke_width: 2,
             selected_text_color: "var(--onBackground)",
-            selected_outline_color: "var(--onPrimaryContainer)",
+            selected_outline_color: "#FFAE42",
             selected_stroke_width: 1
         }        
     }
@@ -102,6 +102,7 @@ impl Default for ScalarStyle {
 
 pub struct OperatorStyle {
     pub fill: &'static str,
+    pub error_fill: &'static str,
     pub selected_fill: &'static str,
     pub size: i32
 }
@@ -109,8 +110,23 @@ impl Default for OperatorStyle {
     fn default() -> Self {
         Self {
             fill: "var(--outlineVariant)",
-            selected_fill: "red",
+            error_fill: "var(--error)",
+            selected_fill: "#FFAE42",
             size: 24
+        }        
+    }
+}
+pub struct MathErrorStyle {
+    pub fill: &'static str,
+    pub selected_fill: &'static str,
+    pub size: i32
+}
+impl Default for MathErrorStyle {
+    fn default() -> Self {
+        Self {
+            fill: "var(--error)",
+            selected_fill: "#FFAE42",
+            size: 16
         }        
     }
 }
@@ -118,14 +134,22 @@ impl Default for OperatorStyle {
 pub struct EquationStyle {
     pub horizontal_spacing_lx: f32,
     pub vertical_spacing_ly: f32,
-    pub vx_per_lx: f32
+    pub vx_per_lx: f32,
+    pub matrix_style: MatrixStyle,
+    pub scalar_style: ScalarStyle,
+    pub operator_style: OperatorStyle,
+    pub error_style: MathErrorStyle
 }
 impl Default for EquationStyle {
     fn default() -> Self {
         Self {
             horizontal_spacing_lx: 0.25,
             vertical_spacing_ly: 0.25,
-            vx_per_lx: 20.0
+            vx_per_lx: 20.0,
+            matrix_style: MatrixStyle::default(),
+            scalar_style: ScalarStyle::default(),
+            operator_style: OperatorStyle::default(),
+            error_style: MathErrorStyle::default()
         }        
     }
 }

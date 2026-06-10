@@ -55,7 +55,7 @@ impl BaseOperator {
                 <path d="M12 4V20M4 12H20" />
             },
             "-" => html! {
-                <path d="M4 10H20V14H4Z" />
+                <path d="M4 12H20" />
             },
             "*" => html! {
                 <rect x="8.5" y="8.5" width="7" height="7" rx="1.5" fill={style.fill} stroke={style.fill} />

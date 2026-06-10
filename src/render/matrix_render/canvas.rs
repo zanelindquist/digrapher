@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::{render::styles::{EquationStyle, MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
+use crate::{render::styles::{EquationStyle, MathErrorStyle, MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MathErrorPositioning, MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
 use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 
 
@@ -60,15 +60,14 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
 
     let rendered_terms = props.matrix_equation.terms.iter().map(|term| {
         // Matrices are centered a little differnt, so we have to do some math
-        let ms = MatrixStyle::default();
-
         let vx = current_lx * equation_style.vx_per_lx;
         let vy = current_ly * equation_style.vx_per_lx;
 
         let width = match term {
-            Term::Matrix(matrix) => matrix.width() * ms.cell_size as f32 / equation_style.vx_per_lx,
+            Term::Matrix(matrix) => matrix.width() * equation_style.matrix_style.cell_size as f32 / equation_style.vx_per_lx,
             Term::Scalar(scalar) => scalar.width(),
             Term::Operator(operator) => operator.width(),
+            Term::Error(error) => 0.0
         };
 
         current_lx += width + equation_style.horizontal_spacing_lx;
@@ -76,21 +75,26 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
         html! {
             {match term {
                 Term::Matrix(matrix) => matrix.clone().draw(
-                    &ms,
-                    &MatrixPositioning::from_xy(vx + matrix.width() / 2.0 * ms.cell_size as f32, vy - equation_style.vx_per_lx / 2.0),
+                    &equation_style.matrix_style,
+                    &MatrixPositioning::from_xy(vx + matrix.width() / 2.0 * equation_style.matrix_style.cell_size as f32, vy - equation_style.vx_per_lx / 2.0),
                     &canvas_position,
                     &crate::services::digraph_services::types::ObjectSelection::default()
                 ),
                 Term::Scalar(scalar) => scalar.draw(
-                    &ScalarStyle::default(),
+                    &equation_style.scalar_style,
                     &ScalarPositioning::from_xy(vx, vy),
                     &canvas_position
                 ),
                 Term::Operator(operator) => operator.draw(
-                    &OperatorStyle::default(),
+                    &equation_style.operator_style,
                     &OperatorPositioning::from_xy(vx, vy - operator.height() * equation_style.vx_per_lx),
                     &canvas_position
                 ),
+                Term::Error(error) => error.draw(
+                    &equation_style.error_style,
+                    &MathErrorPositioning::from_xy(vx - error.width() / 2.0 * equation_style.vx_per_lx, vy + equation_style.error_style.size as f32 * 1.5),
+                    &canvas_position
+                )
             }}
         }
     });

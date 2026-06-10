@@ -2,7 +2,7 @@ use std::iter::empty;
 use yew::prelude::*;
 use regex::Regex;
 
-use crate::services::{matrix_services::operators::{BaseOperator, OperatorTypes}, objects::{matrix::Matrix, scalar::Scalar}};
+use crate::{render::styles::MathErrorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::operators::{BaseOperator, OperatorTypes}, objects::{matrix::Matrix, scalar::Scalar}}};
 
 // ENUMS
 #[derive(PartialEq, Clone)]
@@ -12,7 +12,8 @@ pub enum TermTypes{ MATRIX, SCALAR }
 pub enum Term {
     Matrix(Matrix),
     Scalar(Scalar),
-    Operator(BaseOperator)
+    Operator(BaseOperator),
+    Error(MathError)
 }
 
 
@@ -58,7 +59,7 @@ impl MatrixEquation {
 
     pub fn parse_terms(&self) -> Result<Vec<Term>, ParseError> {
         let mut terms: Vec<Term> = vec![];
-        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∧⊙\.])|(det|trans)").unwrap();
+        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∨∧⊙⋅\.])|(det|trans)").unwrap();
 
         for mat in digit_selector.find_iter(&self.raw_text) {
             // Process a scalar
@@ -213,7 +214,7 @@ impl MatrixEquation {
                             cursor_translate_l: (0.5 , 0.0)
                         }));
                     }
-                    "." => {
+                    "⋅" | "." => {
                         terms.push(Term::Operator(BaseOperator {
                             supported_operands: vec![
                                 (TermTypes::MATRIX, TermTypes::MATRIX),
@@ -225,7 +226,7 @@ impl MatrixEquation {
                             cursor_translate_l: (0.5, 0.0)
                         }));
                     }
-                    "v" => {
+                    "∨" | "v" => {
                         terms.push(Term::Operator(BaseOperator {
                             supported_operands: vec![
                                 (TermTypes::MATRIX, TermTypes::MATRIX),
@@ -248,7 +249,7 @@ impl MatrixEquation {
                             height: 1.0,
                             cursor_translate_l: (0.5, 0.0)
                         }));
-                    },
+                    }
                     "det" => {
                         terms.push(Term::Operator(BaseOperator {
                             supported_operands: vec![
@@ -260,7 +261,7 @@ impl MatrixEquation {
                             height: 1.0,
                             cursor_translate_l: (0.5, 0.0)
                         }));
-                    },
+                    }
                     "trans" => {
                         terms.push(Term::Operator(BaseOperator {
                             supported_operands: vec![
@@ -277,6 +278,10 @@ impl MatrixEquation {
                 }
             }
         }
+
+        terms.push(Term::Error(
+            MathError::new("Division by zero")
+        ));
 
         Ok(terms)
     }
@@ -297,6 +302,19 @@ impl ParseError {
     }
 }
 
+pub struct MathErrorPositioning {
+    pub offset_vx: i32,
+    pub offset_vy: i32,
+}
+impl MathErrorPositioning {
+    pub fn from_xy(x: f32, y: f32) -> Self {
+        Self {
+            offset_vx: x as i32,
+            offset_vy: y as i32
+        }
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct MathError {
     pub message: String,
@@ -306,5 +324,26 @@ impl MathError {
         Self {
             message: message.to_string(),
         }
+    }
+
+    pub fn width(&self) -> f32 {
+        self.message.len() as f32 * 0.5 + 0.3
+    }
+    pub fn height(&self) -> f32 {
+        1.0
+    }
+
+    pub fn draw(&self, style: &MathErrorStyle, scalar_pos: &MathErrorPositioning, canvas_pos: &CanvasPositioning) -> Html {
+        html! {
+            <text
+                x={(canvas_pos.width / 2 + canvas_pos.offset_x + scalar_pos.offset_vx).to_string()}
+                y={(canvas_pos.height / 2 + canvas_pos.offset_y + scalar_pos.offset_vy).to_string()}
+                font-size={(style.size as f32 * canvas_pos.zoom).to_string()}
+                fill={style.fill}
+            >
+                { self.message.clone() }
+            </text>
+        }
+
     }
 }
