@@ -55,6 +55,7 @@ impl OperatorPositioning {
 pub struct BaseOperator {
     pub supported_operands: Vec<(TermTypes, TermTypes)>,
     pub pemdas_level: i32,
+    pub is_unary: bool,
     pub symbol: String,
     pub width: f32,
     pub height: f32,

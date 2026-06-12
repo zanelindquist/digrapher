@@ -1,3 +1,4 @@
+use js_sys::Math;
 use yew::prelude::*;
 use regex::Regex;
 
@@ -57,6 +58,20 @@ impl MatrixEquation {
     }
 
     pub fn parse_terms(&self) -> Result<Vec<Term>, ParseError> {
+        /*
+            Returns a result that is either a Vec of Term, or a Parse Error
+            Parse error are thrown if the program hits an unrecoverable parsing error
+            Math errors occur when there is a syntax issue that we want to clearly communicate to the user
+            Math errors are included in the term vector so that they can be displayed to the user.
+
+            While parsing, if the parser hits a math error, it will continue to the next term to evaluate.
+            If it hits a parsing error, it will return immediately
+
+            Parse Errors = Symantic errors
+            Math Errors = Syntactic errors
+        */
+
+
         let mut terms: Vec<Term> = vec![];
         // Matrix | Scalar | Binary Operators | Unary Operators | \mat... Incompleted | Text | Unupported operators
         let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∨∧⊙⋅\.])|(det|trans)|\\[A-Za-z]{1,7}\{?[^}]*|(\w+)|(\W+)").unwrap();
@@ -65,18 +80,17 @@ impl MatrixEquation {
             .filter(|c| !c.is_whitespace())
             .collect::<String>();
 
+        // Parse the text into terms
         for (index, capture) in digit_selector.captures_iter(&removed_whitespace).into_iter().enumerate() {
             // Add an error if we have unexpected text and continue
             if let Some(_incomplete_escape) = capture.get(5) {
                 continue
             }
             if let Some(_text) = capture.get(6) {
-                terms.push(Term::Error(MathError::new("Unexpected text")));
-                continue
+                return Err(ParseError::new("Unexpected text"))
             }
             if let Some(_unsupported_operators) = capture.get(7) {
-                terms.push(Term::Error(MathError::new("Unexpected operator")));
-                continue
+                return Err(ParseError::new("Unexpected operator"))
             }
             // Parse real terms
             if let Some(matrix) = capture.get(1) {
@@ -99,7 +113,7 @@ impl MatrixEquation {
                     .collect::<Result<Vec<i32>, ParseError>>()?;
 
                 if dims.len() != 2 {
-                    return Err(ParseError::new("Dimensions must be exactly two integers, e.g. (4, 3)"));
+                    return Err(ParseError::new("Matrix dimensions must be exactly two integers, e.g. (4, 3)"));
                 }
 
                 let (rows, cols) = (dims[0], dims[1]);
@@ -144,33 +158,45 @@ impl MatrixEquation {
                     terms.push(Term::Operator(op_type.get_base_operator()));
                 }
             }
-        
-            // Check the term with the previous term to see if the two are compatible
-            // If we are the first or second term, just continue because you cant make an equation out of that (TODO: UNLESS ITS UNARY)
-            if index == 0 || index == 1 {
-                continue;
-            }
+        }
 
-            // If there is an error in compatiblity, add it
-            if let Err(math_error) = self.check_term_compatibility(terms.get(terms.len() - 3).unwrap(),terms.get(terms.len() - 2).unwrap(), terms.get(terms.len() - 1).unwrap()) {
-                terms.push(Term::Error(math_error));
+
+        // Now that the terms are parsed correctly, check for Math Errors (syntactic errors)
+        // Check every pair to make sure we don't have invalid pairs
+        // let mut errors_to_insert: Vec<(usize, MathError)> = vec![];
+        for (index, term) in terms.iter().enumerate() {
+            if index == 0 {
+                continue
+            }
+            if let Err(math_error) = self.check_term_compatibility(terms.get(index - 1).unwrap(), term) {
+                // If we hit an error, break so that we only display one at a time and don't snowball a ton
+                terms.insert(index, Term::Error(math_error));
+                break;
             }
         }
 
         Ok(terms)
     }
 
-    pub fn check_term_compatibility(&self, _term1: &Term, operator: &Term, _term2: &Term) -> Result<bool, MathError> {
-        if let Term::Operator(operator) = operator {
-            if let Some(specific_op) = supported_operators::get_supported_operator_by_symbol(operator.symbol.as_str()) {
-                
-                Ok(true)
-            } else {
-                return Err(MathError::new("Unexpected operator"))
-            }
+    // Checks the order of two terms and makes sure its ok
+    pub fn check_term_compatibility(&self, term1: &Term, term2: &Term) -> Result<bool, MathError> {
+        // Don't let two consecutive vectors or scalars exist
+        if (matches!(term1, Term::Scalar(_)) || matches!(term1, Term::Matrix(_)))
+        && (matches!(term2, Term::Scalar(_)) || matches!(term2, Term::Matrix(_))) {
+            Err(MathError::new("Missing an operator"))
+        }
+        // If there are two operators in a row, and the second is not unary, throw an error
+        else if matches!(term1, Term::Operator(_)) && matches!(term2, Term::Operator(op) if !op.is_unary) {
+            Err(MathError::new("Missing a term"))
         } else {
             Ok(true)
         }
+    }
+
+    pub fn check_operator_compatibility(&self) -> Result<bool, MathError> {
+
+
+        Ok(true)
     }
 }
 

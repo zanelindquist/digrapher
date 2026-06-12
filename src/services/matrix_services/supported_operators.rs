@@ -23,6 +23,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
                     (TermTypes::SCALAR, TermTypes::MATRIX),
                 ],
                 pemdas_level: 1,
+                is_unary: false,
                 symbol: "+".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -42,6 +43,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
                     (TermTypes::MATRIX, TermTypes::SCALAR),
                 ],
                 pemdas_level: 1,
+                is_unary: false,
                 symbol: "-".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -57,6 +59,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::SCALAR, TermTypes::SCALAR)],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "/".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -77,6 +80,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
                     (TermTypes::SCALAR, TermTypes::MATRIX),
                 ],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "*".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -95,6 +99,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
                     (TermTypes::MATRIX, TermTypes::SCALAR),
                 ],
                 pemdas_level: 3,
+                is_unary: false,
                 symbol: "^".to_string(),
                 width: 0.0,
                 height: 0.0,
@@ -110,6 +115,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "x".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -125,6 +131,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "⊙".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -140,6 +147,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "⊙".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -155,6 +163,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "⋅".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -170,6 +179,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 2,
+                is_unary: false,
                 symbol: "⋅".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -185,6 +195,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 0,
+                is_unary: false,
                 symbol: "∨".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -200,6 +211,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 0,
+                is_unary: false,
                 symbol: "∨".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -215,6 +227,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 0,
+                is_unary: false,
                 symbol: "∧".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -230,6 +243,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 3,
+                is_unary: true,
                 symbol: "det".to_string(),
                 width: 1.0,
                 height: 1.0,
@@ -245,6 +259,7 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
             base: BaseOperator {
                 supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
                 pemdas_level: 3,
+                is_unary: true,
                 symbol: "trans".to_string(),
                 width: 1.0,
                 height: 1.0,
