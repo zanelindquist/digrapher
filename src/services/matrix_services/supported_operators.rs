@@ -172,22 +172,6 @@ pub fn get_supported_operators() -> HashMap<String, OperatorType> {
         }),
     );
 
-    // Dot Product (.) - alias for ⋅
-    operators.insert(
-        ".".to_string(),
-        OperatorType::DotProduct(DotProductOperator {
-            base: BaseOperator {
-                supported_operands: vec![(TermTypes::MATRIX, TermTypes::MATRIX)],
-                pemdas_level: 2,
-                is_unary: false,
-                symbol: "⋅".to_string(),
-                width: 1.0,
-                height: 1.0,
-                cursor_translate_l: (0.5, 0.0),
-            },
-        }),
-    );
-
     // Logical Or (∨)
     operators.insert(
         "∨".to_string(),

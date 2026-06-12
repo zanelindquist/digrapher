@@ -97,7 +97,7 @@ impl BaseOperator {
                     <circle cx="12" cy="12" r="2.5" />
                 </>
             },
-            "." => html! {
+            "⋅" => html! {
                 <circle cx="12" cy="12" r="3" />
             },
             "v" => html! {

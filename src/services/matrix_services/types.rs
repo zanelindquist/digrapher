@@ -1,3 +1,5 @@
+use core::fmt;
+
 use js_sys::Math;
 use yew::prelude::*;
 use regex::Regex;
@@ -7,6 +9,16 @@ use crate::{render::styles::MathErrorStyle, services::{digraph_services::types::
 // ENUMS
 #[derive(PartialEq, Clone)]
 pub enum TermTypes{ MATRIX, SCALAR }
+impl fmt::Display for TermTypes{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let msg = match self {
+            TermTypes::MATRIX => "matrix",
+            TermTypes::SCALAR => "scalar",
+        };
+
+        write!(f, "{}", msg)
+    }
+}
 
 #[derive(PartialEq, Clone)]
 pub enum Term {
@@ -74,7 +86,7 @@ impl MatrixEquation {
 
         let mut terms: Vec<Term> = vec![];
         // Matrix | Scalar | Binary Operators | Unary Operators | \mat... Incompleted | Text | Unupported operators
-        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∨∧⊙⋅\.])|(det|trans)|\\[A-Za-z]{1,7}\{?[^}]*|(\w+)|(\W+)").unwrap();
+        let digit_selector = Regex::new(r"\\matrix\{([^}]+)\}|(\d+\.?\d*)|([\+\-/\*\^xov∨∧⊙⋅])|(det|trans)|\\[A-Za-z]{1,7}\{?[^}]*|(\w+)|(\W+)").unwrap();
 
         let removed_whitespace = self.raw_text.chars()
             .filter(|c| !c.is_whitespace())
@@ -165,13 +177,23 @@ impl MatrixEquation {
         // Check every pair to make sure we don't have invalid pairs
         // let mut errors_to_insert: Vec<(usize, MathError)> = vec![];
         for (index, term) in terms.iter().enumerate() {
-            if index == 0 {
-                continue
-            }
+            // Check for term compatibility
+            if index == 0 { continue }
             if let Err(math_error) = self.check_term_compatibility(terms.get(index - 1).unwrap(), term) {
                 // If we hit an error, break so that we only display one at a time and don't snowball a ton
                 terms.insert(index, Term::Error(math_error));
                 break;
+            }
+
+            // Check for binary operator compatibility
+            if index == 1 || index == terms.len() - 1 { continue }
+            if let Term::Operator(operator) = term {
+                if !operator.is_unary {
+                    if let Err(math_error) = self.check_binary_operator_compatibility(terms.get(index - 1).unwrap(), term, terms.get(index + 1).unwrap()) {
+                        terms.insert(index, Term::Error(math_error));
+                        break;
+                    }
+                }
             }
         }
 
@@ -193,8 +215,33 @@ impl MatrixEquation {
         }
     }
 
-    pub fn check_operator_compatibility(&self) -> Result<bool, MathError> {
+    pub fn check_binary_operator_compatibility(&self, term1: &Term, operator: &Term, term2: &Term) -> Result<bool, MathError> {
+        // If the middle one is not an operator, crash the program
+        assert_eq!(matches!(operator, Term::Operator(_)), true);
+        // Return if one of the terms is an operator (we have run into a unary operator, which isn't supported yet)
+        if matches!(term1, Term::Operator(_)) || matches!(term2, Term::Operator(_)) {
+            return Err(MathError::new("Unary operator encountered"))
+        }
 
+        if let Term::Operator(op) = operator {
+            // Crash the program if this is not a binary operator
+            assert_ne!(op.is_unary, true);
+
+            let term1_type = if matches!(term1, Term::Matrix(_)) {TermTypes::MATRIX} else {TermTypes::SCALAR};
+            let term2_type = if matches!(term2, Term::Matrix(_)) {TermTypes::MATRIX} else {TermTypes::SCALAR};
+
+            // Check if the operands are compatible
+           if op.supported_operands.iter()
+            .find(|supported| supported.0 == term1_type && supported.1 == term2_type)
+            .is_none() {
+                return Err(MathError::new(format!("Operand mismatch: '{}' does not support types: '{}' and '{}'", op.symbol, term1_type, term2_type).as_str()))
+           }
+
+        //    // Use the custom validate operator to 
+        //     let Some(op) = supported_operators::get_supported_operator_by_symbol(&op.symbol) {
+
+        //     }
+        }
 
         Ok(true)
     }
