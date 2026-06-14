@@ -531,3 +531,12 @@
 .canvas.grab {
     cursor: grabbing;
 }
+.canvas__divider {
+    border-top: 1px solid var(--outlineVariant);
+    padding-left: 16px;
+    padding-top: 10px;
+    width: 100%;
+    font-family: "Fira Code", monospace;
+    font-size: 24px;
+    color: var(--onSurface);
+}

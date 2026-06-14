@@ -9,6 +9,7 @@ use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 pub struct MatrixCanvasProps {
     pub matrix_equation: MatrixEquation,
     pub object_selection: UseStateHandle<ObjectSelection>,
+    pub answer: Option<Term>,
 
     #[prop_or_default]
     pub class: Classes,
@@ -20,17 +21,19 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     let size = use_state(|| (1000, 1000));
 
     let canvas_position = use_state(|| CanvasPositioning::new());
+    let answer_canvas_position = use_state(|| CanvasPositioning::new());
 
     // On layout set the dimentions of the canvas
     use_effect({
         let node_ref = node_ref.clone();
         let size = size.clone();
         let canvas_pos = canvas_position.clone();
+        let answer_pos = answer_canvas_position.clone();
 
         move || {
             if let Some(element) = node_ref.cast::<HtmlElement>() {
                 let width = element.offset_width();
-                let height = element.offset_height();
+                let height = (element.offset_height() as f32 * 0.66) as i32;
 
                 let rect = element.get_bounding_client_rect();
                 let real_x = rect.x() as f32;
@@ -46,7 +49,9 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                     new_pos.height = height;
 
                     canvas_pos.set(new_pos);
-                    size.set((width, height))
+                    size.set((width, height));
+
+                    answer_pos.set(CanvasPositioning { offset_x: 0, offset_y: 0, width, height: height / 2, zoom: 1.0, dom_element_offset_x: real_x, dom_element_offset_y: real_y + height as f32 });
                 }
             }
             || ()
@@ -117,6 +122,39 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 height={canvas_position.height.to_string()}
             >
             {for rendered_terms}
+            </svg>
+            <div class="canvas__divider">{"Answer:"}</div>
+            <svg
+                class="canvas__svg"
+                width={canvas_position.width.to_string()}
+                height={(canvas_position.height / 2).to_string()}
+            >
+            {
+                if let Some(term) = &props.answer {
+                    match term {
+                        Term::Matrix(matrix) => html! {
+                            {matrix.clone().draw(
+                                &equation_style.matrix_style,
+                                &MatrixPositioning::from_xy(0.0, 0.0),
+                                &answer_canvas_position,
+                                &crate::services::digraph_services::types::ObjectSelection::default()
+                            )}
+                        },
+                        Term::Scalar(scalar) => html!{
+                            {scalar.draw(
+                                &equation_style.scalar_style,
+                                &ScalarPositioning::from_xy(0.0, 0.0),
+                                &answer_canvas_position
+                            )}
+                        },
+                        _ => html!{
+
+                        }
+                    }
+                } else {
+                    html! {}
+                }
+            }
             </svg>
         </div>
     }

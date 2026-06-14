@@ -4,9 +4,7 @@ use crate::{
     components::{
         matrix_components::sidebar::Sidebar,
         navigation::topbar_layout::TopbarLayout
-    },
-    services::matrix_services::types::{MatrixEquation, ObjectSelection, ParseError},
-    render::matrix_render::canvas::MatrixCanvas
+    }, render::matrix_render::canvas::MatrixCanvas, services::{matrix_services::types::{MatrixEquation, ObjectSelection, ParseError, Term}, objects::scalar::Scalar}
 };
 
 
@@ -14,6 +12,15 @@ use crate::{
 pub fn matrix() -> Html {
     let object_selection: UseStateHandle<ObjectSelection> = use_state(|| ObjectSelection::default());
     let matrix_equation: UseStateHandle<Result<MatrixEquation, ParseError>> = use_state(|| Err(ParseError::new("No input")));
+    let computed_answer: UseStateHandle<Option<Term>> = use_state(|| Some(Term::Scalar(Scalar::from_f64(1.1))));
+
+    {
+        let computed_answer = computed_answer.clone();
+        let matrix_equation = matrix_equation.clone();
+        use_effect_with(matrix_equation, move |_| {
+
+        })
+    }
 
     html! {
         <TopbarLayout class="app">
@@ -27,6 +34,7 @@ pub fn matrix() -> Html {
                         <MatrixCanvas
                             object_selection={object_selection}
                             matrix_equation={equation.clone()}
+                            answer={(*computed_answer).clone()}
                         />
                     }
                 }
