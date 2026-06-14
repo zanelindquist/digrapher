@@ -237,10 +237,10 @@ impl MatrixEquation {
                 return Err(MathError::new(format!("Operand mismatch: '{}' does not support types: '{}' and '{}'", op.symbol, term1_type, term2_type).as_str()))
            }
 
-        //    // Use the custom validate operator to 
-        //     let Some(op) = supported_operators::get_supported_operator_by_symbol(&op.symbol) {
-
-        //     }
+            // Perform the operation to see if there are any other errors
+            if let Err(math_error) = supported_operators::evaluate_binary_operator(term1, operator, term2) {
+                return Err(math_error)
+            }
         }
 
         Ok(true)

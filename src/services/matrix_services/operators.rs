@@ -100,7 +100,7 @@ impl BaseOperator {
             "⋅" => html! {
                 <circle cx="12" cy="12" r="3" />
             },
-            "v" => html! {
+            "∨" | "v" => html! {
                 <path d="M6 8L12 16L18 8" />
             },
             "∧" => html! {

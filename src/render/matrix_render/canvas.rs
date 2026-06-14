@@ -57,6 +57,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
 
     let mut current_lx = -canvas_position.width as f32 / (3.0 * equation_style.vx_per_lx);
     let mut current_ly = 0.0;
+    let mut error_text_offset_ly: f32 = 0.0;
 
     let rendered_terms = props.matrix_equation.terms.iter().map(|term| {
         // Matrices are centered a little differnt, so we have to do some math
@@ -67,8 +68,12 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
             Term::Matrix(matrix) => matrix.width() * equation_style.matrix_style.cell_size as f32 / equation_style.vx_per_lx,
             Term::Scalar(scalar) => scalar.width(),
             Term::Operator(operator) => operator.width(),
-            Term::Error(error) => 1.0
+            Term::Error(error) => 0.5
         };
+
+        if let Term::Matrix(matrix) = term {
+            error_text_offset_ly = error_text_offset_ly.max(matrix.height());
+        }
 
         current_lx += width + equation_style.horizontal_spacing_lx;
         
@@ -92,7 +97,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 ),
                 Term::Error(error) => error.draw(
                     &equation_style.error_style,
-                    &MathErrorPositioning::from_xy(vx, vy),
+                    &MathErrorPositioning::from_xy(vx, vy + error_text_offset_ly * equation_style.matrix_style.cell_size as f32 / 2.0),
                     &canvas_position
                 )
             }}
