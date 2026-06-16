@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::{render::styles::{EquationStyle, MathErrorStyle, MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MathErrorPositioning, MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
+use crate::{render::styles::{EquationStyle, MathErrorStyle, MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MathError, MathErrorPositioning, MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
 use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 
 
@@ -9,7 +9,7 @@ use crate::services::objects::{matrix::Matrix, scalar::Scalar};
 pub struct MatrixCanvasProps {
     pub matrix_equation: MatrixEquation,
     pub object_selection: UseStateHandle<ObjectSelection>,
-    pub answer: Option<Term>,
+    pub answer: Result<Term, MathError>,
 
     #[prop_or_default]
     pub class: Classes,
@@ -130,29 +130,41 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 height={(canvas_position.height / 2).to_string()}
             >
             {
-                if let Some(term) = &props.answer {
-                    match term {
-                        Term::Matrix(matrix) => html! {
-                            {matrix.clone().draw(
-                                &equation_style.matrix_style,
-                                &MatrixPositioning::from_xy(0.0, 0.0),
-                                &answer_canvas_position,
-                                &crate::services::digraph_services::types::ObjectSelection::default()
-                            )}
-                        },
-                        Term::Scalar(scalar) => html!{
-                            {scalar.draw(
-                                &equation_style.scalar_style,
-                                &ScalarPositioning::from_xy(0.0, 0.0),
-                                &answer_canvas_position
-                            )}
-                        },
-                        _ => html!{
+                match &props.answer {
+                    Ok(term) => {
+                        match term {
+                            Term::Matrix(matrix) => html! {
+                                {matrix.clone().draw(
+                                    &equation_style.matrix_style,
+                                    &MatrixPositioning::from_xy(0.0, 0.0),
+                                    &answer_canvas_position,
+                                    &crate::services::digraph_services::types::ObjectSelection::default()
+                                )}
+                            },
+                            Term::Scalar(scalar) => html!{
+                                {scalar.draw(
+                                    &equation_style.scalar_style,
+                                    &ScalarPositioning::from_xy(0.0, 0.0),
+                                    &answer_canvas_position
+                                )}
+                            },
+                            _ => html!{
 
+                            }
                         }
+                    },
+                    Err(error) => html! {
+                        <text
+                            x={(answer_canvas_position.width / 2 + answer_canvas_position.offset_x).to_string()}
+                            y={(answer_canvas_position.height / 2 + answer_canvas_position.offset_y - 20).to_string()}
+                            font-size={(equation_style.error_style.size as f32 * answer_canvas_position.zoom).to_string()}
+                            fill={equation_style.error_style.fill}
+                            dominant-baseline="middle"
+                            text-anchor="middle"
+                        >
+                            { error.message.clone() }
+                        </text>
                     }
-                } else {
-                    html! {}
                 }
             }
             </svg>

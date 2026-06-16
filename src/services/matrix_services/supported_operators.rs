@@ -88,6 +88,26 @@ pub fn evaluate_binary_operator(term1: &Term, operator: &Term, term2: &Term) -> 
     }
 }
 
+pub fn evaluate_unary_operator(operator: &Term, term: &Term) -> Result<Term, MathError> {
+    let operator_type = match operator {
+        Term::Operator(base_op) => {
+            get_supported_operator_by_symbol(&base_op.symbol)
+                .ok_or_else(|| MathError::new("Unknown operator"))?
+        }
+        _ => return Err(MathError::new("Expected operator")),
+    };
+
+    match (&operator_type, term) {
+        (OperatorType::Transpose(_), Term::Matrix(matrix)) => {
+            Ok(Term::Matrix(TransposeOperator::m(matrix)?))
+        }
+        (OperatorType::Determinate(_), Term::Matrix(matrix)) => {
+            Ok(Term::Scalar(DeterminateOperator::m(matrix)?))
+        }
+        _ => Err(MathError::new("Unsupported operand combination")),
+    }
+}
+
 pub fn get_supported_operators() -> HashMap<String, OperatorType> {
     let mut operators = HashMap::new();
 

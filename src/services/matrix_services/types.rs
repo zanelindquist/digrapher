@@ -4,7 +4,7 @@ use js_sys::Math;
 use yew::prelude::*;
 use regex::Regex;
 
-use crate::{render::styles::MathErrorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::operators::BaseOperator, matrix_services::supported_operators, objects::{matrix::Matrix, scalar::Scalar}}};
+use crate::{render::styles::MathErrorStyle, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::{BaseOperator, OperatorType}, supported_operators::{self, evaluate_binary_operator, get_supported_operators}}, objects::{matrix::Matrix, scalar::Scalar}}};
 
 // ENUMS
 #[derive(PartialEq, Clone)]
@@ -244,6 +244,65 @@ impl MatrixEquation {
         }
 
         Ok(true)
+    }
+
+    pub fn evaluate(&self) -> Result<Term, MathError> {
+        match &mut self.parse_terms() {
+            Ok(terms) => {
+                // Check for math errors
+                if let Some(Term::Error(math_error)) = terms.iter().find(|t| matches!(t, Term::Error(_))) {
+                    return Err((*math_error).clone())
+                }
+
+                // Now that our vector of terms has no errors in it, we can begin to evaluate it
+
+                // Evaluate unary operators
+
+                // Evaluate binary operators according to pemdas
+                let supported_ops = get_supported_operators();
+                let mut operands = supported_ops
+                    .iter()
+                    .collect::<Vec<(&String, &OperatorType)>>();
+
+                operands.sort_by(|a, b| (b.1.get_base_operator().pemdas_level).cmp(&a.1.get_base_operator().pemdas_level));
+
+                for operand in operands {
+                    loop {
+                        let index = match terms.iter().position(|t| matches!(t, Term::Operator(o) if o.symbol.eq(operand.0))) {
+                            Some(i) => i,
+                            None => break,
+                        };
+
+                        // If there isnt an n + 1 or n - 1, then we must return an error
+                        if terms.get(index - 1).is_none() || terms.get(index + 1).is_none() {
+                            return Err(MathError::new("Incomplete equation"))
+                        }
+
+                        // Remove n - 1, n, and n + 1 and feed them into the evaluation
+                        let left = terms.remove(index - 1);
+                        let op = terms.remove(index - 1);
+                        let right = terms.remove(index - 1);
+                        let result = evaluate_binary_operator(&left, &op, &right)?;
+                        terms.insert(index - 1, result);
+                    }
+                }
+
+                // Now the vector of terms should only be one term
+                if terms.len() == 1 {
+                    if let Some(term) = terms.first() {
+                        return Ok((*term).clone())
+                    }
+                }
+
+                return Err(MathError::new("More than one final term found"))
+
+            },
+            Err(parse_error) => {
+                return Err(MathError::new("Evaluation failed"))
+            }
+        }
+
+        Err(MathError::new("Evaluation failed"))
     }
 }
 
