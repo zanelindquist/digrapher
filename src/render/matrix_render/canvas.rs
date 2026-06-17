@@ -1,15 +1,13 @@
 use yew::prelude::*;
 use web_sys::{HtmlElement};
 
-use crate::{render::styles::{EquationStyle, MathErrorStyle, MatrixStyle, OperatorStyle, ScalarStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MathError, MathErrorPositioning, MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
-use crate::services::objects::{matrix::Matrix, scalar::Scalar};
+use crate::{render::styles::{EquationStyle}, services::{digraph_services::types::CanvasPositioning, matrix_services::{operators::OperatorPositioning, types::{MathError, MathErrorPositioning, MatrixEquation, ObjectSelection, Term}}, objects::{matrix::MatrixPositioning, scalar::ScalarPositioning}}};
 
 
 #[derive(Properties, PartialEq)]
 pub struct MatrixCanvasProps {
     pub matrix_equation: MatrixEquation,
     pub object_selection: UseStateHandle<ObjectSelection>,
-    pub answer: Result<Term, MathError>,
 
     #[prop_or_default]
     pub class: Classes,
@@ -20,6 +18,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     let node_ref = use_node_ref();
     let size = use_state(|| (1000, 1000));
 
+    // Position for the main canvas and the answer canvas
     let canvas_position = use_state(|| CanvasPositioning::new());
     let answer_canvas_position = use_state(|| CanvasPositioning::new());
 
@@ -51,6 +50,7 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                     canvas_pos.set(new_pos);
                     size.set((width, height));
 
+                    // Set the dimentions of the answer canvas (same width, 1/2 of the height of the normal window)
                     answer_pos.set(CanvasPositioning { offset_x: 0, offset_y: 0, width, height: height / 2, zoom: 1.0, dom_element_offset_x: real_x, dom_element_offset_y: real_y + height as f32 });
                 }
             }
@@ -64,24 +64,29 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
     let mut current_ly = 0.0;
     let mut error_text_offset_ly: f32 = 0.0;
 
+    // Collect the terms here instead of in the Html bc its just easier
     let rendered_terms = props.matrix_equation.terms.iter().map(|term| {
         // Matrices are centered a little differnt, so we have to do some math
         let vx = current_lx * equation_style.vx_per_lx;
         let vy = current_ly * equation_style.vx_per_lx;
 
+        // Add the width to the cursor
         let width = match term {
             Term::Matrix(matrix) => matrix.width() * equation_style.matrix_style.cell_size as f32 / equation_style.vx_per_lx,
             Term::Scalar(scalar) => scalar.width(),
             Term::Operator(operator) => operator.width(),
-            Term::Error(error) => 0.5
+            Term::Error(_) => 0.5
         };
 
+        // Add height to the error cursor
         if let Term::Matrix(matrix) = term {
             error_text_offset_ly = error_text_offset_ly.max(matrix.height());
         }
 
+        // Add width
         current_lx += width + equation_style.horizontal_spacing_lx;
         
+        // Render the term corresponding to its position
         html! {
             {match term {
                 Term::Matrix(matrix) => matrix.clone().draw(
@@ -130,7 +135,8 @@ pub fn matrix_canvas(props: &MatrixCanvasProps) -> Html {
                 height={(canvas_position.height / 2).to_string()}
             >
             {
-                match &props.answer {
+                // Render the term in the answre canvas
+                match &props.matrix_equation.answer {
                     Ok(term) => {
                         match term {
                             Term::Matrix(matrix) => html! {

@@ -50,21 +50,23 @@ impl Default for ObjectSelection {
 #[derive(Properties, PartialEq, Clone)]
 pub struct MatrixEquation {
     pub raw_text: String,
-    pub terms: Vec<Term>
+    pub terms: Vec<Term>,
+    pub answer: Result<Term, MathError>
 }
 impl MatrixEquation {
     pub fn default() -> Self {
-        Self { raw_text: String::default(), terms: vec![] }
+        Self { raw_text: String::default(), terms: vec![], answer: Err(MathError::new("No input")) }
     }
     pub fn from_text(text: String) -> Result<Self, ParseError> {
-        let mut new = Self { raw_text: text, terms: vec![] };
+        let mut new = Self { raw_text: text, terms: vec![], answer: Err(MathError::new("No input")) };
         match new.parse_terms() {
             Ok(terms) => {
                 new.terms = terms;
+                new.answer = new.evaluate();
                 Ok(new)
             },
             Err(e) => {
-                Err(e)
+                return Err(e)
             }
         }
     }
@@ -125,7 +127,7 @@ impl MatrixEquation {
                     .collect::<Result<Vec<i32>, ParseError>>()?;
 
                 if dims.len() != 2 {
-                    return Err(ParseError::new("Matrix dimensions must be exactly two integers, e.g. (4, 3)"));
+                    return Err(ParseError::new("Matrix dimensions must be exactly two integers, e.x. (4, 3)"));
                 }
 
                 let (rows, cols) = (dims[0], dims[1]);
@@ -188,6 +190,7 @@ impl MatrixEquation {
             // Check for binary operator compatibility
             if index == 1 || index == terms.len() - 1 { continue }
             if let Term::Operator(operator) = term {
+                // Only check binary operators right now
                 if !operator.is_unary {
                     if let Err(math_error) = self.check_binary_operator_compatibility(terms.get(index - 1).unwrap(), term, terms.get(index + 1).unwrap()) {
                         terms.insert(index, Term::Error(math_error));

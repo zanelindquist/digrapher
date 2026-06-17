@@ -27,19 +27,6 @@ impl Scalar {
         }
     }
 
-    pub fn add_s(&self, s: &Scalar) -> Scalar {
-        Scalar::from_f64(self.value + s.value)
-    }
-    pub fn add_m(&self, m: &Matrix) -> Matrix {
-        let mut matrix = Matrix::create(m.rows, m.cols);
-        for row in matrix.data.iter_mut() {
-            for val in row.iter_mut() {
-                *val += self.value;
-            }
-        }
-        matrix
-    }
-
     pub fn width(&self) -> f32 {
         (self.value as f32).to_string().len() as f32 * 0.5 + 0.3
     }
